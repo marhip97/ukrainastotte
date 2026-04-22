@@ -4,7 +4,12 @@ Automatisert HTML-dashboard som henter, analyserer og visualiserer data fra
 [Kiel Institute for the World Economy sin Ukraine Support Tracker](https://www.ifw-kiel.de/topics/war-against-ukraine/ukraine-support-tracker/),
 med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverland.
 
-**Status:** Under utvikling - milepæl M1 Oppstart.
+**Status:** Under utvikling. M1 og M2 ferdig; M3 Analysemodul og M4 Dashboard MVP pågår.
+
+**Dashboard (MVP):** https://marhip97.github.io/ukrainastotte/
+
+(Tilgjengelig etter første vellykkede `deploy-pages`-workflow og at
+Pages er aktivert i repo-innstillingene med Source = GitHub Actions.)
 
 ## Formål
 

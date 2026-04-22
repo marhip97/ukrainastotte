@@ -1,0 +1,56 @@
+name: Deploy dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/dashboard/**"
+      - "data/processed/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bygg _site-mappe
+        run: |
+          mkdir -p _site/data
+          cp src/dashboard/index.html src/dashboard/styles.css src/dashboard/dashboard.js _site/
+          cp data/processed/country_summary.csv data/processed/metadata.json _site/data/
+          cp data/processed/bilateral_activities.csv data/processed/financial_disbursements.csv _site/data/ || true
+          # Injiser datasti-overstyring før dashboard.js slik at relative
+          # stier fra src/dashboard (../../data/...) blir ./data/ etter deploy.
+          sed -i 's|<script src="dashboard.js"></script>|<script>window.DATA_PATH="./data/country_summary.csv";window.META_PATH="./data/metadata.json";</script><script src="dashboard.js"></script>|' _site/index.html
+          # Ikke-eksponerende: lenken i index.html til S2-dokumentet peker til
+          # en lokal sti som ikke finnes i deploy-bundelen. Erstatt med GitHub-lenke.
+          sed -i 's|../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md|https://github.com/${{ github.repository }}/blob/main/docs/beslutningssaker/S2-definisjon-av-norges-stotte.md|' _site/index.html
+          echo "Bygde _site:"
+          ls -la _site/ _site/data/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
