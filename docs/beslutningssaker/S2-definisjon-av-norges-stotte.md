@@ -2,10 +2,11 @@
 
 **Sak-ID:** S2
 **Dato løftet:** 2026-04-22
+**Dato besluttet:** 2026-04-22
 **Frist for beslutning:** Før M3-oppstart (uke 5)
 **Utarbeidet av:** `prosjektleder` (med faglig innspill fra `analytiker`)
 **Mottaker:** Prosjekteier
-**Status:** Åpen, til beslutning
+**Status:** Besluttet - alternativ D valgt
 
 ---
 
@@ -198,16 +199,36 @@ endre senere uten modell-omskrivning.
 
 ## 7. Beslutning fra prosjekteier
 
-*Fylles inn av prosjekteier:*
-
 - [ ] **Alternativ A** (kun utbetalt, eksklusive flyktningkostnader)
 - [ ] **Alternativ B** (Kiel-hovedinndeling, eksklusive flyktningkostnader)
 - [ ] **Alternativ C** (Kiel-hovedinndeling, inklusive flyktningkostnader)
-- [ ] **Alternativ D** (flermåls-tilnærming med standard = B) - *prosjektleders tilrådning*
+- [x] **Alternativ D** (flermåls-tilnærming med standard = B) - *prosjektleders tilrådning, valgt*
 - [ ] Annet / ønsker justering: ______________________________
 
-**Dato for beslutning:**
-**Signatur:** prosjekteier
+**Dato for beslutning:** 2026-04-22
+**Signatur:** prosjekteier (bekreftet via chat-dialog med prosjektleder)
+
+### Føringer for videre arbeid
+
+Basert på valgt alternativ D:
+
+- **Standardvisning:** Kiel-hovedinndeling (allokeringer, eksklusive
+  flyktningkostnader) - alternativ B.
+- **Alternative visninger:** "Kun utbetalt" (A) og "Inkludert
+  flyktningkostnader" (C) tilgjengelige via tydelig bryter.
+- **Normalisering:** Alle tall vises i absolutte kroner/euro, per capita
+  og som andel av BNP, uavhengig av valgt visning.
+- **Metodenotat:** Hver visning skal ha synlig forklaring av hva som
+  inngår og hvor Kiel er kilden.
+- **Indirekte EU-bidrag:** Følges iht. Kiel sin metodikk (typisk
+  finansieringsnøkkel), eksplisitt synliggjort i metodenotat.
+- **Verdsetting av materiell:** Kiel sin verdsetting brukes uendret;
+  ingen egen verdsetting.
+
+Disse føringene binder design av M2 (datapipeline må bevare alle tre
+fasene), M3 (analysemodul parametriseres på valgt definisjon og
+produserer tre varianter av hvert nøkkeltall) og M4 (frontend må ha
+definisjonsbryter med tydelig UX).
 
 ---
 
