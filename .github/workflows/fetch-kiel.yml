@@ -21,33 +21,44 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Installer avhengigheter
+        run: pip install -r requirements.txt
+
       - name: Kjør fetch-skript
         id: fetch
         run: python -m src.ingest.fetch_kiel
         continue-on-error: true
 
-      - name: Commit og push ny fil
+      - name: Normaliser til data/processed/
+        id: normalize
         if: steps.fetch.outcome == 'success'
+        run: python -m src.ingest.normalize
+        continue-on-error: true
+
+      - name: Commit og push ny fil
+        if: steps.fetch.outcome == 'success' && steps.normalize.outcome == 'success'
         run: |
-          if [ -n "$(git status --porcelain data/raw/kiel/)" ]; then
+          if [ -n "$(git status --porcelain data/raw/kiel/ data/processed/)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/raw/kiel/
+            git add data/raw/kiel/ data/processed/
             git commit -m "data: ny utgave fra Kiel Ukraine Support Tracker ($(date -u +%Y-%m-%d))"
             git push
           else
-            echo "Ingen ny fil - hopper over commit."
+            echo "Ingen endring - hopper over commit."
           fi
 
       - name: Opprett Issue ved feil
-        if: steps.fetch.outcome == 'failure'
+        if: steps.fetch.outcome == 'failure' || steps.normalize.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
+            const fetchOk = "${{ steps.fetch.outcome }}" === "success";
+            const phase = fetchOk ? "normalisering" : "henting";
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `[DATA] Automatisk henting fra Kiel feilet ${new Date().toISOString().slice(0,10)}`,
+              title: `[DATA] Automatisk ${phase} fra Kiel feilet ${new Date().toISOString().slice(0,10)}`,
               labels: ["data", "kiel", "bug"],
-              body: `Workflow \`fetch-kiel.yml\` feilet. Sannsynlig årsak: endret URL eller struktur på Kiels publiseringsside (R1/R2 i prosjektplan).\n\nSe workflow-logg: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nAnsvar: \`dataingenior\`.`
+              body: `Workflow \`fetch-kiel.yml\` feilet under **${phase}**. Sannsynlig årsak: endret URL eller struktur på Kiels publiseringsside (R1/R2 i prosjektplan) eller kolonnekontrakt-brudd i parseren.\n\nSe workflow-logg: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nAnsvar: \`dataingenior\`.`
             })
