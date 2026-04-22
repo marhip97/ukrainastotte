@@ -14,6 +14,7 @@ from src.ingest.normalize import normalize
 from src.ingest.parse_kiel import (
     BILATERAL_ARK,
     COUNTRY_SUMMARY_ARK,
+    DISBURSEMENT_ARK,
     FORVENTEDE_BILATERAL_KOLONNER,
     FORVENTEDE_SUMMARY_KOLONNER,
 )
@@ -33,6 +34,14 @@ def _lag_fixture(tmp_path: Path) -> Path:
         cs.append([])
     cs.append(list(FORVENTEDE_SUMMARY_KOLONNER))
     cs.append(["Norway", 0, 1, 2.0, 1.8, 6.2, 10.0, 5.0, 1.7, 18.0, 24.7])
+
+    disb = wb.create_sheet(DISBURSEMENT_ARK)
+    for _ in range(9):
+        disb.append([])
+    disb.append(["", "", "", "January", "February"])
+    disb.append(["", "Country", "EU member", "1", "2"])
+    disb.append([])
+    disb.append(["", "Norway", 0, 0.0, 0.3])
 
     path = tmp_path / "fixture.xlsx"
     wb.save(str(path))
@@ -67,7 +76,14 @@ def test_normalize_produserer_forventede_filer(tmp_path: Path) -> None:
 
     assert metadata["antall_land_summary"] == 1
     assert metadata["antall_bilateral_rader"] == 2
+    assert metadata["antall_disbursement_rader"] == 1
     assert "sha256" in metadata
+
+    with (out_dir / "financial_disbursements.csv").open() as fh:
+        drader = list(csv.DictReader(fh))
+    assert len(drader) == 1
+    assert drader[0]["giver"] == "Norway"
+    assert float(drader[0]["verdi_eur_mrd"]) == pytest.approx(0.3)
 
 
 def _finn_ekte_fil() -> Path | None:
