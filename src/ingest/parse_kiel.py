@@ -32,6 +32,16 @@ from openpyxl import load_workbook
 BILATERAL_ARK = "Bilateral Assistance, MAIN DATA"
 COUNTRY_SUMMARY_ARK = "Country Summary (€)"
 COUNTRY_SUMMARY_HEADER_RAD = 8
+DISBURSEMENT_ARK = "Financial disb per Month (€)"
+DISBURSEMENT_MAANED_RAD = 10
+DISBURSEMENT_HEADER_RAD = 11
+DISBURSEMENT_FORSTE_AAR = 2022  # Første kolonne uten årsuffix antas å være 2022
+
+MAANED_NAVN = {
+    "January": 1, "February": 2, "March": 3, "April": 4,
+    "May": 5, "June": 6, "July": 7, "August": 8,
+    "September": 9, "October": 10, "November": 11, "December": 12,
+}
 
 FORVENTEDE_BILATERAL_KOLONNER: tuple[str, ...] = (
     "donor",
@@ -72,6 +82,17 @@ class Aktivitet:
     kategori: str
     maal: str
     verdi_eur: float
+
+
+@dataclass(frozen=True)
+class FinanciellUtbetaling:
+    """En månedlig finansiell utbetaling fra ett giverland. Verdi i € mrd."""
+
+    giver: str
+    er_eu_medlem: bool
+    aar: int
+    maaned: int
+    verdi_eur_mrd: float
 
 
 @dataclass(frozen=True)
@@ -156,6 +177,102 @@ def parse_bilateral(xlsx_path: Path) -> list[Aktivitet]:
                 verdi_eur=_til_float(row[idx["tot_sub_activity_value_EUR"]]),
             )
         )
+    return resultat
+
+
+def _er_aggregat_rad(navn: str) -> bool:
+    """Sanne navn på aggregatrader i Kiel-arkene (ikke enkeltland)."""
+    lavere = navn.lower().strip()
+    if lavere in {"total", "eu"}:
+        return True
+    if "total" in lavere or "cummulative" in lavere or "cumulative" in lavere:
+        return True
+    return False
+
+
+def _parse_maaned_kolonner(
+    maaned_rad: tuple, forste_datakolonne: int = 3
+) -> list[tuple[int, int, int]]:
+    """Returner liste av (kolonneindeks, år, måned) for hver datakolonne.
+
+    Måned-raden har etiketter som "January", "February", ..., "January (2023)".
+    Celler uten årsuffix antas å tilhøre `DISBURSEMENT_FORSTE_AAR` inntil
+    neste årsuffix dukker opp.
+    """
+    resultat: list[tuple[int, int, int]] = []
+    aar = DISBURSEMENT_FORSTE_AAR
+    for idx, celle in enumerate(maaned_rad):
+        if idx < forste_datakolonne or celle is None:
+            continue
+        tekst = str(celle).strip()
+        if not tekst:
+            continue
+        maaned_del = tekst
+        if "(" in tekst and tekst.endswith(")"):
+            navn, rest = tekst.split("(", 1)
+            maaned_del = navn.strip()
+            try:
+                aar = int(rest.rstrip(")").strip())
+            except ValueError:
+                pass
+        maaned = MAANED_NAVN.get(maaned_del)
+        if maaned is None:
+            continue
+        resultat.append((idx, aar, maaned))
+    return resultat
+
+
+def parse_financial_disbursements(xlsx_path: Path) -> list[FinanciellUtbetaling]:
+    """Parse arket "Financial disb per Month (€)" til månedlige utbetalinger.
+
+    Tekstverdier som "No budget support" og tomme celler hoppes over.
+    Rader med 0 inkluderes ikke (redusere støy; 0 betyr ingen utbetaling
+    den måneden).
+    """
+    wb = load_workbook(filename=str(xlsx_path), data_only=True, read_only=True)
+    ark = wb[DISBURSEMENT_ARK]
+    alle_rader = list(ark.iter_rows(values_only=True))
+    if len(alle_rader) < DISBURSEMENT_HEADER_RAD:
+        raise KolonneKontraktFeil(
+            f"{DISBURSEMENT_ARK}: for få rader ({len(alle_rader)})"
+        )
+    maaned_rad = alle_rader[DISBURSEMENT_MAANED_RAD - 1]
+    header_rad = alle_rader[DISBURSEMENT_HEADER_RAD - 1]
+    if str(header_rad[1] or "").strip() != "Country":
+        raise KolonneKontraktFeil(
+            f"{DISBURSEMENT_ARK}: forventet 'Country' i kolonne B rad "
+            f"{DISBURSEMENT_HEADER_RAD}, fant {header_rad[1]!r}"
+        )
+    maaned_map = _parse_maaned_kolonner(maaned_rad)
+    if not maaned_map:
+        raise KolonneKontraktFeil(
+            f"{DISBURSEMENT_ARK}: fant ingen månedskolonner i rad "
+            f"{DISBURSEMENT_MAANED_RAD}"
+        )
+    resultat: list[FinanciellUtbetaling] = []
+    for rad in alle_rader[DISBURSEMENT_HEADER_RAD:]:
+        giver = rad[1] if len(rad) > 1 else None
+        if giver is None or str(giver).strip() == "":
+            continue
+        giver_tekst = str(giver).strip()
+        if _er_aggregat_rad(giver_tekst):
+            continue
+        er_eu = _til_bool(rad[2] if len(rad) > 2 else 0)
+        for idx, aar, maaned in maaned_map:
+            if idx >= len(rad):
+                continue
+            verdi = _til_float(rad[idx])
+            if verdi == 0:
+                continue
+            resultat.append(
+                FinanciellUtbetaling(
+                    giver=giver_tekst,
+                    er_eu_medlem=er_eu,
+                    aar=aar,
+                    maaned=maaned,
+                    verdi_eur_mrd=verdi,
+                )
+            )
     return resultat
 
 
@@ -244,7 +361,7 @@ def parse_country_summary(xlsx_path: Path) -> list[LandSummary]:
             continue
         # "Total"-raden og eventuelle EU-aggregater filtreres - de er
         # ikke enkeltland og gir falske advarsler i validate_summary.
-        if str(land).strip().lower() in {"total", "eu"}:
+        if _er_aggregat_rad(str(land)):
             continue
         resultat.append(
             LandSummary(

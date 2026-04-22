@@ -19,12 +19,14 @@ from openpyxl import Workbook
 from src.ingest.parse_kiel import (
     BILATERAL_ARK,
     COUNTRY_SUMMARY_ARK,
+    DISBURSEMENT_ARK,
     FORVENTEDE_BILATERAL_KOLONNER,
     FORVENTEDE_SUMMARY_KOLONNER,
     KolonneKontraktFeil,
     LandSummary,
     parse_bilateral,
     parse_country_summary,
+    parse_financial_disbursements,
     validate_summary,
 )
 
@@ -86,6 +88,45 @@ def test_parser_kaster_ved_kolonneavvik(tmp_path: Path) -> None:
     wb.save(str(path))
     with pytest.raises(KolonneKontraktFeil):
         parse_bilateral(path)
+
+
+def _lag_disbursement_fixture(tmp_path: Path) -> Path:
+    wb = Workbook()
+    wb.remove(wb.active)
+    ark = wb.create_sheet(DISBURSEMENT_ARK)
+    # Rad 1-9 kan være blanke/tittel
+    for _ in range(9):
+        ark.append([])
+    # Rad 10: månedsetiketter
+    ark.append(
+        ["", "", "", "January", "February", "March", "January (2023)", "February (2023)"]
+    )
+    # Rad 11: header
+    ark.append(["", "Country", "EU member", "1", "2", "3", "4", "5"])
+    # Rad 12: tom
+    ark.append([])
+    # Data
+    ark.append(["", "Norway", 0, 0.0, 0.5, 0.0, 0.0, 0.3])
+    ark.append(["", "Germany", 1, 1.0, 0.0, 0.0, 2.0, 0.0])
+    ark.append(["", "Total per month", 0, 1.0, 0.5, 0.0, 2.0, 0.3])
+    path = tmp_path / "disbursement.xlsx"
+    wb.save(str(path))
+    return path
+
+
+def test_disbursement_parser_leser_og_filtrerer(tmp_path: Path) -> None:
+    rader = parse_financial_disbursements(_lag_disbursement_fixture(tmp_path))
+    # "Total per month" skal filtreres. 0-verdier hoppes over.
+    # Norway: (2022-02, 0.5), (2023-02, 0.3)
+    # Germany: (2022-01, 1.0), (2023-01, 2.0)
+    assert [(r.giver, r.aar, r.maaned, r.verdi_eur_mrd) for r in rader] == [
+        ("Norway", 2022, 2, 0.5),
+        ("Norway", 2023, 2, 0.3),
+        ("Germany", 2022, 1, 1.0),
+        ("Germany", 2023, 1, 2.0),
+    ]
+    assert rader[2].er_eu_medlem is True
+    assert rader[0].er_eu_medlem is False
 
 
 def _finn_ekte_fil() -> Path | None:
@@ -165,6 +206,28 @@ def test_validate_ekte_fil_kjente_avvik() -> None:
         assert "total_commitment" in a and "< total_allocation" in a, (
             f"Uventet advarselstype: {a}"
         )
+
+
+@pytest.mark.skipif(
+    _finn_ekte_fil() is None, reason="ingen ekte Kiel-fil i data/raw/kiel/"
+)
+def test_disbursement_ekte_fil_norges_sum_under_commitment() -> None:
+    """Sum av Norges månedlige utbetalinger <= Norges total_commitment.
+
+    Dette er den logiske kryssjekken: faktiske utbetalinger kan ikke
+    overstige det som er committed. Gir rask sanity-check på tidsseriene.
+    """
+    fil = _finn_ekte_fil()
+    assert fil is not None
+    utbetalinger = parse_financial_disbursements(fil)
+    summary = {r.land: r for r in parse_country_summary(fil)}
+    norges_utbetalt = sum(
+        r.verdi_eur_mrd for r in utbetalinger if r.giver == "Norway"
+    )
+    norges_commitment = summary["Norway"].total_commitment
+    assert norges_utbetalt <= norges_commitment
+    # Også positivt signal: vi forventer minst noen utbetalinger.
+    assert len(utbetalinger) > 50
 
 
 @pytest.mark.skipif(

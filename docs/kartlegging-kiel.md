@@ -19,7 +19,7 @@
 
 - **Land:** 44 distinkte givere registrert i bilateral-arket (EU-stater, G7, pluss Australia, Sør-Korea, Tyrkia, **Norge**, New Zealand, Sveits, Kina, Taiwan, India, Island m.fl.). EU-institusjoner er egen aktør.
 - **Kategorier (`aid_type_general`):** `Financial`, `Humanitarian`, `Military`. NB: noen rader har trailing whitespace (`Humanitarian `) - parseren normaliserer.
-- **Faser (`measure`):** `Allocation` og `Commitment`. (Disbursement finnes ikke som egen verdi i hovedkolonnen; utbetaling rapporteres i egne ark, f.eks. `Financial disb per Month (€)`.)
+- **Faser (`measure`):** `Allocation` og `Commitment`. Disbursement (faktisk utbetaling) finnes **ikke** i hovedarket, men i eget ark `Financial disb per Month (€)` (månedlige beløp i € mrd). Merknad: dette arket dekker **kun finansielle budget support-utbetalinger** - ikke militær eller humanitær støtte. Norge har 5 utbetalinger siden Mai 2022 som summerer til ca. 0.65 mrd EUR, langt under total_commitment på 24.7 mrd EUR.
 - **Hovedark:**
   - `Bilateral Assistance, MAIN DATA` (5580 rader) - langformat, én rad per sub-aktivitet med 89+ kolonner (metadata, verdier i lokal valuta og EUR, våpen-detaljer, geografiske data, dummy-flagg).
   - `Country Summary (€)` - pre-aggregert per land i € mrd (header på rad 8 etter preamble).

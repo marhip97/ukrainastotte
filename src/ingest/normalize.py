@@ -23,9 +23,11 @@ from pathlib import Path
 
 from src.ingest.parse_kiel import (
     Aktivitet,
+    FinanciellUtbetaling,
     LandSummary,
     parse_bilateral,
     parse_country_summary,
+    parse_financial_disbursements,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -65,17 +67,29 @@ def skriv_bilateral(rader: list[Aktivitet], path: Path) -> None:
             writer.writerow(d)
 
 
+def skriv_disbursements(rader: list[FinanciellUtbetaling], path: Path) -> None:
+    feltnavn = [f.name for f in fields(FinanciellUtbetaling)]
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=feltnavn)
+        writer.writeheader()
+        for rad in rader:
+            writer.writerow(asdict(rad))
+
+
 def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary = parse_country_summary(xlsx_path)
     bilateral = parse_bilateral(xlsx_path)
+    disbursements = parse_financial_disbursements(xlsx_path)
     skriv_country_summary(summary, out_dir / "country_summary.csv")
     skriv_bilateral(bilateral, out_dir / "bilateral_activities.csv")
+    skriv_disbursements(disbursements, out_dir / "financial_disbursements.csv")
     metadata = {
         "kildefil": xlsx_path.name,
         "sha256": _sha256(xlsx_path),
         "antall_land_summary": len(summary),
         "antall_bilateral_rader": len(bilateral),
+        "antall_disbursement_rader": len(disbursements),
         "prosessert_dato": date.today().isoformat(),
     }
     (out_dir / "metadata.json").write_text(
