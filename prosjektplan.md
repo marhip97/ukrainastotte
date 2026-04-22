@@ -298,10 +298,13 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M2: Datapipeline | Pågår | Utvidet validering: `validate_summary` i `parse_kiel.py` sjekker komponentsummer, `commitment >= allocation`, negative og urimelig høye verdier. Fant tre ekte dataavvik i Release 28 (Australia, Irland, Italia har `total_commitment < total_allocation` med små marginer). Parser filtrerer "Total"/"EU"-aggregatrader. 11/11 tester grønne. | dataingenior | — |
 | 2026-04-22 | M2: Datapipeline | **Ferdig** | Disbursement-kobling: `parse_financial_disbursements` leser arket `Financial disb per Month (€)` (månedlige utbetalinger per land, € mrd). 131 utbetalinger fra 23 land i Release 28; Norge har 5 utbetalinger (sum 0.65 mrd EUR). `normalize.py` produserer `data/processed/financial_disbursements.csv`. Kartleggingsnotat oppdatert med at arket kun dekker finansielle budget support-utbetalinger. 13/13 tester grønne. **M2 er dermed fullført iht. plan**; M3 Analysemodul kan starte. | dataingenior, prosjektleder | — |
 | 2026-04-22 | M3: Analysemodul | Pågår | Første tre av seks nøkkeltall implementert i `src/analyze/noekkeltall.py`: absolutt støtte (allocation + commitment), fordeling militær/finansiell/humanitær (prosent), rangering blant giverland. Tre tester + kryssjekk mot Norges publiserte tall (10.01 mrd EUR allocation, 24.72 mrd commitment, 61.9 % militær, rangering 10 allocation / 5 commitment blant 42 land). 16/16 tester grønne. Gjenstår: BNP-andel, per capita, endring siste kvartal. | analytiker | — |
+| 2026-04-22 | M3: Analysemodul | Pågår | Nøkkeltall 6 (endring) implementert som `src/analyze/endring.py` - tar to `LandSummary`-lister og returnerer delta per land. Meningsfullt resultat krever minst to releaser i `data/raw/kiel/`; fungerer som ren-funksjon allerede nå. Ny sak **S6** åpnet for kildevalg til BNP-andel og per capita (nøkkeltall 2+3); prosjektleders forslag er Verdensbanken WDI med 2023-tall. 3 nye tester (19/19 grønne). | analytiker, prosjektleder | S6: kildevalg for BNP/folketall (nøkkeltall 2+3). |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
-*(Ingen åpne saker. Alle vedtatte saker er lukket og ført i 11.3.)*
+| ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
+|---|---|---|---|---|---|
+| S6 | 2026-04-22 | Kildevalg for BNP og folketall (nøkkeltall 2 og 3). Verdensbanken (WDI), IMF, OECD eller nasjonale kilder? Hvilket år (før krigen 2021 eller siste tilgjengelige 2023)? Nominell eller kjøpekraftsjustert (PPP)? | **Verdensbanken WDI, 2023-tall, nominell BNP i USD** - enkel API, dekker alle 42 giverland, mest brukt internasjonalt. | Før M4-oppstart (eller når nøkkeltall 2+3 skal implementeres) | Åpen |
 
 ### 11.3 Lukkede saker
 
