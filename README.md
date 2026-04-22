@@ -6,9 +6,10 @@ med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverl
 
 **Status:** Under utvikling. M1 og M2 ferdige; M3 Analysemodul og M4 Dashboard MVP pågår.
 
-**Dashboard (MVP):** deployes via Netlify fra `main`. URL settes av Netlify
-(sjekk Netlify-dashboardet). `netlify.toml` styrer bygg og publisering;
-`scripts/build-netlify.sh` bygger `_site/`.
+**Dashboard (MVP):** <https://ukrainastotte.netlify.app/>
+
+Deployes automatisk via Netlify fra `main`. `netlify.toml` styrer bygg
+og publisering; `scripts/build-netlify.sh` bygger `_site/`.
 
 ## Formål
 
