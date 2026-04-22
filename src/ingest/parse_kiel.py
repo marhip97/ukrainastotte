@@ -159,6 +159,75 @@ def parse_bilateral(xlsx_path: Path) -> list[Aktivitet]:
     return resultat
 
 
+def validate_summary(
+    rader: list[LandSummary],
+    komponent_toleranse: float = 0.01,
+    rimelig_maks_mrd: float = 200.0,
+) -> list[str]:
+    """Returner liste med advarsler for mistenkelige rader.
+
+    Regler:
+    - `total_allocation` skal være sum av tre komponent-allokeringer
+      (tillatt avvik: `komponent_toleranse`, default 1 %).
+    - `total_commitment` skal være sum av tre komponent-commitments.
+    - `total_commitment >= total_allocation` (allocation er delmengde
+      av commitment).
+    - Ingen verdi skal være negativ.
+    - Ingen verdi skal overstige `rimelig_maks_mrd` (default 200 mrd EUR).
+
+    Tom liste betyr at alle rader passerte. Brukes av `qa`-rollen og av
+    fetch-workflow for å oppdage strukturelle feil tidlig.
+    """
+    advarsler: list[str] = []
+    for r in rader:
+        alloc_komponenter = (
+            r.financial_allocation
+            + r.humanitarian_allocation
+            + r.military_allocation
+        )
+        if r.total_allocation and abs(alloc_komponenter - r.total_allocation) > (
+            komponent_toleranse * r.total_allocation
+        ):
+            advarsler.append(
+                f"{r.land}: total_allocation ({r.total_allocation:.3f}) avviker "
+                f"fra sum komponenter ({alloc_komponenter:.3f})"
+            )
+        comm_komponenter = (
+            r.financial_commitment
+            + r.humanitarian_commitment
+            + r.military_commitment
+        )
+        if r.total_commitment and abs(comm_komponenter - r.total_commitment) > (
+            komponent_toleranse * r.total_commitment
+        ):
+            advarsler.append(
+                f"{r.land}: total_commitment ({r.total_commitment:.3f}) avviker "
+                f"fra sum komponenter ({comm_komponenter:.3f})"
+            )
+        if r.total_commitment + komponent_toleranse < r.total_allocation:
+            advarsler.append(
+                f"{r.land}: total_commitment ({r.total_commitment:.3f}) "
+                f"< total_allocation ({r.total_allocation:.3f})"
+            )
+        for navn, verdi in (
+            ("financial_allocation", r.financial_allocation),
+            ("humanitarian_allocation", r.humanitarian_allocation),
+            ("military_allocation", r.military_allocation),
+            ("total_allocation", r.total_allocation),
+            ("financial_commitment", r.financial_commitment),
+            ("humanitarian_commitment", r.humanitarian_commitment),
+            ("military_commitment", r.military_commitment),
+            ("total_commitment", r.total_commitment),
+        ):
+            if verdi < 0:
+                advarsler.append(f"{r.land}: negativ {navn} = {verdi}")
+            if verdi > rimelig_maks_mrd:
+                advarsler.append(
+                    f"{r.land}: urimelig høy {navn} = {verdi} (> {rimelig_maks_mrd})"
+                )
+    return advarsler
+
+
 def parse_country_summary(xlsx_path: Path) -> list[LandSummary]:
     """Parse Country Summary (€) og returner aggregat per land."""
     wb = load_workbook(filename=str(xlsx_path), data_only=True, read_only=True)
@@ -172,6 +241,10 @@ def parse_country_summary(xlsx_path: Path) -> list[LandSummary]:
             continue
         land = row[idx["Country"]]
         if land is None or str(land).strip() == "":
+            continue
+        # "Total"-raden og eventuelle EU-aggregater filtreres - de er
+        # ikke enkeltland og gir falske advarsler i validate_summary.
+        if str(land).strip().lower() in {"total", "eu"}:
             continue
         resultat.append(
             LandSummary(

@@ -22,8 +22,10 @@ from src.ingest.parse_kiel import (
     FORVENTEDE_BILATERAL_KOLONNER,
     FORVENTEDE_SUMMARY_KOLONNER,
     KolonneKontraktFeil,
+    LandSummary,
     parse_bilateral,
     parse_country_summary,
+    validate_summary,
 )
 
 
@@ -90,6 +92,79 @@ def _finn_ekte_fil() -> Path | None:
     repo_root = Path(__file__).resolve().parents[1]
     filer = sorted((repo_root / "data" / "raw" / "kiel").glob("*.xlsx"))
     return filer[-1] if filer else None
+
+
+def _land(**endringer) -> LandSummary:
+    base = dict(
+        land="Test",
+        er_eu_medlem=False,
+        er_geografisk_europa=True,
+        financial_allocation=1.0,
+        humanitarian_allocation=2.0,
+        military_allocation=3.0,
+        total_allocation=6.0,
+        financial_commitment=2.0,
+        humanitarian_commitment=3.0,
+        military_commitment=5.0,
+        total_commitment=10.0,
+    )
+    base.update(endringer)
+    return LandSummary(**base)
+
+
+def test_validate_gyldig_rad_gir_ingen_advarsler() -> None:
+    assert validate_summary([_land()]) == []
+
+
+def test_validate_fanger_komponent_avvik() -> None:
+    # total_allocation er 6.0 men komponenter summerer til 7.0
+    rad = _land(military_allocation=4.0)
+    advarsler = validate_summary([rad])
+    assert any("total_allocation" in a for a in advarsler)
+
+
+def test_validate_fanger_commitment_under_allocation() -> None:
+    rad = _land(total_commitment=5.0, military_commitment=0.0)  # 5 < 6
+    advarsler = validate_summary([rad])
+    assert any("total_commitment" in a and "< total_allocation" in a for a in advarsler)
+
+
+def test_validate_fanger_negativ_og_urimelig_hoeg() -> None:
+    neg = _land(
+        financial_allocation=-1.0,
+        total_allocation=4.0,
+    )
+    hoey = _land(
+        military_allocation=500.0,
+        total_allocation=503.0,
+        military_commitment=500.0,
+        total_commitment=505.0,
+    )
+    advarsler = validate_summary([neg, hoey])
+    assert any("negativ" in a for a in advarsler)
+    assert any("urimelig høy" in a for a in advarsler)
+
+
+@pytest.mark.skipif(
+    _finn_ekte_fil() is None, reason="ingen ekte Kiel-fil i data/raw/kiel/"
+)
+def test_validate_ekte_fil_kjente_avvik() -> None:
+    """Validerer at ekte fil kun har kjente, lavsignaturs advarsler.
+
+    Release 28 har små commitment<allocation-avvik for noen få land
+    (sannsynligvis fordi allocation-tall er oppdatert nyere enn
+    commitment). Vi aksepterer inntil 5 slike advarsler og ingen andre
+    typer. Vekker testen oppmerksomhet hvis nye avvik dukker opp ved
+    neste release.
+    """
+    fil = _finn_ekte_fil()
+    assert fil is not None
+    advarsler = validate_summary(parse_country_summary(fil))
+    assert len(advarsler) <= 5
+    for a in advarsler:
+        assert "total_commitment" in a and "< total_allocation" in a, (
+            f"Uventet advarselstype: {a}"
+        )
 
 
 @pytest.mark.skipif(
