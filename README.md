@@ -4,7 +4,11 @@ Automatisert HTML-dashboard som henter, analyserer og visualiserer data fra
 [Kiel Institute for the World Economy sin Ukraine Support Tracker](https://www.ifw-kiel.de/topics/war-against-ukraine/ukraine-support-tracker/),
 med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverland.
 
-**Status:** Under utvikling - milepæl M1 Oppstart.
+**Status:** Under utvikling. M1 og M2 ferdige; M3 Analysemodul og M4 Dashboard MVP pågår.
+
+**Dashboard (MVP):** deployes via Netlify fra `main`. URL settes av Netlify
+(sjekk Netlify-dashboardet). `netlify.toml` styrer bygg og publisering;
+`scripts/build-netlify.sh` bygger `_site/`.
 
 ## Formål
 
