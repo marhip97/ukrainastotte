@@ -67,6 +67,10 @@ src/dashboard/dist/
 src/dashboard/build/
 src/dashboard/.vite/
 
+# Netlify / deploy-bundel
+_site/
+.netlify/
+
 # IDE og editor
 .vscode/
 .idea/

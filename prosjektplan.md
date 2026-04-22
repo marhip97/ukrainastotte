@@ -300,6 +300,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M3: Analysemodul | Pågår | Første tre av seks nøkkeltall implementert i `src/analyze/noekkeltall.py`: absolutt støtte (allocation + commitment), fordeling militær/finansiell/humanitær (prosent), rangering blant giverland. Tre tester + kryssjekk mot Norges publiserte tall (10.01 mrd EUR allocation, 24.72 mrd commitment, 61.9 % militær, rangering 10 allocation / 5 commitment blant 42 land). 16/16 tester grønne. Gjenstår: BNP-andel, per capita, endring siste kvartal. | analytiker | — |
 | 2026-04-22 | M3: Analysemodul | Pågår | Nøkkeltall 6 (endring) implementert som `src/analyze/endring.py` - tar to `LandSummary`-lister og returnerer delta per land. Meningsfullt resultat krever minst to releaser i `data/raw/kiel/`; fungerer som ren-funksjon allerede nå. Ny sak **S6** åpnet for kildevalg til BNP-andel og per capita (nøkkeltall 2+3); prosjektleders forslag er Verdensbanken WDI med 2023-tall. 3 nye tester (19/19 grønne). | analytiker, prosjektleder | S6: kildevalg for BNP/folketall (nøkkeltall 2+3). |
 | 2026-04-22 | M4: Dashboard MVP | Pågår | Skjelett av HTML-dashboard i `src/dashboard/` (index.html, styles.css, dashboard.js). Leser `data/processed/country_summary.csv` ved runtime. Viser fire nøkkeltall for Norge (total allocation, total commitment, rangering allocation, rangering commitment), fordelingsdiagram (Plotly donut) og rangering topp 15 (Plotly bar). Visningsbryter for allocation/commitment iht. S2-beslutningen. Verifisert lokalt via `python -m http.server`. Pages-deploy kommer i neste PR. | frontend | — |
+| 2026-04-22 | M4: Dashboard MVP | Pågår | Hosting-omvalg (**S7**): GitHub Pages krever offentlig repo på gratisplanen. Prosjekteier valgte **Netlify** i stedet - støtter private repo-er gratis. Netlify-prosjekt opprettet og koblet til `main`. Ny `netlify.toml` + `scripts/build-netlify.sh` bygger `_site/` og speiler deploy-strukturen. PR #15 (GitHub Pages) lukket uendret. | devops, prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -316,6 +317,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S3 | 2026-04-22 | 2026-04-22 | Hosting av dashboardet | Prosjekteier valgte **GitHub Pages** (prosjektleders tilrådning). Automatisk deploy via GitHub Actions. Vurderes på nytt kun hvis prosjektet senere får behov for server-side prosessering, noe som ikke er i scope. |
 | S4 | 2026-04-22 | 2026-04-22 | Branch-navnkonvensjon (agent-indusert `claude/...` vs. `feature/...` i CLAUDE.md) | Prosjekteier valgte omdøping til `feature/m1-oppstart`. Konsekvens: fremtidige branches følger `feature/<kort-beskrivelse>` som definert i CLAUDE.md. |
 | S5 | 2026-04-22 | 2026-04-22 | Godkjenning av M1-leveransen (pull request mot `main`) | Pull request #1 godkjent og merget av prosjekteier. M1 satt til Ferdig. |
+| S7 | 2026-04-22 | 2026-04-22 | Hosting-omvalg - GitHub Pages krever offentlig repo | Prosjekteier valgte **Netlify** (gratis private repo). GitHub Pages-workflow (PR #15) lukket uendret. S3 overstyres av dette valget. |
 
 ### 11.4 Milepælsstatus
 
