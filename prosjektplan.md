@@ -299,6 +299,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M2: Datapipeline | **Ferdig** | Disbursement-kobling: `parse_financial_disbursements` leser arket `Financial disb per Month (€)` (månedlige utbetalinger per land, € mrd). 131 utbetalinger fra 23 land i Release 28; Norge har 5 utbetalinger (sum 0.65 mrd EUR). `normalize.py` produserer `data/processed/financial_disbursements.csv`. Kartleggingsnotat oppdatert med at arket kun dekker finansielle budget support-utbetalinger. 13/13 tester grønne. **M2 er dermed fullført iht. plan**; M3 Analysemodul kan starte. | dataingenior, prosjektleder | — |
 | 2026-04-22 | M3: Analysemodul | Pågår | Første tre av seks nøkkeltall implementert i `src/analyze/noekkeltall.py`: absolutt støtte (allocation + commitment), fordeling militær/finansiell/humanitær (prosent), rangering blant giverland. Tre tester + kryssjekk mot Norges publiserte tall (10.01 mrd EUR allocation, 24.72 mrd commitment, 61.9 % militær, rangering 10 allocation / 5 commitment blant 42 land). 16/16 tester grønne. Gjenstår: BNP-andel, per capita, endring siste kvartal. | analytiker | — |
 | 2026-04-22 | M3: Analysemodul | Pågår | Nøkkeltall 6 (endring) implementert som `src/analyze/endring.py` - tar to `LandSummary`-lister og returnerer delta per land. Meningsfullt resultat krever minst to releaser i `data/raw/kiel/`; fungerer som ren-funksjon allerede nå. Ny sak **S6** åpnet for kildevalg til BNP-andel og per capita (nøkkeltall 2+3); prosjektleders forslag er Verdensbanken WDI med 2023-tall. 3 nye tester (19/19 grønne). | analytiker, prosjektleder | S6: kildevalg for BNP/folketall (nøkkeltall 2+3). |
+| 2026-04-22 | M4: Dashboard MVP | Pågår | Skjelett av HTML-dashboard i `src/dashboard/` (index.html, styles.css, dashboard.js). Leser `data/processed/country_summary.csv` ved runtime. Viser fire nøkkeltall for Norge (total allocation, total commitment, rangering allocation, rangering commitment), fordelingsdiagram (Plotly donut) og rangering topp 15 (Plotly bar). Visningsbryter for allocation/commitment iht. S2-beslutningen. Verifisert lokalt via `python -m http.server`. Pages-deploy kommer i neste PR. | frontend | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -323,7 +324,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M1: Oppstart | Uke 1 | Ferdig | Levert via PR #1 og godkjent 2026-04-22. |
 | M2: Datapipeline | Uke 3 | Ferdig | Full pipeline: fetch-workflow, parser (bilateral + summary + disbursements), validering, normalisering til CSV-er i `data/processed/`. Verifisert mot Release 28 og Norges publiserte totals. 13/13 tester grønne. |
 | M3: Analysemodul | Uke 5 | Pågår | 3 av 6 nøkkeltall ferdig (absolutt, fordeling, rangering). Gjenstår: BNP-andel, per capita, endring siste kvartal. |
-| M4: Dashboard MVP | Uke 7 | Ikke startet | Hosting besluttet (S3: GitHub Pages). Må ha tydelig definisjonsbryter iht. S2-beslutningen. |
+| M4: Dashboard MVP | Uke 7 | Pågår | Skjelett bygget (fire nøkkeltall + to Plotly-grafer + visningsbryter). Gjenstår: Pages-deploy, integrasjon av BNP/per-capita etter S6, endring-graf når historikk finnes. |
 | M5: Produksjon | Uke 9 | Ikke startet | GitHub Actions for automatisk datauthenting og Pages-deploy. |
 
 ---

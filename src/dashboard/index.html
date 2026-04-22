@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Norges støtte til Ukraina - Kiel Ukraine Support Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header>
+    <h1>Norges støtte til Ukraina</h1>
+    <p class="subtitle">
+      Data fra <a href="https://www.kielinstitut.de/topics/war-against-ukraine/ukraine-support-tracker">Kiel
+      Ukraine Support Tracker</a>. Sist oppdatert: <span id="sist-oppdatert">laster...</span>
+    </p>
+  </header>
+
+  <main>
+    <section class="nokkel-tall" aria-label="Nøkkeltall for Norge">
+      <div class="kort">
+        <div class="tall" id="total-allocation">-</div>
+        <div class="label">Total allokering (€ mrd)</div>
+      </div>
+      <div class="kort">
+        <div class="tall" id="total-commitment">-</div>
+        <div class="label">Total forpliktelse (€ mrd)</div>
+      </div>
+      <div class="kort">
+        <div class="tall" id="rangering-alloc">-</div>
+        <div class="label">Rangering allokering</div>
+      </div>
+      <div class="kort">
+        <div class="tall" id="rangering-comm">-</div>
+        <div class="label">Rangering forpliktelse</div>
+      </div>
+    </section>
+
+    <section class="visning-bytter" aria-label="Visningsvalg">
+      <label>Visning:
+        <select id="visning">
+          <option value="allocation" selected>Allokering (Kiel-hovedinndeling)</option>
+          <option value="commitment">Forpliktelse</option>
+        </select>
+      </label>
+      <p class="metode-notat">
+        Standardvisning er allokering (det som er øremerket for levering).
+        Forpliktelse inkluderer lovnader som ennå ikke er konkretisert.
+        Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">beslutningssak S2</a>.
+      </p>
+    </section>
+
+    <section class="graf">
+      <h2>Fordeling av støtte (Norge)</h2>
+      <div id="fordeling-graf"></div>
+    </section>
+
+    <section class="graf">
+      <h2>Topp 15 giverland</h2>
+      <div id="rangering-graf"></div>
+      <p class="uthev" id="norge-plassering"></p>
+    </section>
+
+    <section class="feil skjult" id="feilmelding" role="alert"></section>
+  </main>
+
+  <footer>
+    <p>
+      Kilde: Kiel Institute for the World Economy, Ukraine Support Tracker.
+      Visualiseringen gjenspeiler Kiels publiserte allocation-/commitment-tall
+      uten egen metodisk justering.
+    </p>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
