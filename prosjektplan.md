@@ -285,24 +285,28 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | Dato | Fase | Status | Oppsummering | Ansvarlig | Saker til prosjekteier |
 |---|---|---|---|---|---|
 | 2026-04-22 | M1: Oppstart | Planlegging | Prosjektplan utarbeidet og klar for godkjenning. | prosjektleder | Godkjenning av prosjektplan; bekreftelse av scope og milepæler. |
+| 2026-04-22 | M1: Oppstart | Under godkjenning | Prosjekteier godkjente prosjektplan v1.0 (S1) og valgte å omdøpe arbeidsbranchen til `feature/m1-oppstart` (S4). Repo-strukturen fra seksjon 9.7 er opprettet med `.gitkeep`-plassholdere. `README.md`, `.gitignore`, Issue-maler og PR-mal er lagt til. M1-leveransen klar for pull request mot `main`. | prosjektleder | Godkjenning av M1-leveranse (pull request). |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
 | ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
 |---|---|---|---|---|---|
-| S1 | 2026-04-22 | Godkjenning av prosjektplan v1.0 | Godkjenn som grunnlag for oppstart av M2. | Før M2-oppstart | Åpen |
 | S2 | 2026-04-22 | Definisjonsvalg: hva inkluderes i "Norges støtte"? Kun utbetalt, eller også lovet/allokert? Inkluderes flyktningkostnader innenlands? | Følge Kiel sin hovedinndeling, men synliggjøre begge varianter i dashboardet. | Før M3-oppstart | Åpen |
 | S3 | 2026-04-22 | Valg av hosting for dashboardet (GitHub Pages foreslått). | GitHub Pages for enkel, gratis drift. | Før M4-oppstart | Åpen |
+| S5 | 2026-04-22 | Godkjenning av M1-leveransen (pull request mot `main`). | Godkjenn etter QA-gjennomgang slik at M2 kan starte. | Ved PR-opprettelse | Åpen |
 
 ### 11.3 Lukkede saker
 
-*(Ingen ennå)*
+| ID | Dato løftet | Dato lukket | Sak | Utfall |
+|---|---|---|---|---|
+| S1 | 2026-04-22 | 2026-04-22 | Godkjenning av prosjektplan v1.0 | Godkjent av prosjekteier. Danner grunnlag for oppstart av M2. |
+| S4 | 2026-04-22 | 2026-04-22 | Branch-navnkonvensjon (agent-indusert `claude/...` vs. `feature/...` i CLAUDE.md) | Prosjekteier valgte omdøping til `feature/m1-oppstart`. Konsekvens: fremtidige branches følger `feature/<kort-beskrivelse>` som definert i CLAUDE.md. |
 
 ### 11.4 Milepælsstatus
 
 | Milepæl | Planlagt uke | Status | Kommentar |
 |---|---|---|---|
-| M1: Oppstart | Uke 1 | Pågår | Prosjektplan under godkjenning |
+| M1: Oppstart | Uke 1 | Under godkjenning | Leveranse klar på branch `feature/m1-oppstart`, venter på prosjekteiers godkjenning av pull request. |
 | M2: Datapipeline | Uke 3 | Ikke startet | — |
 | M3: Analysemodul | Uke 5 | Ikke startet | — |
 | M4: Dashboard MVP | Uke 7 | Ikke startet | — |
