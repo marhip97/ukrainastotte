@@ -76,3 +76,10 @@ Protokolloppdatering skjer som egen commit med melding `docs: oppdater status- o
 - Kode som går til `main` skal ha grunnleggende tester.
 - Dokumentasjon oppdateres samtidig med kode, ikke i etterkant.
 - Rådata fra Kiel lagres uendret under `data/raw/`; all prosessering produserer nye filer under `data/processed/`.
+
+## Timeout-forebygging
+
+- Skriv aldri dokumenter, notater eller lange tekster i chatten. Bruk alltid filskriving (opprett fil eller rediger fil) for alt over 15 linjer.
+- Hold chat-svar under 20 linjer. Hvis svaret blir lengre, skriv til fil i stedet og referer til filen i chatten.
+- Ved sammensatte oppgaver: del opp i separate verktøykall. Gjør ett steg, bekreft kort, fortsett med neste.
+- Ikke kombiner lang tenkning med lang skriving i samme svar. Tenk kort, skriv til fil, bekreft kort.

@@ -290,6 +290,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | Mellom M1 og M2 | Ferdig | PR #2 merget. Beslutningssak S2 i main. | prosjektleder | — |
 | 2026-04-22 | Mellom M1 og M2 | Besluttet | Prosjekteier valgte **alternativ D med alternativ B som standardvisning** for S2. Dashboardet får tre visninger (kun utbetalt / Kiel-hovedinndeling / inkludert flyktningkostnader) med Kiel-hovedinndeling som default. Føringer for M2-M4 dokumentert i beslutningsdokumentet. | prosjektleder | — |
 | 2026-04-22 | Mellom M1 og M2 | Besluttet | Prosjekteier besluttet **GitHub Pages** som hosting for dashboardet (S3). GitHub Actions vil brukes til automatisk deploy. Ingen eksterne kontoer involvert. | prosjektleder | — |
+| 2026-04-22 | M2: Datapipeline | Pågår | Kildekartlegging av Kiel Ukraine Support Tracker gjennomført. Notat i `docs/kartlegging-kiel.md` dekker publiseringskanaler, filformat (XLSX, Release 23, data fram til feb 2026), metodikk (commitments/allocations/disbursements), flyktningkostnader, lisens og risiko (domene-endring ifw-kiel.de→kielinstitut.de, 403 på WebFetch). CLAUDE.md utvidet med seksjon om timeout-forebygging. | dataingenior, prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -310,7 +311,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | Milepæl | Planlagt uke | Status | Kommentar |
 |---|---|---|---|
 | M1: Oppstart | Uke 1 | Ferdig | Levert via PR #1 og godkjent 2026-04-22. |
-| M2: Datapipeline | Uke 3 | Ikke startet | Klar for oppstart. S2 besluttet - datamodellen må bevare alle tre fasene (utbetalt, allokert, flyktningkostnader) for alle giverland. |
+| M2: Datapipeline | Uke 3 | Pågår | Kildekartlegging ferdig (`docs/kartlegging-kiel.md`). Neste: manuell nedlasting av Release 23 til `data/raw/`, utforskende analyse, parser-prototype med kolonnekontrakter. |
 | M3: Analysemodul | Uke 5 | Ikke startet | Parametriseres på S2-valgt definisjon; tre varianter av hvert nøkkeltall. |
 | M4: Dashboard MVP | Uke 7 | Ikke startet | Hosting besluttet (S3: GitHub Pages). Må ha tydelig definisjonsbryter iht. S2-beslutningen. |
 | M5: Produksjon | Uke 9 | Ikke startet | GitHub Actions for automatisk datauthenting og Pages-deploy. |
