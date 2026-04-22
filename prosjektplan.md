@@ -297,6 +297,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M2: Datapipeline | Pågår | Normalisering implementert (`src/ingest/normalize.py`) - produserer `data/processed/{country_summary.csv, bilateral_activities.csv, metadata.json}`. 43 land og 5565 aktivitetsrader fra Release 28. Workflow `fetch-kiel.yml` utvidet til å kjøre normalize etter fetch og committe både raw og processed i samme commit; oppretter Issue hvis enten henting eller normalisering feiler. To nye tester (6/6 grønne). | dataingenior | — |
 | 2026-04-22 | M2: Datapipeline | Pågår | Utvidet validering: `validate_summary` i `parse_kiel.py` sjekker komponentsummer, `commitment >= allocation`, negative og urimelig høye verdier. Fant tre ekte dataavvik i Release 28 (Australia, Irland, Italia har `total_commitment < total_allocation` med små marginer). Parser filtrerer "Total"/"EU"-aggregatrader. 11/11 tester grønne. | dataingenior | — |
 | 2026-04-22 | M2: Datapipeline | **Ferdig** | Disbursement-kobling: `parse_financial_disbursements` leser arket `Financial disb per Month (€)` (månedlige utbetalinger per land, € mrd). 131 utbetalinger fra 23 land i Release 28; Norge har 5 utbetalinger (sum 0.65 mrd EUR). `normalize.py` produserer `data/processed/financial_disbursements.csv`. Kartleggingsnotat oppdatert med at arket kun dekker finansielle budget support-utbetalinger. 13/13 tester grønne. **M2 er dermed fullført iht. plan**; M3 Analysemodul kan starte. | dataingenior, prosjektleder | — |
+| 2026-04-22 | M3: Analysemodul | Pågår | Første tre av seks nøkkeltall implementert i `src/analyze/noekkeltall.py`: absolutt støtte (allocation + commitment), fordeling militær/finansiell/humanitær (prosent), rangering blant giverland. Tre tester + kryssjekk mot Norges publiserte tall (10.01 mrd EUR allocation, 24.72 mrd commitment, 61.9 % militær, rangering 10 allocation / 5 commitment blant 42 land). 16/16 tester grønne. Gjenstår: BNP-andel, per capita, endring siste kvartal. | analytiker | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -318,7 +319,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 |---|---|---|---|
 | M1: Oppstart | Uke 1 | Ferdig | Levert via PR #1 og godkjent 2026-04-22. |
 | M2: Datapipeline | Uke 3 | Ferdig | Full pipeline: fetch-workflow, parser (bilateral + summary + disbursements), validering, normalisering til CSV-er i `data/processed/`. Verifisert mot Release 28 og Norges publiserte totals. 13/13 tester grønne. |
-| M3: Analysemodul | Uke 5 | Ikke startet | Parametriseres på S2-valgt definisjon; tre varianter av hvert nøkkeltall. |
+| M3: Analysemodul | Uke 5 | Pågår | 3 av 6 nøkkeltall ferdig (absolutt, fordeling, rangering). Gjenstår: BNP-andel, per capita, endring siste kvartal. |
 | M4: Dashboard MVP | Uke 7 | Ikke startet | Hosting besluttet (S3: GitHub Pages). Må ha tydelig definisjonsbryter iht. S2-beslutningen. |
 | M5: Produksjon | Uke 9 | Ikke startet | GitHub Actions for automatisk datauthenting og Pages-deploy. |
 
