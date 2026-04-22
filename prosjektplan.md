@@ -287,12 +287,13 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M1: Oppstart | Planlegging | Prosjektplan utarbeidet og klar for godkjenning. | prosjektleder | Godkjenning av prosjektplan; bekreftelse av scope og milepæler. |
 | 2026-04-22 | M1: Oppstart | Under godkjenning | Prosjekteier godkjente prosjektplan v1.0 (S1) og valgte å omdøpe arbeidsbranchen til `feature/m1-oppstart` (S4). Repo-strukturen fra seksjon 9.7 er opprettet med `.gitkeep`-plassholdere. `README.md`, `.gitignore`, Issue-maler og PR-mal er lagt til. M1-leveransen klar for pull request mot `main`. | prosjektleder | Godkjenning av M1-leveranse (pull request). |
 | 2026-04-22 | M1: Oppstart | Ferdig | Pull request #1 godkjent og merget til `main` av prosjekteier. Strukturell M1-leveranse fullført. Beslutningssak S2 (definisjon av "Norges støtte") utarbeidet som dokument under `docs/beslutningssaker/` med fire alternativer og tilrådning D. | prosjektleder | Beslutning på S2 før M3-oppstart. |
+| 2026-04-22 | Mellom M1 og M2 | Ferdig | PR #2 merget. Beslutningssak S2 i main. | prosjektleder | — |
+| 2026-04-22 | Mellom M1 og M2 | Besluttet | Prosjekteier valgte **alternativ D med alternativ B som standardvisning** for S2. Dashboardet får tre visninger (kun utbetalt / Kiel-hovedinndeling / inkludert flyktningkostnader) med Kiel-hovedinndeling som default. Føringer for M2-M4 dokumentert i beslutningsdokumentet. | prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
 | ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
 |---|---|---|---|---|---|
-| S2 | 2026-04-22 | Definisjonsvalg: hva inkluderes i "Norges støtte"? Kun utbetalt, eller også lovet/allokert? Inkluderes flyktningkostnader innenlands? Se beslutningsdokument: `docs/beslutningssaker/S2-definisjon-av-norges-stotte.md`. | Alternativ D (flermåls-tilnærming) med Kiel-hovedinndeling (alternativ B) som standardvisning. | Før M3-oppstart | Under behandling |
 | S3 | 2026-04-22 | Valg av hosting for dashboardet (GitHub Pages foreslått). | GitHub Pages for enkel, gratis drift. | Før M4-oppstart | Åpen |
 
 ### 11.3 Lukkede saker
@@ -300,6 +301,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | ID | Dato løftet | Dato lukket | Sak | Utfall |
 |---|---|---|---|---|
 | S1 | 2026-04-22 | 2026-04-22 | Godkjenning av prosjektplan v1.0 | Godkjent av prosjekteier. Danner grunnlag for oppstart av M2. |
+| S2 | 2026-04-22 | 2026-04-22 | Definisjonsvalg for "Norges støtte til Ukraina" | Prosjekteier valgte **alternativ D med B som standardvisning** - flermåls-tilnærming med Kiel-hovedinndeling som default, og underordnede visninger for "kun utbetalt" og "inkludert flyktningkostnader". Se `docs/beslutningssaker/S2-definisjon-av-norges-stotte.md` for føringer. |
 | S4 | 2026-04-22 | 2026-04-22 | Branch-navnkonvensjon (agent-indusert `claude/...` vs. `feature/...` i CLAUDE.md) | Prosjekteier valgte omdøping til `feature/m1-oppstart`. Konsekvens: fremtidige branches følger `feature/<kort-beskrivelse>` som definert i CLAUDE.md. |
 | S5 | 2026-04-22 | 2026-04-22 | Godkjenning av M1-leveransen (pull request mot `main`) | Pull request #1 godkjent og merget av prosjekteier. M1 satt til Ferdig. |
 
@@ -308,9 +310,9 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | Milepæl | Planlagt uke | Status | Kommentar |
 |---|---|---|---|
 | M1: Oppstart | Uke 1 | Ferdig | Levert via PR #1 og godkjent 2026-04-22. |
-| M2: Datapipeline | Uke 3 | Ikke startet | Kan starte så snart S2 er besluttet. Før S2-beslutning kan `dataingenior` gjøre kildekartlegging. |
-| M3: Analysemodul | Uke 5 | Ikke startet | Avhenger av S2. |
-| M4: Dashboard MVP | Uke 7 | Ikke startet | Avhenger av S3. |
+| M2: Datapipeline | Uke 3 | Ikke startet | Klar for oppstart. S2 besluttet - datamodellen må bevare alle tre fasene (utbetalt, allokert, flyktningkostnader) for alle giverland. |
+| M3: Analysemodul | Uke 5 | Ikke startet | Parametriseres på S2-valgt definisjon; tre varianter av hvert nøkkeltall. |
+| M4: Dashboard MVP | Uke 7 | Ikke startet | Avhenger av S3 (hosting). Må ha tydelig definisjonsbryter iht. S2-beslutningen. |
 | M5: Produksjon | Uke 9 | Ikke startet | — |
 
 ---
