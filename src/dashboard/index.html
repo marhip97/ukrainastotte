@@ -23,16 +23,24 @@
         <div class="label">Total allokering (€ mrd)</div>
       </div>
       <div class="kort">
-        <div class="tall" id="total-commitment">-</div>
-        <div class="label">Total forpliktelse (€ mrd)</div>
+        <div class="tall" id="andel-bnp">-</div>
+        <div class="label">Andel av BNP (kumulativt)</div>
+      </div>
+      <div class="kort">
+        <div class="tall" id="per-capita">-</div>
+        <div class="label">Per innbygger (EUR)</div>
       </div>
       <div class="kort">
         <div class="tall" id="rangering-alloc">-</div>
         <div class="label">Rangering allokering</div>
       </div>
       <div class="kort">
-        <div class="tall" id="rangering-comm">-</div>
-        <div class="label">Rangering forpliktelse</div>
+        <div class="tall" id="rangering-bnp">-</div>
+        <div class="label">Rangering BNP-andel</div>
+      </div>
+      <div class="kort">
+        <div class="tall" id="rangering-capita">-</div>
+        <div class="label">Rangering per capita</div>
       </div>
     </section>
 
@@ -42,6 +50,8 @@
           <option value="allocation" selected>Allokering (Kiel-hovedinndeling)</option>
           <option value="commitment">Forpliktelse</option>
           <option value="disbursement">Kun utbetalt (finansiell)</option>
+          <option value="bnp">Andel av BNP</option>
+          <option value="capita">Per innbygger</option>
         </select>
       </label>
       <p class="metode-notat">
@@ -49,7 +59,10 @@
         <strong>Forpliktelse</strong> inkluderer lovnader som ennå ikke er konkretisert.
         <strong>Kun utbetalt</strong> viser faktiske finansielle utbetalinger (budget support) -
         dekker <em>ikke</em> militær eller humanitær støtte.
-        Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">beslutningssak S2</a>.
+        <strong>Andel BNP</strong> og <strong>per innbygger</strong> beregnes på total
+        allokering (kumulativt 2022-2024) mot Verdensbankens 2024-tall for BNP og folketall.
+        Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
+        og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
       </p>
     </section>
 
