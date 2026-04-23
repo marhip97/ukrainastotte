@@ -5,6 +5,7 @@ const DATA_PATH = window.DATA_PATH || "../../data/processed/country_summary.csv"
 const META_PATH = window.META_PATH || "../../data/processed/metadata.json";
 const DISB_PATH = window.DISB_PATH || "../../data/processed/financial_disbursements.csv";
 const REL_PATH = window.REL_PATH || "../../data/processed/country_summary_relative.csv";
+const ENDR_PATH = window.ENDR_PATH || "../../data/processed/country_summary_endring.csv";
 
 function visFeil(tekst) {
   const el = document.getElementById("feilmelding");
@@ -58,7 +59,7 @@ function rangMellomKomplette(rader, felt, land) {
   return { plass, av: sortert.length };
 }
 
-function skrivNoekkeltall(norge, rader, relRader) {
+function skrivNoekkeltall(norge, rader, relRader, endrRader) {
   const alloc = tilTall(norge.total_allocation);
   document.getElementById("total-allocation").textContent = alloc.toFixed(2);
   const sortertAlloc = sortertEtter(rader, "total_allocation");
@@ -83,10 +84,53 @@ function skrivNoekkeltall(norge, rader, relRader) {
     document.getElementById("rangering-bnp").textContent = "–";
     document.getElementById("rangering-capita").textContent = "–";
   }
+
+  const endrEl = document.getElementById("endring-siste");
+  if (endrRader.length === 0) {
+    endrEl.textContent = "–";
+    endrEl.title = "Kun én Kiel-release tilgjengelig. Endring vises når neste release kommer.";
+  } else {
+    const endrIdx = indekser(endrRader);
+    const norgeEndr = endrIdx["Norway"];
+    const d = norgeEndr ? tilTall(norgeEndr.delta_total_allocation) : 0;
+    const tegn = d > 0 ? "+" : "";
+    endrEl.textContent = tegn + d.toFixed(2);
+  }
 }
 
-function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel) {
+function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
   const graf = document.getElementById("fordeling-graf");
+  if (maal === "endring") {
+    if (!norgeEndr) {
+      Plotly.purge(graf);
+      graf.innerHTML =
+        '<p class="metode-notat">Kun én Kiel-release er lagret enda. '
+        + 'Endringstall beregnes når neste release kommer (ukentlig henting).</p>';
+      return;
+    }
+    Plotly.newPlot(
+      graf,
+      [
+        {
+          x: ["Militær", "Finansiell", "Humanitær"],
+          y: [
+            tilTall(norgeEndr.delta_military_allocation),
+            tilTall(norgeEndr.delta_financial_allocation),
+            tilTall(norgeEndr.delta_humanitarian_allocation),
+          ],
+          type: "bar",
+          marker: { color: ["#d71418", "#1a4d8f", "#2e8540"] },
+        },
+      ],
+      {
+        margin: { t: 30, b: 40, l: 50, r: 20 },
+        height: 320,
+        yaxis: { title: "Endring (€ mrd)", zeroline: true },
+      },
+      { displayModeBar: false, responsive: true }
+    );
+    return;
+  }
   if (maal === "disbursement") {
     Plotly.newPlot(
       graf,
@@ -172,7 +216,7 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel) {
   );
 }
 
-function tegnRangering(rader, maal, disbSum, relRader) {
+function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
   let verdier;
   let xTittel;
   if (maal === "disbursement") {
@@ -180,6 +224,11 @@ function tegnRangering(rader, maal, disbSum, relRader) {
       .map((land) => ({ land, sum: disbSum[land] }))
       .sort((a, b) => b.sum - a.sum);
     xTittel = "€ mrd";
+  } else if (maal === "endring") {
+    verdier = endrRader
+      .map((r) => ({ land: r.land, sum: tilTall(r.delta_total_allocation) }))
+      .sort((a, b) => b.sum - a.sum);
+    xTittel = "Endring i total allokering (€ mrd)";
   } else if (maal === "bnp" || maal === "capita") {
     const felt = maal === "bnp" ? "andel_bnp_pct" : "per_capita_eur";
     verdier = relRader
@@ -221,20 +270,24 @@ function tegnRangering(rader, maal, disbSum, relRader) {
   let nevner;
   if (maal === "disbursement") nevner = " land med rapporterte utbetalinger";
   else if (maal === "bnp" || maal === "capita") nevner = " land med WDI-data";
+  else if (maal === "endring") nevner = " giverland (endring siden forrige release)";
   else nevner = " giverland";
-  const tekst = rang > 0
-    ? `Norge er på ${rang}. plass av ${antall}${nevner}.`
-    : `Norge er ikke i datasettet for denne visningen.`;
+  const tekst = antall === 0
+    ? "Ingen endringsdata tilgjengelig ennå - kun én Kiel-release er lagret."
+    : rang > 0
+      ? `Norge er på ${rang}. plass av ${antall}${nevner}.`
+      : `Norge er ikke i datasettet for denne visningen.`;
   document.getElementById("norge-plassering").textContent = tekst;
 }
 
 async function main() {
   try {
-    const [csvResp, metaResp, disbResp, relResp] = await Promise.all([
+    const [csvResp, metaResp, disbResp, relResp, endrResp] = await Promise.all([
       fetch(DATA_PATH),
       fetch(META_PATH),
       fetch(DISB_PATH),
       fetch(REL_PATH),
+      fetch(ENDR_PATH),
     ]);
     if (!csvResp.ok) throw new Error("Fant ikke country_summary.csv");
     const csv = await csvResp.text();
@@ -255,6 +308,13 @@ async function main() {
     const relIdx = indekser(relRader);
     const norgeRel = relIdx["Norway"];
 
+    let endrRader = [];
+    if (endrResp.ok) {
+      endrRader = parseCsv(await endrResp.text());
+    }
+    const endrIdx = indekser(endrRader);
+    const norgeEndr = endrIdx["Norway"];
+
     if (metaResp.ok) {
       const meta = await metaResp.json();
       document.getElementById("sist-oppdatert").textContent = meta.prosessert_dato;
@@ -264,9 +324,9 @@ async function main() {
 
     const visning = document.getElementById("visning");
     function tegn() {
-      skrivNoekkeltall(norge, rader, relRader);
-      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel);
-      tegnRangering(rader, visning.value, disbSum, relRader);
+      skrivNoekkeltall(norge, rader, relRader, endrRader);
+      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr);
+      tegnRangering(rader, visning.value, disbSum, relRader, endrRader);
     }
     visning.addEventListener("change", tegn);
     tegn();
