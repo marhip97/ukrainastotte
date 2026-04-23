@@ -308,6 +308,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-23 | M3: Analysemodul | Pågår | Nøkkeltall 6 (endring siste release) visualisert. `normalize.py` skriver `country_summary_endring.csv` når det finnes ≥2 Kiel-releaser i `data/raw/kiel/`. Dashboard har nytt nøkkeltall-kort "Endring siste release" og ny visningsmodus "Endring siste release" (stolpegraf per komponent for Norge + rangering av endring per giver). Graceful fallback: dashboardet viser "Kun én Kiel-release lagret" så lenge vi bare har release 28. To nye tester (24/24 grønne). M3 er nå funksjonelt komplett; endringstall materialiserer seg automatisk når release 29 hentes. | analytiker, frontend, prosjektleder | — |
 | 2026-04-23 | QA Release 28 | Ferdig | Første systematiske QA-krysssjekk utført. `scripts/qa_krysssjekk.py` kjører 103 interne sjekker + verifisering mot Kiel Policy Brief (februar 2026). Resultat: 103 OK, 0 kritiske feil, 6 observerte avvik i Kiels rådata (alle dokumentert og håndtert - Australia/Irland/Italia/Slovakia har commitment<allocation, Tyskland/Storbritannia har disbursement>financial_allocation). Nordic-topprangering bekreftet: Danmark (2,80 %), Estonia (2,40 %), Norge (2,23 %), Sverige (1,85 %) i topp 5 på BNP-andel. Norges 10 mrd EUR konsistent med Kiels 3,6 mrd for 2025 alene + tidligere år. Rapport: `docs/qa/qa-rapport-release28.md`. Data er godkjent for publisering. | qa, prosjektleder | — |
 | 2026-04-23 | M5: Produksjon | Pågår | Første M5-leveranser: brukerveiledning på norsk (`docs/brukerveiledning.md`) for journalister/utredere/forskere. Driftoverlevering (`docs/drift/overlevering.md`) med komponentoversikt, driftsjekkliste, varslingsrutiner og fire vanlige driftsscenarier. README oppdatert med lenker og lokal kjøreguide. Punkt 1 i M5 (end-to-end-test av fetch-kiel-workflow) utført av prosjekteier manuelt. | prosjektleder, devops, frontend | — |
+| 2026-04-23 | M5: Produksjon | Ferdig | **M5 lukket. Prosjektet fullført.** Prosjekteier trigget `fetch-kiel.yml` manuelt og workflowen returnerte grønn. Siden Release 28 allerede var lagret, gjenkjente hash-dedup-logikken filen og hoppet over commit - forventet og godkjent utfall. Hele kjeden (fetch → dedup → normalize → auto-commit → Netlify-deploy) er dermed verifisert. Alle fem milepæler M1-M5 er levert og godkjent. | prosjekteier, prosjektleder, devops | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -331,9 +332,9 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 |---|---|---|---|
 | M1: Oppstart | Uke 1 | Ferdig | Levert via PR #1 og godkjent 2026-04-22. |
 | M2: Datapipeline | Uke 3 | Ferdig | Full pipeline: fetch-workflow, parser (bilateral + summary + disbursements), validering, normalisering til CSV-er i `data/processed/`. Verifisert mot Release 28 og Norges publiserte totals. 13/13 tester grønne. |
-| M3: Analysemodul | Uke 5 | Pågår | 3 av 6 nøkkeltall ferdig (absolutt, fordeling, rangering). Gjenstår: BNP-andel, per capita, endring siste kvartal. |
-| M4: Dashboard MVP | Uke 7 | Pågår | Skjelett bygget (fire nøkkeltall + to Plotly-grafer + visningsbryter). Gjenstår: Pages-deploy, integrasjon av BNP/per-capita etter S6, endring-graf når historikk finnes. |
-| M5: Produksjon | Uke 9 | Ikke startet | GitHub Actions for automatisk datauthenting og Pages-deploy. |
+| M3: Analysemodul | Uke 5 | Ferdig | Alle 6 nøkkeltall implementert og visualisert: absolutt støtte, fordeling mil/fin/hum, rangering, andel BNP (via WDI), per capita, endring siste release. 24/24 tester grønne. |
+| M4: Dashboard MVP | Uke 7 | Ferdig | Dashboard live på <https://ukrainastotte.netlify.app/> med seks nøkkeltall-kort, fem S2-visninger (allokering, forpliktelse, utbetalt, BNP-andel, per capita, endring), Norge-fokusert rangering. Automatisk Netlify-deploy fra `main`. |
+| M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
 
 ---
 
