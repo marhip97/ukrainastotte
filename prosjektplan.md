@@ -303,12 +303,11 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-22 | M4: Dashboard MVP | Pågår | Hosting-omvalg (**S7**): GitHub Pages krever offentlig repo på gratisplanen. Prosjekteier valgte **Netlify** i stedet - støtter private repo-er gratis. Netlify-prosjekt opprettet og koblet til `main`. Ny `netlify.toml` + `scripts/build-netlify.sh` bygger `_site/` og speiler deploy-strukturen. PR #15 (GitHub Pages) lukket uendret. | devops, prosjektleder | — |
 | 2026-04-22 | M4: Dashboard MVP | Pågår | **Dashboard live på <https://ukrainastotte.netlify.app/>**. PR #16 merget, Netlify bygde og publiserte automatisk. README oppdatert med URL. | devops, prosjektleder | — |
 | 2026-04-22 | M4: Dashboard MVP | Pågår | Tredje S2-visning "kun utbetalt" lagt til i dashboardet. Leser `financial_disbursements.csv`, summerer per land, og viser rangering + tydelig merknad om at utbetalingsarket bare dekker finansielle budget support (ikke militær/humanitær). Netlify-build oppdatert til å sette `window.DISB_PATH`. Alle tre S2-visninger nå tilgjengelig iht. plan. | frontend, prosjektleder | — |
+| 2026-04-22 | M3: Analysemodul | Pågår | S6 lukket: prosjekteier valgte Verdensbanken WDI med "Most Recent Value"-strategi (ferskeste endelige tall per land). Ny modul `src/ingest/fetch_wdi.py` henter BNP (NY.GDP.MKTP.CD) og folketall (SP.POP.TOTL) for 38+ av Kiels 42 giverland (EU-institusjoner, EIB og Taiwan utelatt). Ny workflow `.github/workflows/fetch-wdi.yml` kjører månedlig + manuelt og committer `data/reference/wdi.json`. Ny `src/analyze/noekkeltall_relative.py` beregner BNP-andel (%) og per capita (EUR/innbygger). Tre tester (22/22 grønne). Dashboard-integrasjon kommer i egen PR når workflow har produsert wdi.json. | dataingenior, analytiker, prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
-| ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
-|---|---|---|---|---|---|
-| S6 | 2026-04-22 | Kildevalg for BNP og folketall (nøkkeltall 2 og 3). Verdensbanken (WDI), IMF, OECD eller nasjonale kilder? Hvilket år (før krigen 2021 eller siste tilgjengelige 2023)? Nominell eller kjøpekraftsjustert (PPP)? | **Verdensbanken WDI, 2023-tall, nominell BNP i USD** - enkel API, dekker alle 42 giverland, mest brukt internasjonalt. | Før M4-oppstart (eller når nøkkeltall 2+3 skal implementeres) | Åpen |
+*(Ingen åpne saker.)*
 
 ### 11.3 Lukkede saker
 
@@ -319,6 +318,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S3 | 2026-04-22 | 2026-04-22 | Hosting av dashboardet | Prosjekteier valgte **GitHub Pages** (prosjektleders tilrådning). Automatisk deploy via GitHub Actions. Vurderes på nytt kun hvis prosjektet senere får behov for server-side prosessering, noe som ikke er i scope. |
 | S4 | 2026-04-22 | 2026-04-22 | Branch-navnkonvensjon (agent-indusert `claude/...` vs. `feature/...` i CLAUDE.md) | Prosjekteier valgte omdøping til `feature/m1-oppstart`. Konsekvens: fremtidige branches følger `feature/<kort-beskrivelse>` som definert i CLAUDE.md. |
 | S5 | 2026-04-22 | 2026-04-22 | Godkjenning av M1-leveransen (pull request mot `main`) | Pull request #1 godkjent og merget av prosjekteier. M1 satt til Ferdig. |
+| S6 | 2026-04-22 | 2026-04-22 | Kildevalg for BNP og folketall (nøkkeltall 2 og 3) | Prosjekteier prioriterte mest oppdaterte tall. Valg: **Verdensbanken WDI med MRV (Most Recent Value)** - gir ferskeste endelige tall per land (typisk 2024 for utviklede land). Referanseår dokumenteres per land i `data/reference/wdi.json`. EU-institusjoner, EIB og Taiwan utelatt fra WDI-henting (ikke land eller ikke dekket). |
 | S7 | 2026-04-22 | 2026-04-22 | Hosting-omvalg - GitHub Pages krever offentlig repo | Prosjekteier valgte **Netlify** (gratis private repo). GitHub Pages-workflow (PR #15) lukket uendret. S3 overstyres av dette valget. |
 
 ### 11.4 Milepælsstatus
