@@ -29,10 +29,12 @@ from src.ingest.parse_kiel import (
     parse_country_summary,
     parse_financial_disbursements,
 )
+from src.analyze.noekkeltall_relative import beregn_relative_noekkeltall
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "data" / "raw" / "kiel"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
+WDI_PATH = REPO_ROOT / "data" / "reference" / "wdi.json"
 
 
 def _finn_nyeste_xlsx() -> Path:
@@ -76,6 +78,51 @@ def skriv_disbursements(rader: list[FinanciellUtbetaling], path: Path) -> None:
             writer.writerow(asdict(rad))
 
 
+def skriv_country_summary_relative(
+    summary: list[LandSummary], wdi_path: Path, out_path: Path
+) -> int:
+    """Skriv CSV med BNP-andel og per capita per land.
+
+    Returnerer antall rader med komplette relative tall. Hvis `wdi_path`
+    mangler, skrives ingen fil.
+    """
+    if not wdi_path.exists():
+        return 0
+    rader = beregn_relative_noekkeltall(summary, wdi_path)
+    feltnavn = [
+        "land",
+        "total_allocation_eur_mrd",
+        "andel_bnp_pct",
+        "per_capita_eur",
+        "bnp_usd",
+        "folketall",
+        "referanseaar_bnp",
+        "referanseaar_folketall",
+    ]
+    summary_idx = {s.land: s for s in summary}
+    komplett = 0
+    with out_path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=feltnavn)
+        writer.writeheader()
+        for r in rader:
+            s = summary_idx.get(r.land)
+            if s is None:
+                continue
+            if r.andel_bnp_pct is not None and r.per_capita_eur is not None:
+                komplett += 1
+            writer.writerow({
+                "land": r.land,
+                "total_allocation_eur_mrd": s.total_allocation,
+                "andel_bnp_pct": r.andel_bnp_pct if r.andel_bnp_pct is not None else "",
+                "per_capita_eur": r.per_capita_eur if r.per_capita_eur is not None else "",
+                "bnp_usd": r.bnp_usd if r.bnp_usd is not None else "",
+                "folketall": r.folketall if r.folketall is not None else "",
+                "referanseaar_bnp": r.referanseaar_bnp if r.referanseaar_bnp is not None else "",
+                "referanseaar_folketall": r.referanseaar_folketall if r.referanseaar_folketall is not None else "",
+            })
+    return komplett
+
+
 def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary = parse_country_summary(xlsx_path)
@@ -84,12 +131,16 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     skriv_country_summary(summary, out_dir / "country_summary.csv")
     skriv_bilateral(bilateral, out_dir / "bilateral_activities.csv")
     skriv_disbursements(disbursements, out_dir / "financial_disbursements.csv")
+    antall_relative = skriv_country_summary_relative(
+        summary, WDI_PATH, out_dir / "country_summary_relative.csv"
+    )
     metadata = {
         "kildefil": xlsx_path.name,
         "sha256": _sha256(xlsx_path),
         "antall_land_summary": len(summary),
         "antall_bilateral_rader": len(bilateral),
         "antall_disbursement_rader": len(disbursements),
+        "antall_land_med_relative_tall": antall_relative,
         "prosessert_dato": date.today().isoformat(),
     }
     (out_dir / "metadata.json").write_text(
