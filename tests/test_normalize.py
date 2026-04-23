@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
-from src.ingest.normalize import normalize
+from src.ingest.normalize import normalize, skriv_country_summary_endring
 from src.ingest.parse_kiel import (
     BILATERAL_ARK,
     COUNTRY_SUMMARY_ARK,
@@ -84,6 +84,55 @@ def test_normalize_produserer_forventede_filer(tmp_path: Path) -> None:
     assert len(drader) == 1
     assert drader[0]["giver"] == "Norway"
     assert float(drader[0]["verdi_eur_mrd"]) == pytest.approx(0.3)
+
+
+def _lag_fixture_med_total(tmp_path: Path, filnavn: str, total: float) -> Path:
+    wb = Workbook()
+    wb.remove(wb.active)
+    bil = wb.create_sheet(BILATERAL_ARK)
+    bil.append(list(FORVENTEDE_BILATERAL_KOLONNER))
+    bil.append(["Norway", date(2024, 1, 1), "Military", "Allocation", 1_000_000_000])
+    cs = wb.create_sheet(COUNTRY_SUMMARY_ARK)
+    for _ in range(7):
+        cs.append([])
+    cs.append(list(FORVENTEDE_SUMMARY_KOLONNER))
+    cs.append(["Norway", 0, 1, 2.0, 1.8, total - 3.8, total, 5.0, 1.7, 18.0, 24.7])
+    disb = wb.create_sheet(DISBURSEMENT_ARK)
+    for _ in range(9):
+        disb.append([])
+    disb.append(["", "", "", "January"])
+    disb.append(["", "Country", "EU member", "1"])
+    disb.append([])
+    disb.append(["", "Norway", 0, 0.0])
+    path = tmp_path / filnavn
+    wb.save(str(path))
+    return path
+
+
+def test_endring_csv_skrives_med_to_releaser(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    _lag_fixture_med_total(raw, "2026-01-01_release27.xlsx", total=9.0)
+    ny = _lag_fixture_med_total(raw, "2026-04-01_release28.xlsx", total=10.5)
+    ut = tmp_path / "endring.csv"
+    antall, forrige = skriv_country_summary_endring(ny, raw, ut)
+    assert antall == 1
+    assert forrige == "2026-01-01_release27.xlsx"
+    with ut.open() as fh:
+        rader = list(csv.DictReader(fh))
+    assert rader[0]["land"] == "Norway"
+    assert float(rader[0]["delta_total_allocation"]) == pytest.approx(1.5)
+
+
+def test_endring_csv_hoppes_over_med_bare_en_release(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    eneste = _lag_fixture_med_total(raw, "2026-04-01_release28.xlsx", total=10.0)
+    ut = tmp_path / "endring.csv"
+    antall, forrige = skriv_country_summary_endring(eneste, raw, ut)
+    assert antall == 0
+    assert forrige is None
+    assert not ut.exists()
 
 
 def _finn_ekte_fil() -> Path | None:

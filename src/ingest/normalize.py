@@ -29,6 +29,7 @@ from src.ingest.parse_kiel import (
     parse_country_summary,
     parse_financial_disbursements,
 )
+from src.analyze.endring import beregn_endring
 from src.analyze.noekkeltall_relative import beregn_relative_noekkeltall
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -76,6 +77,40 @@ def skriv_disbursements(rader: list[FinanciellUtbetaling], path: Path) -> None:
         writer.writeheader()
         for rad in rader:
             writer.writerow(asdict(rad))
+
+
+def skriv_country_summary_endring(
+    ny_xlsx: Path, raw_dir: Path, out_path: Path
+) -> tuple[int, str | None]:
+    """Skriv delta-CSV basert på nest-nyeste release.
+
+    Returnerer `(antall_rader, forrige_release_filnavn)`. Hvis det bare
+    finnes én release, skrives ingen fil og `(0, None)` returneres.
+    """
+    kandidater = sorted(raw_dir.glob("*.xlsx"))
+    if len(kandidater) < 2:
+        return (0, None)
+    if kandidater[-1] != ny_xlsx:
+        # Bruk faktisk nyeste hvis den angitte ikke er siste.
+        return (0, None)
+    forrige = kandidater[-2]
+    ny_sum = parse_country_summary(ny_xlsx)
+    gml_sum = parse_country_summary(forrige)
+    deltaer = beregn_endring(ny_sum, gml_sum)
+    feltnavn = [
+        "land",
+        "delta_total_allocation",
+        "delta_total_commitment",
+        "delta_military_allocation",
+        "delta_financial_allocation",
+        "delta_humanitarian_allocation",
+    ]
+    with out_path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=feltnavn)
+        writer.writeheader()
+        for d in deltaer:
+            writer.writerow(asdict(d))
+    return (len(deltaer), forrige.name)
 
 
 def skriv_country_summary_relative(
@@ -134,6 +169,9 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     antall_relative = skriv_country_summary_relative(
         summary, WDI_PATH, out_dir / "country_summary_relative.csv"
     )
+    antall_endring, forrige_release = skriv_country_summary_endring(
+        xlsx_path, RAW_DIR, out_dir / "country_summary_endring.csv"
+    )
     metadata = {
         "kildefil": xlsx_path.name,
         "sha256": _sha256(xlsx_path),
@@ -141,6 +179,8 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
         "antall_bilateral_rader": len(bilateral),
         "antall_disbursement_rader": len(disbursements),
         "antall_land_med_relative_tall": antall_relative,
+        "forrige_release": forrige_release,
+        "antall_land_med_endring": antall_endring,
         "prosessert_dato": date.today().isoformat(),
     }
     (out_dir / "metadata.json").write_text(
