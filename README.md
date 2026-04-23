@@ -4,7 +4,8 @@ Automatisert HTML-dashboard som henter, analyserer og visualiserer data fra
 [Kiel Institute for the World Economy sin Ukraine Support Tracker](https://www.ifw-kiel.de/topics/war-against-ukraine/ukraine-support-tracker/),
 med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverland.
 
-**Status:** M1, M2, M3 og M4 ferdige. M5 Produksjon pågår.
+**Status:** Alle fem milepæler (M1-M5) levert og godkjent.
+Prosjektet er i driftsfase.
 
 **Dashboard:** <https://ukrainastotte.netlify.app/>
 
