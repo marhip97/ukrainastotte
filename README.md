@@ -4,9 +4,9 @@ Automatisert HTML-dashboard som henter, analyserer og visualiserer data fra
 [Kiel Institute for the World Economy sin Ukraine Support Tracker](https://www.ifw-kiel.de/topics/war-against-ukraine/ukraine-support-tracker/),
 med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverland.
 
-**Status:** Under utvikling. M1 og M2 ferdige; M3 Analysemodul og M4 Dashboard MVP pågår.
+**Status:** M1, M2, M3 og M4 ferdige. M5 Produksjon pågår.
 
-**Dashboard (MVP):** <https://ukrainastotte.netlify.app/>
+**Dashboard:** <https://ukrainastotte.netlify.app/>
 
 Deployes automatisk via Netlify fra `main`. `netlify.toml` styrer bygg
 og publisering; `scripts/build-netlify.sh` bygger `_site/`.
@@ -20,6 +20,14 @@ innsikt i byrdefordelingen i støtten til Ukraina.
 
 ## Dokumentasjon
 
+- [`docs/brukerveiledning.md`](./docs/brukerveiledning.md) -
+  **for journalister, utredere og forskere** som vil bruke
+  dashboardet i analyser og omtale.
+- [`docs/drift/overlevering.md`](./docs/drift/overlevering.md) -
+  driftsjekkliste og vanlige scenarier.
+- [`docs/qa/`](./docs/qa/) - kvalitetsrapporter per Kiel-release.
+- [`docs/beslutningssaker/`](./docs/beslutningssaker/) - metodiske valg
+  dokumentert (S2, S6 så langt).
 - [`prosjektplan.md`](./prosjektplan.md) - fullstendig prosjektplan med mål,
   milepæler, roller, risiko og status- og fremdriftsprotokoll.
 - [`CLAUDE.md`](./CLAUDE.md) - stående instrukser for prosjektgruppen
@@ -47,18 +55,23 @@ ukraina-dashboard/
     └── workflows/         # GitHub Actions (automatisk oppdatering)
 ```
 
-## Teknologi (foreløpig)
+## Teknologi
 
-- **Datainnhenting og analyse:** Python (pandas, requests, openpyxl, pdfplumber).
+- **Datainnhenting og analyse:** Python 3.12 (openpyxl, urllib).
 - **Dashboard:** Statisk HTML + Plotly.js.
-- **Hosting:** GitHub Pages (avventer endelig godkjenning).
-- **Automatisering:** GitHub Actions, planlagt ukentlig oppdatering.
+- **Hosting:** Netlify (gratis plan for private repoer; se S7 i protokollen).
+- **Automatisering:** GitHub Actions - `fetch-kiel.yml` ukentlig,
+  `fetch-wdi.yml` månedlig.
 
-Endelig teknologivalg besluttes i M1. Se `prosjektplan.md` seksjon 6.1.
+## Kom i gang (lokalt)
 
-## Kom i gang
-
-Installasjons- og kjøreinstrukser fylles ut i M2 når datapipelinen er på plass.
+```bash
+python -m pip install -r requirements.txt
+python -m src.ingest.fetch_kiel       # Laster siste Kiel-XLSX til data/raw/
+python -m src.ingest.normalize        # Skriver data/processed/*.csv
+python scripts/qa_krysssjekk.py       # Kjører kvalitetskontroll
+python -m http.server 8080            # Åpne http://127.0.0.1:8080/src/dashboard/
+```
 
 ## Arbeidsflyt
 
