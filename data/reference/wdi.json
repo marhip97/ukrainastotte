@@ -1,0 +1,294 @@
+{
+  "hentet_dato": "2026-04-23",
+  "indikatorer": {
+    "NY.GDP.MKTP.CD": "BNP i løpende USD",
+    "SP.POP.TOTL": "Total folketall"
+  },
+  "land": {
+    "Australia": {
+      "iso3": "AUS",
+      "bnp_usd": 1757022451652.83,
+      "bnp_aar": 2024,
+      "folketall": 27196812,
+      "folketall_aar": 2024
+    },
+    "Austria": {
+      "iso3": "AUT",
+      "bnp_usd": 534790720466.822,
+      "bnp_aar": 2024,
+      "folketall": 9177982,
+      "folketall_aar": 2024
+    },
+    "Belgium": {
+      "iso3": "BEL",
+      "bnp_usd": 671370081636.406,
+      "bnp_aar": 2024,
+      "folketall": 11858610,
+      "folketall_aar": 2024
+    },
+    "Bulgaria": {
+      "iso3": "BGR",
+      "bnp_usd": 113343355779.985,
+      "bnp_aar": 2024,
+      "folketall": 6441421,
+      "folketall_aar": 2024
+    },
+    "Canada": {
+      "iso3": "CAN",
+      "bnp_usd": 2243636826633.76,
+      "bnp_aar": 2024,
+      "folketall": 41288599,
+      "folketall_aar": 2024
+    },
+    "Croatia": {
+      "iso3": "HRV",
+      "bnp_usd": 92983810328.9088,
+      "bnp_aar": 2024,
+      "folketall": 3866200,
+      "folketall_aar": 2024
+    },
+    "Cyprus": {
+      "iso3": "CYP",
+      "bnp_usd": 37634533331.8902,
+      "bnp_aar": 2024,
+      "folketall": 1358282,
+      "folketall_aar": 2024
+    },
+    "Czechia": {
+      "iso3": "CZE",
+      "bnp_usd": 347034062928.479,
+      "bnp_aar": 2024,
+      "folketall": 10905028,
+      "folketall_aar": 2024
+    },
+    "Denmark": {
+      "iso3": "DNK",
+      "bnp_usd": 424524722037.047,
+      "bnp_aar": 2024,
+      "folketall": 5976992,
+      "folketall_aar": 2024
+    },
+    "Estonia": {
+      "iso3": "EST",
+      "bnp_usd": 43130419829.35,
+      "bnp_aar": 2024,
+      "folketall": 1372341,
+      "folketall_aar": 2024
+    },
+    "Finland": {
+      "iso3": "FIN",
+      "bnp_usd": 298696961297.656,
+      "bnp_aar": 2024,
+      "folketall": 5619911,
+      "folketall_aar": 2024
+    },
+    "France": {
+      "iso3": "FRA",
+      "bnp_usd": 3160442622465.08,
+      "bnp_aar": 2024,
+      "folketall": 68551653,
+      "folketall_aar": 2024
+    },
+    "Germany": {
+      "iso3": "DEU",
+      "bnp_usd": 4685592577804.69,
+      "bnp_aar": 2024,
+      "folketall": 83516593,
+      "folketall_aar": 2024
+    },
+    "Greece": {
+      "iso3": "GRC",
+      "bnp_usd": 256238371778.118,
+      "bnp_aar": 2024,
+      "folketall": 10405134,
+      "folketall_aar": 2024
+    },
+    "Hungary": {
+      "iso3": "HUN",
+      "bnp_usd": 222722738925.641,
+      "bnp_aar": 2024,
+      "folketall": 9562065,
+      "folketall_aar": 2024
+    },
+    "Iceland": {
+      "iso3": "ISL",
+      "bnp_usd": 33255181468.9382,
+      "bnp_aar": 2024,
+      "folketall": 386506,
+      "folketall_aar": 2024
+    },
+    "Ireland": {
+      "iso3": "IRL",
+      "bnp_usd": 609157459747.205,
+      "bnp_aar": 2024,
+      "folketall": 5395790,
+      "folketall_aar": 2024
+    },
+    "Italy": {
+      "iso3": "ITA",
+      "bnp_usd": 2380825077243.59,
+      "bnp_aar": 2024,
+      "folketall": 58952704,
+      "folketall_aar": 2024
+    },
+    "Japan": {
+      "iso3": "JPN",
+      "bnp_usd": 4027597523550.58,
+      "bnp_aar": 2024,
+      "folketall": 123975371,
+      "folketall_aar": 2024
+    },
+    "Latvia": {
+      "iso3": "LVA",
+      "bnp_usd": 43684254432.3609,
+      "bnp_aar": 2024,
+      "folketall": 1866124,
+      "folketall_aar": 2024
+    },
+    "Lithuania": {
+      "iso3": "LTU",
+      "bnp_usd": 84869215513.3648,
+      "bnp_aar": 2024,
+      "folketall": 2888278,
+      "folketall_aar": 2024
+    },
+    "Luxembourg": {
+      "iso3": "LUX",
+      "bnp_usd": 93279851863.4062,
+      "bnp_aar": 2024,
+      "folketall": 677012,
+      "folketall_aar": 2024
+    },
+    "Malta": {
+      "iso3": "MLT",
+      "bnp_usd": 24971574502.4475,
+      "bnp_aar": 2024,
+      "folketall": 568847,
+      "folketall_aar": 2024
+    },
+    "Netherlands": {
+      "iso3": "NLD",
+      "bnp_usd": 1214927698572.66,
+      "bnp_aar": 2024,
+      "folketall": 17993485,
+      "folketall_aar": 2024
+    },
+    "New Zealand": {
+      "iso3": "NZL",
+      "bnp_usd": 260172385097.616,
+      "bnp_aar": 2024,
+      "folketall": 5287500,
+      "folketall_aar": 2024
+    },
+    "Norway": {
+      "iso3": "NOR",
+      "bnp_usd": 483592648313.301,
+      "bnp_aar": 2024,
+      "folketall": 5572279,
+      "folketall_aar": 2024
+    },
+    "Poland": {
+      "iso3": "POL",
+      "bnp_usd": 917767106146.761,
+      "bnp_aar": 2024,
+      "folketall": 36559233,
+      "folketall_aar": 2024
+    },
+    "Portugal": {
+      "iso3": "PRT",
+      "bnp_usd": 313271185085.102,
+      "bnp_aar": 2024,
+      "folketall": 10694681,
+      "folketall_aar": 2024
+    },
+    "South Korea": {
+      "iso3": "KOR",
+      "bnp_usd": 1875388209406.8,
+      "bnp_aar": 2024,
+      "folketall": 51751065,
+      "folketall_aar": 2024
+    },
+    "Romania": {
+      "iso3": "ROU",
+      "bnp_usd": 382564217988.866,
+      "bnp_aar": 2024,
+      "folketall": 19051804,
+      "folketall_aar": 2024
+    },
+    "Slovakia": {
+      "iso3": "SVK",
+      "bnp_usd": 140934076532.375,
+      "bnp_aar": 2024,
+      "folketall": 5422069,
+      "folketall_aar": 2024
+    },
+    "Slovenia": {
+      "iso3": "SVN",
+      "bnp_usd": 72972015197.3859,
+      "bnp_aar": 2024,
+      "folketall": 2127400,
+      "folketall_aar": 2024
+    },
+    "Spain": {
+      "iso3": "ESP",
+      "bnp_usd": 1725671652742.19,
+      "bnp_aar": 2024,
+      "folketall": 48848840,
+      "folketall_aar": 2024
+    },
+    "Sweden": {
+      "iso3": "SWE",
+      "bnp_usd": 603715224265.798,
+      "bnp_aar": 2024,
+      "folketall": 10569709,
+      "folketall_aar": 2024
+    },
+    "Switzerland": {
+      "iso3": "CHE",
+      "bnp_usd": 936564198048.516,
+      "bnp_aar": 2024,
+      "folketall": 9005582,
+      "folketall_aar": 2024
+    },
+    "Turkiye": {
+      "iso3": "TUR",
+      "bnp_usd": 1359123768774.12,
+      "bnp_aar": 2024,
+      "folketall": 85518661,
+      "folketall_aar": 2024
+    },
+    "United Kingdom": {
+      "iso3": "GBR",
+      "bnp_usd": 3686033044482.13,
+      "bnp_aar": 2024,
+      "folketall": 69226000,
+      "folketall_aar": 2024
+    },
+    "United States": {
+      "iso3": "USA",
+      "bnp_usd": 28750956130731.2,
+      "bnp_aar": 2024,
+      "folketall": 340110988,
+      "folketall_aar": 2024
+    },
+    "China": {
+      "iso3": "CHN",
+      "bnp_usd": 18743803170827.2,
+      "bnp_aar": 2024,
+      "folketall": 1408975000,
+      "folketall_aar": 2024
+    },
+    "India": {
+      "iso3": "IND",
+      "bnp_usd": 3909891533858.08,
+      "bnp_aar": 2024,
+      "folketall": 1450935791,
+      "folketall_aar": 2024
+    }
+  },
+  "utelatt": [
+    "EU (Commission and Council)",
+    "Taiwan"
+  ],
+  "manglende_mapping": []
+}
