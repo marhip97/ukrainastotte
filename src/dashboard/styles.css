@@ -125,3 +125,113 @@ footer {
 .skjult { display: none; }
 
 a { color: var(--accent); }
+
+.endringstekst-tekst {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+.komparativ-kontroller {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.komparativ-kontroller select {
+  min-width: 220px;
+  padding: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.gruppe-knapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gruppe-knapper button {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.gruppe-knapper button:hover {
+  background: #f0f0f0;
+}
+
+.komparativ-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.komparativ-kort {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.komparativ-kort.fokus {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.komparativ-kort h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+.komparativ-kort dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.komparativ-kort dt {
+  color: var(--muted);
+}
+
+.komparativ-kort dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+kbd {
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0 0.3rem;
+  font-size: 0.85em;
+  font-family: monospace;
+}
+
+.tidsserie-kontroller,
+.scatter-kontroller {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.tidsserie-kontroller label,
+.scatter-kontroller label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.tidsserie-kontroller select,
+.scatter-kontroller select {
+  padding: 0.25rem 0.5rem;
+}

@@ -71,6 +71,33 @@
       </p>
     </section>
 
+    <section class="graf" id="endringstekst-seksjon" hidden>
+      <h2>Endring siden forrige Kiel-rapport</h2>
+      <p class="endringstekst-tekst" id="endringstekst-norge"></p>
+      <p class="metode-notat" id="endringstekst-meta"></p>
+    </section>
+
+    <section class="graf">
+      <h2>Komparativ landprofil</h2>
+      <p class="metode-notat">
+        Sammenlign Norge med valgte giverland på samme nøkkeltall.
+        Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd> (Mac) for å velge flere
+        land i lista. Eller bruk hurtigknappene for forhåndsdefinerte grupper.
+      </p>
+      <div class="komparativ-kontroller">
+        <label for="komparativ-velger">Velg land:</label>
+        <select id="komparativ-velger" multiple size="6"></select>
+        <div class="gruppe-knapper">
+          <button type="button" data-gruppe="default">Standard</button>
+          <button type="button" data-gruppe="Norden">Norden</button>
+          <button type="button" data-gruppe="EU">EU</button>
+          <button type="button" data-gruppe="G7">G7</button>
+          <button type="button" data-gruppe="NATO">NATO</button>
+        </div>
+      </div>
+      <div id="komparativ-grid" class="komparativ-grid"></div>
+    </section>
+
     <section class="graf">
       <h2>Fordeling av støtte (Norge)</h2>
       <div id="fordeling-graf"></div>
@@ -80,6 +107,73 @@
       <h2>Topp 15 giverland</h2>
       <div id="rangering-graf"></div>
       <p class="uthev" id="norge-plassering"></p>
+    </section>
+
+    <section class="graf" id="tidsserie-seksjon">
+      <h2>Tidsserie - støtte per måned</h2>
+      <div class="tidsserie-kontroller">
+        <label>Modus:
+          <select id="tidsserie-modus">
+            <option value="akkumulert" selected>Akkumulert</option>
+            <option value="maaned">Per måned</option>
+          </select>
+        </label>
+        <label>Mål:
+          <select id="tidsserie-maal">
+            <option value="Allocation" selected>Allokering</option>
+            <option value="Commitment">Forpliktelse</option>
+          </select>
+        </label>
+        <label>Kategori:
+          <select id="tidsserie-kategori">
+            <option value="Total" selected>Total</option>
+            <option value="Military">Militær</option>
+            <option value="Financial">Finansiell</option>
+            <option value="Humanitarian">Humanitær</option>
+          </select>
+        </label>
+        <label>Valuta:
+          <select id="tidsserie-valuta">
+            <option value="eur" selected>EUR</option>
+            <option value="nok">NOK</option>
+          </select>
+        </label>
+      </div>
+      <div id="tidsserie-graf"></div>
+      <p class="metode-notat">
+        Aktiviteter uten dato i Kiel-datasettet er utelatt fra tidsserien
+        (de telles fortsatt i totalsummene andre steder). NOK-tall bruker
+        historisk EUR/NOK-kurs på utbetalingsdato (forrige bankdag som
+        fallback).
+      </p>
+    </section>
+
+    <section class="graf" id="scatter-seksjon">
+      <h2>Sammenheng mellom nøkkeltall</h2>
+      <div class="scatter-kontroller">
+        <label>X-akse:
+          <select id="scatter-x">
+            <option value="andel_bnp_pct" selected>Andel av BNP (%)</option>
+            <option value="per_capita_eur">Per innbygger (EUR)</option>
+            <option value="total_allocation">Total allokering (€ mrd)</option>
+            <option value="total_commitment">Total forpliktelse (€ mrd)</option>
+          </select>
+        </label>
+        <label>Y-akse:
+          <select id="scatter-y">
+            <option value="andel_bnp_pct">Andel av BNP (%)</option>
+            <option value="per_capita_eur" selected>Per innbygger (EUR)</option>
+            <option value="total_allocation">Total allokering (€ mrd)</option>
+            <option value="total_commitment">Total forpliktelse (€ mrd)</option>
+          </select>
+        </label>
+      </div>
+      <div id="scatter-graf"></div>
+      <p class="metode-notat">
+        Hvert punkt er ett giverland. Norge er fremhevet i rødt. Akser kan
+        byttes via dropdownene over. BNP-andel og per capita beregnes fra
+        Verdensbankens 2024-tall (S6).
+      </p>
     </section>
 
     <section class="feil skjult" id="feilmelding" role="alert"></section>
