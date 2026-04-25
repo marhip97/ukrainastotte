@@ -220,28 +220,46 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
     return;
   }
   const prefiks = maal === "commitment" ? "commitment" : "allocation";
-  const verdier = [
-    tilTall(norge["military_" + prefiks]),
-    tilTall(norge["financial_" + prefiks]),
-    tilTall(norge["humanitarian_" + prefiks]),
-  ];
+  const militaer   = tilTall(norge["military_"     + prefiks]);
+  const finansiell = tilTall(norge["financial_"    + prefiks]);
+  const humanitaer = tilTall(norge["humanitarian_" + prefiks]);
+  const total = militaer + finansiell + humanitaer;
+  const pct = (v) => total > 0 ? (100 * v / total).toFixed(0) + " %" : "–";
+  // Tokens fra src/dashboard/tokens.css - hardkodet her i påvente av
+  // tema()-funksjonen som innføres i M6.3 Steg 5.
+  const KAT_MIL = "#08306b";  // var(--kategori-militaer)
+  const KAT_FIN = "#2171b5";  // var(--kategori-finansiell)
+  const KAT_HUM = "#4292c6";  // var(--kategori-humanitaer)
+  const RAMME   = "#0b2545";  // var(--blue-900) - inter-segment ramme
+  const trace = (navn, verdi, farge) => ({
+    x: [verdi],
+    y: ["Norge"],
+    name: navn,
+    type: "bar",
+    orientation: "h",
+    marker: { color: farge, line: { color: RAMME, width: 1 } },
+    text: [pct(verdi)],
+    textposition: "inside",
+    insidetextanchor: "middle",
+    hovertemplate:
+      "<b>" + navn + "</b><br>" +
+      "%{x:,.2f} € mrd (" + pct(verdi) + ")<extra></extra>",
+  });
   Plotly.newPlot(
     graf,
     [
-      {
-        values: verdier,
-        labels: ["Militær", "Finansiell", "Humanitær"],
-        type: "pie",
-        hole: 0.5,
-        marker: { colors: ["#d71418", "#1a4d8f", "#2e8540"] },
-        textinfo: "label+percent",
-        hovertemplate: "<b>%{label}</b><br>%{value:,.2f} € mrd (%{percent})<extra></extra>",
-      },
+      trace("Militær", militaer, KAT_MIL),
+      trace("Finansiell", finansiell, KAT_FIN),
+      trace("Humanitær", humanitaer, KAT_HUM),
     ],
     {
-      margin: { t: 20, b: 20, l: 20, r: 20 },
-      height: 360,
-      showlegend: false,
+      barmode: "stack",
+      margin: { t: 20, b: 60, l: 30, r: 20 },
+      height: 180,
+      xaxis: { title: "€ mrd", rangemode: "tozero" },
+      yaxis: { showticklabels: false, fixedrange: true },
+      showlegend: true,
+      legend: { orientation: "h", y: -0.6 },
     },
     { displayModeBar: false, responsive: true }
   );
