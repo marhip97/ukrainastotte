@@ -19,7 +19,7 @@
   --blue-900: #0b2545;
   --blue-700: #13315c;
   --blue-500: #1d3557;  /* Primær aksent: Norge i grafer, knapper */
-  --blue-300: #8da9c4;  /* Sammenligningsland i grafer */
+  --blue-300: #5d8aaa;  /* Sammenligningsland i grafer (WCAG 1.4.11: 3,70:1 mot hvit) */
   --blue-50:  #eef2f7;  /* Norge-bakgrunn i tabell og rangering */
 
   /* === Farger - nøytrale ======================================== */
@@ -37,9 +37,9 @@
      Brukes i stablet horisontal stolpe for fordeling
      militær/finansiell/humanitær (jf. 03-3.4.2).
   */
-  --kategori-militaer:    #08306b;
-  --kategori-finansiell:  #2171b5;
-  --kategori-humanitaer:  #6baed6;
+  --kategori-militaer:    #08306b;  /* WCAG: 12,76:1 mot hvit */
+  --kategori-finansiell:  #2171b5;  /* WCAG: 5,13:1 mot hvit */
+  --kategori-humanitaer:  #4292c6;  /* WCAG: 3,41:1 mot hvit. Segmenter trenger 1 px --blue-900-ramme i Plotly for inter-segment definisjon. */
 
   /* === Farger - aliaser brukt av komponenter ==================== */
   --bg:           var(--neutral-50);
