@@ -1,16 +1,15 @@
-:root {
-  --bg: #f8f9fa;
-  --fg: #1a1a1a;
-  --muted: #555;
-  --accent: #d71418;
-  --card-bg: #ffffff;
-  --border: #e0e0e0;
-}
+/*
+ * Hovedstilfilen for dashboardet.
+ *
+ * Designtokens er definert i tokens.css og må importeres før denne
+ * fila i index.html. styles.css bruker kun var(--token)-referanser,
+ * aldri rå hex-verdier.
+ */
 
 * { box-sizing: border-box; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   margin: 0;
   background: var(--bg);
   color: var(--fg);
@@ -115,11 +114,11 @@ footer {
 }
 
 .feil {
-  background: #fff3f3;
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  background: var(--card-bg);
+  border: 1px solid var(--negative);
+  color: var(--negative);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .skjult { display: none; }
@@ -162,7 +161,7 @@ a { color: var(--accent); }
 }
 
 .gruppe-knapper button:hover {
-  background: #f0f0f0;
+  background: var(--blue-50);
 }
 
 .komparativ-grid {
@@ -207,12 +206,12 @@ a { color: var(--accent); }
 }
 
 kbd {
-  background: #eee;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  background: var(--neutral-200);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
   padding: 0 0.3rem;
   font-size: 0.85em;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .tidsserie-kontroller,

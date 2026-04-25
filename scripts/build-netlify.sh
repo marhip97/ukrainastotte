@@ -10,6 +10,7 @@ rm -rf "$SITE"
 mkdir -p "$SITE/data"
 
 cp "$ROOT/src/dashboard/index.html" "$SITE/"
+cp "$ROOT/src/dashboard/tokens.css" "$SITE/"
 cp "$ROOT/src/dashboard/styles.css" "$SITE/"
 cp "$ROOT/src/dashboard/dashboard.js" "$SITE/"
 cp "$ROOT/data/processed/country_summary.csv" "$SITE/data/"
