@@ -30,6 +30,7 @@ from src.ingest.parse_kiel import (
     parse_financial_disbursements,
 )
 from src.analyze.endring import beregn_endring
+from src.analyze.endringstekst import generer_for_alle
 from src.analyze.noekkeltall_relative import beregn_relative_noekkeltall
 from src.analyze.tidsserier import MaanedsAggregat, aggreger_per_maaned
 from src.analyze.valutakonvertering import eur_til_nok, last_kurser
@@ -114,6 +115,46 @@ def skriv_country_summary_endring(
         for d in deltaer:
             writer.writerow(asdict(d))
     return (len(deltaer), forrige.name)
+
+
+def skriv_endringstekst(
+    ny_xlsx: Path, raw_dir: Path, out_path: Path
+) -> tuple[int, str | None]:
+    """Skriv `endringstekst.json` med automatisk generert tekst per land.
+
+    Krever minst to releaser i `raw_dir`. Returnerer
+    `(antall_land, forrige_release_filnavn)`. Hvis det bare finnes
+    én release, skrives ingen fil og `(0, None)` returneres.
+    """
+    kandidater = sorted(raw_dir.glob("*.xlsx"))
+    if len(kandidater) < 2:
+        return (0, None)
+    if kandidater[-1] != ny_xlsx:
+        return (0, None)
+    forrige = kandidater[-2]
+    ny_sum = parse_country_summary(ny_xlsx)
+    gml_sum = parse_country_summary(forrige)
+    tekster = generer_for_alle(ny_sum, gml_sum)
+    output = {
+        "generert_dato": date.today().isoformat(),
+        "ny_release": ny_xlsx.name,
+        "forrige_release": forrige.name,
+        "tekster": {
+            land: {
+                "tekst": e.tekst,
+                "delta_total_allocation_mrd": e.delta_total_allocation_mrd,
+                "delta_total_allocation_pct": e.delta_total_allocation_pct,
+                "rangering_ny": e.rangering_ny,
+                "rangering_gammel": e.rangering_gammel,
+            }
+            for land, e in tekster.items()
+        },
+    }
+    out_path.write_text(
+        json.dumps(output, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return (len(tekster), forrige.name)
 
 
 def skriv_country_summary_relative(
@@ -288,6 +329,9 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     antall_endring, forrige_release = skriv_country_summary_endring(
         xlsx_path, RAW_DIR, out_dir / "country_summary_endring.csv"
     )
+    antall_endringstekst, _ = skriv_endringstekst(
+        xlsx_path, RAW_DIR, out_dir / "endringstekst.json"
+    )
 
     antall_tidsserie_rader = 0
     antall_land_nok = 0
@@ -312,6 +356,7 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
         "antall_land_med_relative_tall": antall_relative,
         "forrige_release": forrige_release,
         "antall_land_med_endring": antall_endring,
+        "antall_land_med_endringstekst": antall_endringstekst,
         "antall_tidsserie_rader": antall_tidsserie_rader,
         "antall_land_nok": antall_land_nok,
         "prosessert_dato": date.today().isoformat(),
