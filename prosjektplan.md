@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.1
+**Versjon:** 2.2
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 25. april 2026
 **Prosjekteier:** [Brukerens navn]
@@ -102,7 +102,7 @@ Prosjektet deles i fem faser. Hver fase har en tydelig leveranse som godkjennes 
 | M5: Produksjon | Automatisk oppdatering, dokumentasjon ferdig, overlevering til drift | Uke 9 | Prosjekteier |
 | M6.1: Datafundament | Dynamisk historisk valutakurs (EUR/NOK), tidsserie-aggregering, land-grupperinger | 1 uke fra M6-oppstart | Prosjekteier |
 | M6.2: Analytisk innhold | Komparative profiler, tidsseriegraf, scatter plot, automatisk endringstekst, tooltips | 2 uker fra M6.1 ferdig | Prosjekteier |
-| M6.3: Visuelt redesign | Blå palett, ny informasjonsarkitektur, eksport (PNG/CSV), land-gruppefiltre | 1 uke fra M6.2 ferdig | Prosjekteier |
+| M6.3: Visuelt redesign | Blå palett, ny informasjonsarkitektur, eksport (PNG/CSV), land-gruppefiltre | 2 uker fra M6.2 ferdig | Prosjekteier |
 
 Etter M5 går prosjektet over i driftsfase (se seksjon 10).
 
@@ -319,6 +319,8 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-25 | M6.1: Datafundament | Ferdig | PR #24 godkjent og merget til main av prosjekteier. M6.1 fullført. | prosjekteier, prosjektleder | — |
 | 2026-04-25 | M6.2: Analytisk innhold | Pågår | Oppstart av M6.2. Plan i `docs/planer/m6-2-plan.md` godkjent; sakene S10 (default-sammenligning Norge + Tyskland/Frankrike/Storbritannia), S11 (scatter Andel BNP × Per capita), S12 (pedagogisk klarspråk), S13 (akkumulert som default), S14 (norsk tooltips med EUR+NOK) besluttet. Implementering starter på `feature/m6-2-analytisk-innhold`. | prosjektleder | Godkjenning av M6.2 ved ferdig PR. |
 | 2026-04-25 | M6.2: Analytisk innhold | Klar for review | M6.2 levert. **Bakend:** `src/analyze/endringstekst.py` genererer 2-4 setningers norsk tekst per land med pedagogisk klarspråk; `normalize.py` skriver `data/processed/endringstekst.json`. **Frontend:** komparativ landprofil (kort-grid) med multivelger og hurtigknapper for Norden/EU/G7/NATO; tidsseriegraf med toggle akkumulert/per måned, valgbar valuta (EUR/NOK), kategori og mål; scatter plot (Andel BNP × Per capita som default, fire akse-valg) med Norge fremhevet; automatisk endringstekst-boks. Alle Plotly-tooltips harmonisert til norsk format. **Workflow:** `fetch-valutakurser.yml` regenererer normalisert data automatisk. Testsuite 63/63 grønn (10 nye tester for endringstekst, 2 nye for normalize). | dataingenior, frontend, qa, prosjektleder | Godkjenning av M6.2-leveransen før M6.3 starter. |
+| 2026-04-25 | M6.2: Analytisk innhold | Ferdig | PR #25 merget til main av prosjekteier. M6.2 fullført. | prosjekteier, prosjektleder | — |
+| 2026-04-25 | M6.3: Visuelt redesign | Pågår | Designgrunnlag levert som fem dokumenter under `docs/m6.3/` (PR #26 merget): prinsipper, informasjonsarkitektur, komponenter og grafer, implementasjonsplan, README. S15 åpnet og lukket: M6.3-tidsanslag utvidet fra 1 til 2 uker etter prosjekteiers beslutning. Implementering starter på Steg 1 (Designtokens og temabytte). | prosjektleder, frontend | Godkjenning per utviklings-PR. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -342,6 +344,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S12 | 2026-04-25 | 2026-04-25 | Tone og format på automatisk endringstekst | Prosjekteier godkjente forslag med presisering: 2-4 setninger med **pedagogisk klarspråk** (ikke fagsjargong). Inkluderer kort metodemerknad. |
 | S13 | 2026-04-25 | 2026-04-25 | Tidsseriegraf - akkumulert eller per måned | Prosjekteier godkjente forslag: **toggle med akkumulert som default**, per måned som sekundær modus. |
 | S14 | 2026-04-25 | 2026-04-25 | Tooltips - innholdsnivå | Prosjekteier godkjente forslag: **norsk språk** med EUR+NOK, referanseår og rangering-posisjon. |
+| S15 | 2026-04-25 | 2026-04-25 | Tidsanslag M6.3: 8-16 utviklingsdager mot prosjektplanens 1-ukes estimat | Prosjekteier valgte **alternativ 1: utvid M6.3 til 2 uker** (prosjektleders tilrådning). Begrunnelse: brukerveiledning og CSV-eksport bør være med i samme fase som det visuelle redesignet, ikke flyttes til M6.4. M6.3-raden i seksjon 5 oppdatert til "2 uker". |
 
 ### 11.4 Milepælsstatus
 
@@ -353,8 +356,8 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M4: Dashboard MVP | Uke 7 | Ferdig | Dashboard live på <https://ukrainastotte.netlify.app/> med seks nøkkeltall-kort, fem S2-visninger (allokering, forpliktelse, utbetalt, BNP-andel, per capita, endring), Norge-fokusert rangering. Automatisk Netlify-deploy fra `main`. |
 | M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
 | M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
-| M6.2: Analytisk innhold | — | Klar for review | Implementert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips. Workflow regenererer prosessert data automatisk. 63/63 tester grønne. Avventer godkjent PR. |
-| M6.3: Visuelt redesign | — | Ikke startet | Venter på M6.2. |
+| M6.2: Analytisk innhold | — | Ferdig | PR #25 merget til main 2026-04-25. Levert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips, automatisk regenerering ved kursoppdatering. 63/63 tester grønne. |
+| M6.3: Visuelt redesign | — | Pågår | Designgrunnlag merget (PR #26). Implementeres i 12 utviklings-PR-er (jf. `docs/m6.3/04-implementation-plan.md` § 4.4). 2 uker fra M6.2-ferdig (S15-utvidelse). |
 
 ---
 
@@ -365,6 +368,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 1.0 | 2026-04-22 | Første versjon opprettet | prosjektleder |
 | 2.0 | 2026-04-25 | Lagt til milepæl M6 med tre delfaser. Sakene S8 og S9 åpnet og lukket. | prosjektleder |
 | 2.1 | 2026-04-25 | M6.1 ferdig (PR #24 merget). M6.2 startet. Sakene S10-S14 åpnet og lukket samme dag. | prosjektleder |
+| 2.2 | 2026-04-25 | M6.2 ferdig (PR #25 merget). M6.3 startet med designgrunnlag (PR #26 merget). S15 åpnet og lukket: M6.3 utvidet fra 1 til 2 uker. | prosjektleder |
 
 ---
 
