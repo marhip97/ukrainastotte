@@ -315,6 +315,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-23 | M5: Produksjon | Ferdig | **M5 lukket. Prosjektet fullført.** Prosjekteier trigget `fetch-kiel.yml` manuelt og workflowen returnerte grønn. Siden Release 28 allerede var lagret, gjenkjente hash-dedup-logikken filen og hoppet over commit - forventet og godkjent utfall. Hele kjeden (fetch → dedup → normalize → auto-commit → Netlify-deploy) er dermed verifisert. Alle fem milepæler M1-M5 er levert og godkjent. | prosjekteier, prosjektleder, devops | — |
 | 2026-04-25 | M6: Planlegging | Pågår | Åtte forbedringspunkter identifisert. M6 deles i tre delfaser. Beslutninger på S8 (dynamisk) og S9 (som tilrådd). | prosjektleder | — |
 | 2026-04-25 | M6.1: Datafundament | Pågår | Oppstart av M6.1 - dynamisk EUR/NOK-kurs, tidsserie-aggregering, land-grupperinger. | prosjektleder | Godkjenning av M6.1 ved ferdig PR. |
+| 2026-04-25 | M6.1: Datafundament | Klar for review | M6.1 levert: `src/ingest/fetch_valutakurser.py` (Norges Bank SDMX-JSON, EUR/NOK fra 2022-01-01) med daglig workflow `.github/workflows/fetch-valutakurser.yml`. `src/analyze/valutakonvertering.py` med dato-fallback (helg/helligdag → forrige bankdag, manglende dato → siste kurs). `src/analyze/tidsserier.py` med månedlig (land, år, måned, kategori, mål)-aggregering, både EUR og NOK. `src/analyze/landgrupper.py` med Norden, EU, G7, NATO og dynamisk Alle. `normalize.py` skriver nå `tidsserier_maanedlig.csv` og `country_summary_nok.csv` når `valutakurser.json` finnes. Testsuite 51/51 grønn (27 nye tester i M6.1). Ingen ekte API-kall i tester - kun fixtures. | dataingenior, qa, prosjektleder | Godkjenning av M6.1-leveransen før M6.2 starter. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -344,7 +345,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M3: Analysemodul | Uke 5 | Ferdig | Alle 6 nøkkeltall implementert og visualisert: absolutt støtte, fordeling mil/fin/hum, rangering, andel BNP (via WDI), per capita, endring siste release. 24/24 tester grønne. |
 | M4: Dashboard MVP | Uke 7 | Ferdig | Dashboard live på <https://ukrainastotte.netlify.app/> med seks nøkkeltall-kort, fem S2-visninger (allokering, forpliktelse, utbetalt, BNP-andel, per capita, endring), Norge-fokusert rangering. Automatisk Netlify-deploy fra `main`. |
 | M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
-| M6.1: Datafundament | — | Pågår | — |
+| M6.1: Datafundament | — | Klar for review | Implementert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. Avventer godkjent PR. |
 | M6.2: Analytisk innhold | — | Ikke startet | Venter på M6.1. |
 | M6.3: Visuelt redesign | — | Ikke startet | Venter på M6.2. |
 
