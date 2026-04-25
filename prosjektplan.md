@@ -1,10 +1,11 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 1.0
+**Versjon:** 2.0
 **Dato opprettet:** 22. april 2026
+**Dato sist oppdatert:** 25. april 2026
 **Prosjekteier:** [Brukerens navn]
 **Prosjektleder:** Claude Code (agent: `prosjektleder`)
-**Status:** Planlegging / Oppstart
+**Status:** Drift + ny utvidelsesfase M6 starter
 
 ---
 
@@ -99,6 +100,9 @@ Prosjektet deles i fem faser. Hver fase har en tydelig leveranse som godkjennes 
 | M3: Analysemodul | Nøkkeltall beregnet og verifisert; Norge-sammenligninger klare | Uke 5 | Prosjekteier |
 | M4: Dashboard MVP | HTML-dashboard med grunnleggende visualiseringer lanseres | Uke 7 | Prosjekteier |
 | M5: Produksjon | Automatisk oppdatering, dokumentasjon ferdig, overlevering til drift | Uke 9 | Prosjekteier |
+| M6.1: Datafundament | Dynamisk historisk valutakurs (EUR/NOK), tidsserie-aggregering, land-grupperinger | 1 uke fra M6-oppstart | Prosjekteier |
+| M6.2: Analytisk innhold | Komparative profiler, tidsseriegraf, scatter plot, automatisk endringstekst, tooltips | 2 uker fra M6.1 ferdig | Prosjekteier |
+| M6.3: Visuelt redesign | Blå palett, ny informasjonsarkitektur, eksport (PNG/CSV), land-gruppefiltre | 1 uke fra M6.2 ferdig | Prosjekteier |
 
 Etter M5 går prosjektet over i driftsfase (se seksjon 10).
 
@@ -309,10 +313,15 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-23 | QA Release 28 | Ferdig | Første systematiske QA-krysssjekk utført. `scripts/qa_krysssjekk.py` kjører 103 interne sjekker + verifisering mot Kiel Policy Brief (februar 2026). Resultat: 103 OK, 0 kritiske feil, 6 observerte avvik i Kiels rådata (alle dokumentert og håndtert - Australia/Irland/Italia/Slovakia har commitment<allocation, Tyskland/Storbritannia har disbursement>financial_allocation). Nordic-topprangering bekreftet: Danmark (2,80 %), Estonia (2,40 %), Norge (2,23 %), Sverige (1,85 %) i topp 5 på BNP-andel. Norges 10 mrd EUR konsistent med Kiels 3,6 mrd for 2025 alene + tidligere år. Rapport: `docs/qa/qa-rapport-release28.md`. Data er godkjent for publisering. | qa, prosjektleder | — |
 | 2026-04-23 | M5: Produksjon | Pågår | Første M5-leveranser: brukerveiledning på norsk (`docs/brukerveiledning.md`) for journalister/utredere/forskere. Driftoverlevering (`docs/drift/overlevering.md`) med komponentoversikt, driftsjekkliste, varslingsrutiner og fire vanlige driftsscenarier. README oppdatert med lenker og lokal kjøreguide. Punkt 1 i M5 (end-to-end-test av fetch-kiel-workflow) utført av prosjekteier manuelt. | prosjektleder, devops, frontend | — |
 | 2026-04-23 | M5: Produksjon | Ferdig | **M5 lukket. Prosjektet fullført.** Prosjekteier trigget `fetch-kiel.yml` manuelt og workflowen returnerte grønn. Siden Release 28 allerede var lagret, gjenkjente hash-dedup-logikken filen og hoppet over commit - forventet og godkjent utfall. Hele kjeden (fetch → dedup → normalize → auto-commit → Netlify-deploy) er dermed verifisert. Alle fem milepæler M1-M5 er levert og godkjent. | prosjekteier, prosjektleder, devops | — |
+| 2026-04-25 | M6: Planlegging | Pågår | Åtte forbedringspunkter identifisert. M6 deles i tre delfaser. Beslutninger på S8 (dynamisk) og S9 (som tilrådd). | prosjektleder | — |
+| 2026-04-25 | M6.1: Datafundament | Pågår | Oppstart av M6.1 - dynamisk EUR/NOK-kurs, tidsserie-aggregering, land-grupperinger. | prosjektleder | Godkjenning av M6.1 ved ferdig PR. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
-*(Ingen åpne saker.)*
+| ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
+|---|---|---|---|---|---|
+| S8 | 2026-04-25 | Skal NOK konverteres med dagens kurs eller historisk kurs på utbetalingsdato? | Historisk kurs (dynamisk). | Før M6.1-oppstart | Besluttet 2026-04-25: Dynamisk. |
+| S9 | 2026-04-25 | Hvilke land-grupperinger skal være forhåndsdefinert? | Norden, EU, G7, NATO i datasettet, alle givere. | Før M6.1-oppstart | Besluttet 2026-04-25: Som tilrådd. |
 
 ### 11.3 Lukkede saker
 
@@ -335,6 +344,9 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M3: Analysemodul | Uke 5 | Ferdig | Alle 6 nøkkeltall implementert og visualisert: absolutt støtte, fordeling mil/fin/hum, rangering, andel BNP (via WDI), per capita, endring siste release. 24/24 tester grønne. |
 | M4: Dashboard MVP | Uke 7 | Ferdig | Dashboard live på <https://ukrainastotte.netlify.app/> med seks nøkkeltall-kort, fem S2-visninger (allokering, forpliktelse, utbetalt, BNP-andel, per capita, endring), Norge-fokusert rangering. Automatisk Netlify-deploy fra `main`. |
 | M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
+| M6.1: Datafundament | — | Pågår | — |
+| M6.2: Analytisk innhold | — | Ikke startet | Venter på M6.1. |
+| M6.3: Visuelt redesign | — | Ikke startet | Venter på M6.2. |
 
 ---
 
@@ -343,6 +355,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | Versjon | Dato | Endring | Utført av |
 |---|---|---|---|
 | 1.0 | 2026-04-22 | Første versjon opprettet | prosjektleder |
+| 2.0 | 2026-04-25 | Lagt til milepæl M6 med tre delfaser. Sakene S8 og S9 åpnet og lukket. | prosjektleder |
 
 ---
 
