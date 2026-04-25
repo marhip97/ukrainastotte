@@ -198,15 +198,31 @@ Alle valgte par må møte WCAG 2.2 AA: minst 4,5:1 for normaltekst,
 3:1 for stor tekst (≥18,66 px regular eller ≥14 px bold) og
 3:1 for grafiske elementer som ikoner og graflinjer.
 
-Verifiserte kombinasjoner:
+Verifiserte kombinasjoner (målt med WCAG-formelen i utviklings-Steg 1):
 
-| Forgrunn / bakgrunn | Kontrast |
-|---|---|
-| `--blue-700` på `--neutral-50` | 12,3:1 (passer AAA) |
-| `--blue-500` på hvit | 9,4:1 (passer AAA) |
-| `--neutral-600` på hvit | 7,4:1 (passer AAA for normaltekst) |
-| `--positive` på hvit | 6,1:1 (passer AA) |
-| `--negative` på hvit | 5,9:1 (passer AA) |
+| Forgrunn / bakgrunn | Kontrast | Vurdering |
+|---|---|---|
+| `--blue-700` på `--neutral-50` | 12,29:1 | AAA |
+| `--blue-500` på hvit | 12,36:1 | AAA |
+| `--neutral-900` på `--neutral-50` | 16,51:1 | AAA |
+| `--neutral-600` på hvit | 7,46:1 | AAA |
+| `--positive` på hvit | 5,13:1 | AA |
+| `--negative` på hvit | 5,62:1 | AA |
+| `--blue-300` på hvit (graf-streker) | 3,70:1 | AA grafikk (1.4.11) |
+| `--kategori-humanitaer` på hvit | 3,41:1 | AA grafikk |
+
+Merknader fra verifiseringen:
+
+- `--blue-300` ble justert fra `#8da9c4` til `#5d8aaa` for å
+  passere 3:1-kravet for grafiske elementer (WCAG 1.4.11).
+- `--kategori-humanitaer` ble justert fra `#6baed6` til `#4292c6`
+  av samme grunn. Inter-segment-kontrasten i den stablede stolpen
+  er 1,5:1, så hver kategori-segment må tegnes med 1 px ramme i
+  `--blue-900` slik at segmentene tydelig skiller seg fra
+  hverandre uavhengig av bakgrunn.
+- `--warning` (`#ef6c00`) har kontrast 3,08:1 mot hvit. Den brukes
+  derfor kun til ikoner og rammer (WCAG 1.4.11), aldri til
+  brødtekst.
 
 Kontrast skal verifiseres i CI før hver M6.3-PR (planlegges som del
 av implementasjonsplanen, dokument 04).
