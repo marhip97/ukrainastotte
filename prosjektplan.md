@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.0
+**Versjon:** 2.1
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 25. april 2026
 **Prosjekteier:** [Brukerens navn]
@@ -316,13 +316,13 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-25 | M6: Planlegging | Pågår | Åtte forbedringspunkter identifisert. M6 deles i tre delfaser. Beslutninger på S8 (dynamisk) og S9 (som tilrådd). | prosjektleder | — |
 | 2026-04-25 | M6.1: Datafundament | Pågår | Oppstart av M6.1 - dynamisk EUR/NOK-kurs, tidsserie-aggregering, land-grupperinger. | prosjektleder | Godkjenning av M6.1 ved ferdig PR. |
 | 2026-04-25 | M6.1: Datafundament | Klar for review | M6.1 levert: `src/ingest/fetch_valutakurser.py` (Norges Bank SDMX-JSON, EUR/NOK fra 2022-01-01) med daglig workflow `.github/workflows/fetch-valutakurser.yml`. `src/analyze/valutakonvertering.py` med dato-fallback (helg/helligdag → forrige bankdag, manglende dato → siste kurs). `src/analyze/tidsserier.py` med månedlig (land, år, måned, kategori, mål)-aggregering, både EUR og NOK. `src/analyze/landgrupper.py` med Norden, EU, G7, NATO og dynamisk Alle. `normalize.py` skriver nå `tidsserier_maanedlig.csv` og `country_summary_nok.csv` når `valutakurser.json` finnes. Testsuite 51/51 grønn (27 nye tester i M6.1). Ingen ekte API-kall i tester - kun fixtures. | dataingenior, qa, prosjektleder | Godkjenning av M6.1-leveransen før M6.2 starter. |
+| 2026-04-25 | M6.1: Datafundament | Ferdig | PR #24 godkjent og merget til main av prosjekteier. M6.1 fullført. | prosjekteier, prosjektleder | — |
+| 2026-04-25 | M6.2: Analytisk innhold | Pågår | Oppstart av M6.2. Plan i `docs/planer/m6-2-plan.md` godkjent; sakene S10 (default-sammenligning Norge + Tyskland/Frankrike/Storbritannia), S11 (scatter Andel BNP × Per capita), S12 (pedagogisk klarspråk), S13 (akkumulert som default), S14 (norsk tooltips med EUR+NOK) besluttet. Implementering starter på `feature/m6-2-analytisk-innhold`. | prosjektleder | Godkjenning av M6.2 ved ferdig PR. |
+| 2026-04-25 | M6.2: Analytisk innhold | Klar for review | M6.2 levert. **Bakend:** `src/analyze/endringstekst.py` genererer 2-4 setningers norsk tekst per land med pedagogisk klarspråk; `normalize.py` skriver `data/processed/endringstekst.json`. **Frontend:** komparativ landprofil (kort-grid) med multivelger og hurtigknapper for Norden/EU/G7/NATO; tidsseriegraf med toggle akkumulert/per måned, valgbar valuta (EUR/NOK), kategori og mål; scatter plot (Andel BNP × Per capita som default, fire akse-valg) med Norge fremhevet; automatisk endringstekst-boks. Alle Plotly-tooltips harmonisert til norsk format. **Workflow:** `fetch-valutakurser.yml` regenererer normalisert data automatisk. Testsuite 63/63 grønn (10 nye tester for endringstekst, 2 nye for normalize). | dataingenior, frontend, qa, prosjektleder | Godkjenning av M6.2-leveransen før M6.3 starter. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
-| ID | Dato løftet | Sak | Forslag fra prosjektleder | Frist | Status |
-|---|---|---|---|---|---|
-| S8 | 2026-04-25 | Skal NOK konverteres med dagens kurs eller historisk kurs på utbetalingsdato? | Historisk kurs (dynamisk). | Før M6.1-oppstart | Besluttet 2026-04-25: Dynamisk. |
-| S9 | 2026-04-25 | Hvilke land-grupperinger skal være forhåndsdefinert? | Norden, EU, G7, NATO i datasettet, alle givere. | Før M6.1-oppstart | Besluttet 2026-04-25: Som tilrådd. |
+*(Ingen åpne saker. S8-S14 er besluttet og flyttet til 11.3.)*
 
 ### 11.3 Lukkede saker
 
@@ -335,6 +335,13 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S5 | 2026-04-22 | 2026-04-22 | Godkjenning av M1-leveransen (pull request mot `main`) | Pull request #1 godkjent og merget av prosjekteier. M1 satt til Ferdig. |
 | S6 | 2026-04-22 | 2026-04-22 | Kildevalg for BNP og folketall (nøkkeltall 2 og 3) | Prosjekteier prioriterte mest oppdaterte tall. Valg: **Verdensbanken WDI med MRV (Most Recent Value)** - gir ferskeste endelige tall per land (typisk 2024 for utviklede land). Referanseår dokumenteres per land i `data/reference/wdi.json`. EU-institusjoner, EIB og Taiwan utelatt fra WDI-henting (ikke land eller ikke dekket). |
 | S7 | 2026-04-22 | 2026-04-22 | Hosting-omvalg - GitHub Pages krever offentlig repo | Prosjekteier valgte **Netlify** (gratis private repo). GitHub Pages-workflow (PR #15) lukket uendret. S3 overstyres av dette valget. |
+| S8 | 2026-04-25 | 2026-04-25 | Skal NOK konverteres med dagens kurs eller historisk kurs på utbetalingsdato? | Prosjekteier valgte **dynamisk historisk kurs**. Implementert i `src/analyze/valutakonvertering.py` med fallback til forrige bankdag for helger/helligdager og siste kurs for aktiviteter uten dato. |
+| S9 | 2026-04-25 | 2026-04-25 | Hvilke land-grupperinger skal være forhåndsdefinert? | Prosjekteier valgte **som tilrådd**: Norden, EU, G7, NATO og dynamisk Alle. Implementert i `src/analyze/landgrupper.py`. |
+| S10 | 2026-04-25 | 2026-04-25 | Standardvalg for komparativ landprofil i M6.2 | Prosjekteier valgte **Norge + Tyskland + Frankrike + Storbritannia** som default-sammenligning. Gir kontrast mot de største europeiske giverne. Brukeren kan endre via multivelger. |
+| S11 | 2026-04-25 | 2026-04-25 | Akser i scatter plot (M6.2) | Prosjekteier godkjente forslag: **Andel av BNP (x) × Per capita EUR (y)** som default. Brukeren kan bytte via dropdown. |
+| S12 | 2026-04-25 | 2026-04-25 | Tone og format på automatisk endringstekst | Prosjekteier godkjente forslag med presisering: 2-4 setninger med **pedagogisk klarspråk** (ikke fagsjargong). Inkluderer kort metodemerknad. |
+| S13 | 2026-04-25 | 2026-04-25 | Tidsseriegraf - akkumulert eller per måned | Prosjekteier godkjente forslag: **toggle med akkumulert som default**, per måned som sekundær modus. |
+| S14 | 2026-04-25 | 2026-04-25 | Tooltips - innholdsnivå | Prosjekteier godkjente forslag: **norsk språk** med EUR+NOK, referanseår og rangering-posisjon. |
 
 ### 11.4 Milepælsstatus
 
@@ -345,8 +352,8 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M3: Analysemodul | Uke 5 | Ferdig | Alle 6 nøkkeltall implementert og visualisert: absolutt støtte, fordeling mil/fin/hum, rangering, andel BNP (via WDI), per capita, endring siste release. 24/24 tester grønne. |
 | M4: Dashboard MVP | Uke 7 | Ferdig | Dashboard live på <https://ukrainastotte.netlify.app/> med seks nøkkeltall-kort, fem S2-visninger (allokering, forpliktelse, utbetalt, BNP-andel, per capita, endring), Norge-fokusert rangering. Automatisk Netlify-deploy fra `main`. |
 | M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
-| M6.1: Datafundament | — | Klar for review | Implementert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. Avventer godkjent PR. |
-| M6.2: Analytisk innhold | — | Ikke startet | Venter på M6.1. |
+| M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
+| M6.2: Analytisk innhold | — | Klar for review | Implementert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips. Workflow regenererer prosessert data automatisk. 63/63 tester grønne. Avventer godkjent PR. |
 | M6.3: Visuelt redesign | — | Ikke startet | Venter på M6.2. |
 
 ---
@@ -357,6 +364,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 |---|---|---|---|
 | 1.0 | 2026-04-22 | Første versjon opprettet | prosjektleder |
 | 2.0 | 2026-04-25 | Lagt til milepæl M6 med tre delfaser. Sakene S8 og S9 åpnet og lukket. | prosjektleder |
+| 2.1 | 2026-04-25 | M6.1 ferdig (PR #24 merget). M6.2 startet. Sakene S10-S14 åpnet og lukket samme dag. | prosjektleder |
 
 ---
 

@@ -14,6 +14,7 @@ from src.ingest.normalize import (
     normalize,
     skriv_country_summary_endring,
     skriv_country_summary_nok,
+    skriv_endringstekst,
     skriv_tidsserier_maanedlig,
 )
 from src.ingest.parse_kiel import (
@@ -130,6 +131,34 @@ def test_endring_csv_skrives_med_to_releaser(tmp_path: Path) -> None:
         rader = list(csv.DictReader(fh))
     assert rader[0]["land"] == "Norway"
     assert float(rader[0]["delta_total_allocation"]) == pytest.approx(1.5)
+
+
+def test_endringstekst_skrives_med_to_releaser(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    _lag_fixture_med_total(raw, "2026-01-01_release27.xlsx", total=9.0)
+    ny = _lag_fixture_med_total(raw, "2026-04-01_release28.xlsx", total=10.5)
+    ut = tmp_path / "endringstekst.json"
+    antall, forrige = skriv_endringstekst(ny, raw, ut)
+    assert antall == 1
+    assert forrige == "2026-01-01_release27.xlsx"
+    payload = json.loads(ut.read_text())
+    assert payload["ny_release"] == "2026-04-01_release28.xlsx"
+    assert "Norway" in payload["tekster"]
+    norge = payload["tekster"]["Norway"]
+    assert "Norges totale støtte" in norge["tekst"]
+    assert norge["delta_total_allocation_mrd"] == pytest.approx(1.5)
+
+
+def test_endringstekst_hoppes_over_med_bare_en_release(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    eneste = _lag_fixture_med_total(raw, "2026-04-01_release28.xlsx", total=10.0)
+    ut = tmp_path / "endringstekst.json"
+    antall, forrige = skriv_endringstekst(eneste, raw, ut)
+    assert antall == 0
+    assert forrige is None
+    assert not ut.exists()
 
 
 def test_endring_csv_hoppes_over_med_bare_en_release(tmp_path: Path) -> None:

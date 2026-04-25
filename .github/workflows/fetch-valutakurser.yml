@@ -21,22 +21,31 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Installer avhengigheter
+        run: pip install -r requirements.txt
+
       - name: Kjør valutakurs-fetch
         id: fetch
         run: python -m src.ingest.fetch_valutakurser
         continue-on-error: true
 
-      - name: Commit og push hvis endret
+      - name: Re-normaliser slik at tidsserie/NOK regenereres
+        id: normalize
         if: steps.fetch.outcome == 'success'
+        run: python -m src.ingest.normalize
+        continue-on-error: true
+
+      - name: Commit og push hvis endret
+        if: steps.fetch.outcome == 'success' && steps.normalize.outcome == 'success'
         run: |
-          if [ -n "$(git status --porcelain data/reference/)" ]; then
+          if [ -n "$(git status --porcelain data/reference/ data/processed/)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/reference/valutakurser.json
-            git commit -m "data: oppdater EUR/NOK-kurser $(date -u +%Y-%m-%d)"
+            git add data/reference/valutakurser.json data/processed/
+            git commit -m "data: oppdater EUR/NOK-kurser og regenerer tidsserie ($(date -u +%Y-%m-%d))"
             git push
           else
-            echo "Ingen endring i valutakurser.json."
+            echo "Ingen endring i valutakurser.json eller processed-filer."
           fi
 
       - name: Opprett Issue ved feil
