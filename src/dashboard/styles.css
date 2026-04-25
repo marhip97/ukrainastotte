@@ -130,30 +130,92 @@ main > section:last-child {
   .col-span-12 { grid-column: span 12; }
 }
 
-.nokkel-tall {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+/*
+ * Hero-seksjon (M6.3 § 1.2 og § 3.1.1).
+ * 1 dominerende KPI-kort + 3 støtte-kort + sekundær linje med
+ * mindre nøkkeltall + metode-merknad.
+ */
+
+.hero-grid {
+  align-items: stretch;
+}
+
+.hero-stotte {
+  display: flex;
+  flex-direction: column;
   gap: var(--gutter);
 }
 
-.kort {
+.kpi-kort {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.tall {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: var(--accent);
+.kpi-verdi {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  color: var(--blue-700);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-heading);
 }
 
-.label {
+.kpi-etikett {
+  font-size: var(--fs-body);
+  color: var(--fg);
+  font-weight: var(--fw-semi);
+}
+
+.kpi-kontekst {
+  font-size: var(--fs-caption);
   color: var(--muted);
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
+}
+
+.kpi-kort.hero {
+  background: var(--blue-50);
+  border-color: var(--blue-300);
+  padding: 2rem;
+  justify-content: center;
+}
+
+.kpi-kort.hero .kpi-verdi {
+  font-size: var(--fs-hero);
+  color: var(--blue-500);
+  line-height: var(--lh-hero);
+}
+
+.kpi-kort.hero .kpi-etikett {
+  font-size: var(--fs-h3);
+}
+
+.hero-sekundaer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 1rem 0 0.5rem 0;
+  font-size: var(--fs-body);
+  color: var(--fg);
+}
+
+.hero-sekundaer span span {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semi);
+}
+
+.visuelt-skjult {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .visning-bytter {
