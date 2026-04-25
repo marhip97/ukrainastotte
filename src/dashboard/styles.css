@@ -18,8 +18,25 @@ body {
 
 header {
   background: var(--card-bg);
-  padding: 1.5rem 2rem;
+  padding: 1.5rem var(--container-pad-mobile);
   border-bottom: 1px solid var(--border);
+}
+
+header > .header-innhold {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  header {
+    padding: 1.5rem var(--container-pad-tablet);
+  }
+}
+
+@media (min-width: 1100px) {
+  header {
+    padding: 1.5rem var(--container-pad-desktop);
+  }
 }
 
 header h1 {
@@ -34,22 +51,95 @@ header h1 {
 }
 
 main {
-  max-width: 1100px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem var(--container-pad-mobile);
+}
+
+main > section {
+  margin-bottom: var(--section-gap);
+}
+
+main > section:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  main {
+    padding: 2rem var(--container-pad-tablet);
+  }
+}
+
+@media (min-width: 1100px) {
+  main {
+    padding: 2rem var(--container-pad-desktop);
+  }
+}
+
+/*
+ * 12-kolonne grid (M6.3 § 2.5).
+ * Brukes som .grid på en wrapper-element, og .col-span-N på direkte
+ * barn for å bestemme bredde.
+ *
+ * Mobile-first: alle kolonner er full bredde til og med 767 px. På
+ * tablet (≥ 768 px) tillates halv- og tredels-deling. På desktop
+ * (≥ 1100 px) gjelder eksplisitt N-bredde.
+ *
+ * Bruk .grid uten .col-span-* på direkte barn hvis du vil at
+ * grid-en kun skal styre layout-flow uten kolonneberegning.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gutter);
+}
+
+.section-gap {
+  margin-bottom: var(--section-gap);
+}
+
+/* Mobile-first: alle col-spans er full bredde */
+.col-span-3,
+.col-span-4,
+.col-span-6,
+.col-span-8,
+.col-span-12 {
+  grid-column: span 12;
+}
+
+/* Tablet: halv- og 8-bredde tillates, ikke fjerdedeler */
+@media (min-width: 768px) {
+  .col-span-3,
+  .col-span-4 {
+    grid-column: span 6;
+  }
+  .col-span-6 {
+    grid-column: span 6;
+  }
+  .col-span-8 {
+    grid-column: span 12;
+  }
+}
+
+/* Desktop: eksplisitt N-bredde */
+@media (min-width: 1100px) {
+  .col-span-3  { grid-column: span 3; }
+  .col-span-4  { grid-column: span 4; }
+  .col-span-6  { grid-column: span 6; }
+  .col-span-8  { grid-column: span 8; }
+  .col-span-12 { grid-column: span 12; }
 }
 
 .nokkel-tall {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--gutter);
 }
 
 .kort {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.25rem;
   text-align: center;
 }
@@ -69,9 +159,8 @@ main {
 .visning-bytter {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
-  margin-bottom: 2rem;
 }
 
 .visning-bytter select {
@@ -89,9 +178,8 @@ main {
 .graf {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .graf h2 {
@@ -106,11 +194,23 @@ main {
 }
 
 footer {
-  max-width: 1100px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 1rem 2rem 2rem;
+  padding: 1rem var(--container-pad-mobile) 2rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-caption);
+}
+
+@media (min-width: 768px) {
+  footer {
+    padding: 1rem var(--container-pad-tablet) 2rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  footer {
+    padding: 1rem var(--container-pad-desktop) 2rem;
+  }
 }
 
 .feil {
@@ -154,7 +254,7 @@ a { color: var(--accent); }
 .gruppe-knapper button {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 0.4rem 0.8rem;
   cursor: pointer;
   font-size: 0.9rem;
@@ -166,15 +266,27 @@ a { color: var(--accent); }
 
 .komparativ-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--gutter);
   margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .komparativ-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .komparativ-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .komparativ-kort {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
