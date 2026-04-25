@@ -31,11 +31,14 @@ from src.ingest.parse_kiel import (
 )
 from src.analyze.endring import beregn_endring
 from src.analyze.noekkeltall_relative import beregn_relative_noekkeltall
+from src.analyze.tidsserier import MaanedsAggregat, aggreger_per_maaned
+from src.analyze.valutakonvertering import eur_til_nok, last_kurser
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "data" / "raw" / "kiel"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 WDI_PATH = REPO_ROOT / "data" / "reference" / "wdi.json"
+VALUTAKURSER_PATH = REPO_ROOT / "data" / "reference" / "valutakurser.json"
 
 
 def _finn_nyeste_xlsx() -> Path:
@@ -158,6 +161,119 @@ def skriv_country_summary_relative(
     return komplett
 
 
+def skriv_tidsserier_maanedlig(
+    rader: list[MaanedsAggregat], path: Path
+) -> None:
+    feltnavn = [
+        "land",
+        "aar",
+        "maaned",
+        "kategori",
+        "maal",
+        "sum_eur",
+        "sum_nok",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=feltnavn)
+        writer.writeheader()
+        for r in rader:
+            writer.writerow({
+                "land": r.land,
+                "aar": r.aar,
+                "maaned": r.maaned,
+                "kategori": r.kategori,
+                "maal": r.maal,
+                "sum_eur": r.sum_eur,
+                "sum_nok": r.sum_nok,
+            })
+
+
+def skriv_country_summary_nok(
+    bilateral: list[Aktivitet],
+    summary: list[LandSummary],
+    kurser: dict,
+    path: Path,
+) -> int:
+    """Skriv country_summary_nok.csv med NOK-konverterte aggregater per land.
+
+    Strategi: summer NOK-konverterte beløp fra hver bilateral-aktivitet
+    per land (S8: dynamisk historisk EUR/NOK-kurs på utbetalingsdato,
+    forrige bankdag som fallback). Aktiviteter uten dato bruker siste
+    tilgjengelige kurs som fallback - de er fortsatt med i totalen,
+    bare ikke i tidsserien (`tidsserier.aggreger_per_maaned` filtrerer
+    dem ut der). Strukturen speiler `country_summary.csv`, men i NOK.
+    """
+    bucket: dict[str, dict[str, float]] = {}
+    for a in bilateral:
+        nok, _ = eur_til_nok(a.verdi_eur, a.dato, kurser)
+        rad = bucket.setdefault(
+            a.giver,
+            {
+                "financial_allocation": 0.0,
+                "humanitarian_allocation": 0.0,
+                "military_allocation": 0.0,
+                "total_allocation": 0.0,
+                "financial_commitment": 0.0,
+                "humanitarian_commitment": 0.0,
+                "military_commitment": 0.0,
+                "total_commitment": 0.0,
+            },
+        )
+        if a.maal == "Allocation":
+            rad["total_allocation"] += nok
+            if a.kategori == "Financial":
+                rad["financial_allocation"] += nok
+            elif a.kategori == "Humanitarian":
+                rad["humanitarian_allocation"] += nok
+            elif a.kategori == "Military":
+                rad["military_allocation"] += nok
+        elif a.maal == "Commitment":
+            rad["total_commitment"] += nok
+            if a.kategori == "Financial":
+                rad["financial_commitment"] += nok
+            elif a.kategori == "Humanitarian":
+                rad["humanitarian_commitment"] += nok
+            elif a.kategori == "Military":
+                rad["military_commitment"] += nok
+
+    summary_idx = {s.land: s for s in summary}
+    feltnavn = [
+        "land",
+        "er_eu_medlem",
+        "er_geografisk_europa",
+        "financial_allocation_nok",
+        "humanitarian_allocation_nok",
+        "military_allocation_nok",
+        "total_allocation_nok",
+        "financial_commitment_nok",
+        "humanitarian_commitment_nok",
+        "military_commitment_nok",
+        "total_commitment_nok",
+    ]
+    skrevet = 0
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=feltnavn)
+        writer.writeheader()
+        for land in sorted(bucket):
+            s = summary_idx.get(land)
+            v = bucket[land]
+            writer.writerow({
+                "land": land,
+                "er_eu_medlem": s.er_eu_medlem if s else "",
+                "er_geografisk_europa": s.er_geografisk_europa if s else "",
+                "financial_allocation_nok": v["financial_allocation"],
+                "humanitarian_allocation_nok": v["humanitarian_allocation"],
+                "military_allocation_nok": v["military_allocation"],
+                "total_allocation_nok": v["total_allocation"],
+                "financial_commitment_nok": v["financial_commitment"],
+                "humanitarian_commitment_nok": v["humanitarian_commitment"],
+                "military_commitment_nok": v["military_commitment"],
+                "total_commitment_nok": v["total_commitment"],
+            })
+            skrevet += 1
+    return skrevet
+
+
 def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     summary = parse_country_summary(xlsx_path)
@@ -172,6 +288,21 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     antall_endring, forrige_release = skriv_country_summary_endring(
         xlsx_path, RAW_DIR, out_dir / "country_summary_endring.csv"
     )
+
+    antall_tidsserie_rader = 0
+    antall_land_nok = 0
+    if VALUTAKURSER_PATH.exists():
+        kurser = last_kurser(VALUTAKURSER_PATH)
+        if kurser:
+            tidsserie = aggreger_per_maaned(bilateral, kurser)
+            skriv_tidsserier_maanedlig(
+                tidsserie, out_dir / "tidsserier_maanedlig.csv"
+            )
+            antall_tidsserie_rader = len(tidsserie)
+            antall_land_nok = skriv_country_summary_nok(
+                bilateral, summary, kurser, out_dir / "country_summary_nok.csv"
+            )
+
     metadata = {
         "kildefil": xlsx_path.name,
         "sha256": _sha256(xlsx_path),
@@ -181,6 +312,8 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
         "antall_land_med_relative_tall": antall_relative,
         "forrige_release": forrige_release,
         "antall_land_med_endring": antall_endring,
+        "antall_tidsserie_rader": antall_tidsserie_rader,
+        "antall_land_nok": antall_land_nok,
         "prosessert_dato": date.today().isoformat(),
     }
     (out_dir / "metadata.json").write_text(

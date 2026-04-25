@@ -10,14 +10,22 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
-from src.ingest.normalize import normalize, skriv_country_summary_endring
+from src.ingest.normalize import (
+    normalize,
+    skriv_country_summary_endring,
+    skriv_country_summary_nok,
+    skriv_tidsserier_maanedlig,
+)
 from src.ingest.parse_kiel import (
     BILATERAL_ARK,
     COUNTRY_SUMMARY_ARK,
     DISBURSEMENT_ARK,
     FORVENTEDE_BILATERAL_KOLONNER,
     FORVENTEDE_SUMMARY_KOLONNER,
+    Aktivitet,
+    LandSummary,
 )
+from src.analyze.tidsserier import aggreger_per_maaned
 
 
 def _lag_fixture(tmp_path: Path) -> Path:
@@ -139,6 +147,56 @@ def _finn_ekte_fil() -> Path | None:
     repo_root = Path(__file__).resolve().parents[1]
     filer = sorted((repo_root / "data" / "raw" / "kiel").glob("*.xlsx"))
     return filer[-1] if filer else None
+
+
+def test_skriv_country_summary_nok_summerer_per_land(tmp_path: Path) -> None:
+    aktiviteter = [
+        Aktivitet("Norway", date(2024, 1, 15), "Military", "Allocation", 1_000_000),
+        Aktivitet("Norway", date(2024, 1, 15), "Financial", "Commitment", 500_000),
+        Aktivitet("Sweden", None, "Humanitarian", "Allocation", 200_000),
+    ]
+    summary = [
+        LandSummary("Norway", False, True, 0, 0, 0, 0, 0, 0, 0, 0),
+        LandSummary("Sweden", True, True, 0, 0, 0, 0, 0, 0, 0, 0),
+    ]
+    kurser = {date(2024, 1, 15): 11.20, date(2024, 4, 1): 11.50}
+    out = tmp_path / "country_summary_nok.csv"
+    antall = skriv_country_summary_nok(aktiviteter, summary, kurser, out)
+    assert antall == 2
+    with out.open() as fh:
+        rader = {r["land"]: r for r in csv.DictReader(fh)}
+    assert float(rader["Norway"]["military_allocation_nok"]) == pytest.approx(
+        1_000_000 * 11.20
+    )
+    assert float(rader["Norway"]["total_allocation_nok"]) == pytest.approx(
+        1_000_000 * 11.20
+    )
+    assert float(rader["Norway"]["financial_commitment_nok"]) == pytest.approx(
+        500_000 * 11.20
+    )
+    # Sweden: aktivitet uten dato - skal bruke siste kurs (11.50)
+    assert float(rader["Sweden"]["humanitarian_allocation_nok"]) == pytest.approx(
+        200_000 * 11.50
+    )
+
+
+def test_skriv_tidsserier_maanedlig_skriver_csv(tmp_path: Path) -> None:
+    aktiviteter = [
+        Aktivitet("Norway", date(2024, 1, 15), "Military", "Allocation", 1_000_000),
+        Aktivitet("Norway", date(2024, 1, 20), "Military", "Allocation", 500_000),
+        Aktivitet("Norway", None, "Military", "Allocation", 9_000_000),
+    ]
+    kurser = {date(2024, 1, 15): 11.20}
+    rader = aggreger_per_maaned(aktiviteter, kurser)
+    out = tmp_path / "tidsserier_maanedlig.csv"
+    skriv_tidsserier_maanedlig(rader, out)
+    with out.open() as fh:
+        csv_rader = list(csv.DictReader(fh))
+    assert len(csv_rader) == 1
+    assert csv_rader[0]["land"] == "Norway"
+    assert int(csv_rader[0]["aar"]) == 2024
+    assert int(csv_rader[0]["maaned"]) == 1
+    assert float(csv_rader[0]["sum_eur"]) == pytest.approx(1_500_000)
 
 
 @pytest.mark.skipif(
