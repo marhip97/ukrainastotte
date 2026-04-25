@@ -18,8 +18,25 @@ body {
 
 header {
   background: var(--card-bg);
-  padding: 1.5rem 2rem;
+  padding: 1.5rem var(--container-pad-mobile);
   border-bottom: 1px solid var(--border);
+}
+
+header > .header-innhold {
+  max-width: var(--container-max);
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  header {
+    padding: 1.5rem var(--container-pad-tablet);
+  }
+}
+
+@media (min-width: 1100px) {
+  header {
+    padding: 1.5rem var(--container-pad-desktop);
+  }
 }
 
 header h1 {
@@ -34,9 +51,75 @@ header h1 {
 }
 
 main {
-  max-width: 1100px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0 var(--container-pad-mobile);
+}
+
+@media (min-width: 768px) {
+  main {
+    padding: 0 var(--container-pad-tablet);
+  }
+}
+
+@media (min-width: 1100px) {
+  main {
+    padding: 0 var(--container-pad-desktop);
+  }
+}
+
+/*
+ * 12-kolonne grid (M6.3 § 2.5).
+ * Brukes som .grid på en wrapper-element, og .col-span-N på direkte
+ * barn for å bestemme bredde.
+ *
+ * Mobile-first: alle kolonner er full bredde til og med 767 px. På
+ * tablet (≥ 768 px) tillates halv- og tredels-deling. På desktop
+ * (≥ 1100 px) gjelder eksplisitt N-bredde.
+ *
+ * Bruk .grid uten .col-span-* på direkte barn hvis du vil at
+ * grid-en kun skal styre layout-flow uten kolonneberegning.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gutter);
+}
+
+.section-gap {
+  margin-bottom: var(--section-gap);
+}
+
+/* Mobile-first: alle col-spans er full bredde */
+.col-span-3,
+.col-span-4,
+.col-span-6,
+.col-span-8,
+.col-span-12 {
+  grid-column: span 12;
+}
+
+/* Tablet: halv- og 8-bredde tillates, ikke fjerdedeler */
+@media (min-width: 768px) {
+  .col-span-3,
+  .col-span-4 {
+    grid-column: span 6;
+  }
+  .col-span-6 {
+    grid-column: span 6;
+  }
+  .col-span-8 {
+    grid-column: span 12;
+  }
+}
+
+/* Desktop: eksplisitt N-bredde */
+@media (min-width: 1100px) {
+  .col-span-3  { grid-column: span 3; }
+  .col-span-4  { grid-column: span 4; }
+  .col-span-6  { grid-column: span 6; }
+  .col-span-8  { grid-column: span 8; }
+  .col-span-12 { grid-column: span 12; }
 }
 
 .nokkel-tall {
