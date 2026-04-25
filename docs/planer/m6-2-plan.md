@@ -1,6 +1,6 @@
-# M6.2 Analytisk innhold - forslag til plan
+# M6.2 Analytisk innhold - plan
 
-**Status:** Forslag fra prosjektleder, avventer godkjenning fra prosjekteier.
+**Status:** Godkjent av prosjekteier 2026-04-25. S10-S14 besluttet.
 **Dato:** 2026-04-25
 **Forutsetninger:** M6.1 merget (PR #24). Datafundamentet leverer
 `tidsserier_maanedlig.csv`, `country_summary_nok.csv`, og land-grupperinger
@@ -19,63 +19,41 @@ M6.2 skal levere fem analytiske byggeklosser som integreres i dashboardet:
    delta siden forrige release.
 5. **Tooltips** - hover-info på alle nye og eksisterende visualiseringer.
 
-## 2. Designvalg som krever beslutning
-
-For hver av disse må jeg ha din avgjørelse før jeg starter koding,
-fordi de er tolkningsvalg snarere enn tekniske valg.
+## 2. Designvalg - besluttet 2026-04-25
 
 ### S10: Standardvalg for komparativ landprofil
 
-Hvilke land skal være forhåndsvalgt sammen med Norge ved første lasting?
-
-- **Forslag:** Sverige, Danmark, Finland (Norden minus Island, som har
-  marginale tall). Brukeren kan deretter legge til/fjerne via
-  multivelger som fyller fra `landgrupper.py`.
-- Alternativ A: Tyskland + USA (de to største giverne, gir kontrast).
-- Alternativ B: Bruk gruppe-velger (Norden / EU / G7 / NATO / Alle)
-  i stedet for individuelle land som default.
+**Beslutning:** Default sammenligning = Norge + **Tyskland, Frankrike,
+Storbritannia**. Gir kontrast mot de største europeiske giverne.
+Brukeren kan legge til/fjerne via multivelger som fyller fra
+`landgrupper.py`.
 
 ### S11: Akser i scatter plot
 
-Hvilke to nøkkeltall skal scatter-plottet krysse som default?
-
-- **Forslag:** *Andel av BNP* (x) mot *Per capita EUR* (y) - viser
-  både relativ og absolutt innsats. Norge fremheves med farge.
-- Alternativ A: *Total allocation* (x) mot *Total commitment* (y) -
-  viser gap mellom lovet og utbetalt.
-- Alternativ B: *Andel av BNP* (x) mot *Total allocation EUR mrd* (y) -
-  miks av relativ og absolutt størrelse.
-
-Brukeren skal uansett kunne bytte akser via dropdown.
+**Beslutning:** *Andel av BNP* (x) mot *Per capita EUR* (y) som default.
+Norge fremheves med farge. Brukeren kan bytte akser via dropdown.
 
 ### S12: Tone og format på automatisk endringstekst
 
-Skal endringsteksten være:
+**Beslutning:** 2-4 setninger med **pedagogisk klarspråk** (ikke
+fagsjargong). Eksempel: *"Norges totale støtte til Ukraina økte med
+1,5 milliarder euro (+15 %) siden forrige Kiel-rapport. Økningen
+kommer hovedsakelig fra nye militære allokeringer. Norge er nå
+rangert som det 8. største giverlandet, opp fra 10. plass."*
+Inkluderer kort metodemerknad om at tallene kan inneholde
+retroaktive korrigeringer.
 
-- **Forslag:** Kort, faktasaklig på 2-4 setninger. Eksempel: *"Norges
-  totale støtte økte med 1,5 mrd EUR (+15 %) siden forrige release.
-  Økningen drevet hovedsakelig av nye militære allokeringer.
-  Norge er nå rangert på 8. plass blant giverland (opp fra 10.)."*
-- Alternativ A: Kun ett tall + retning (sparsommelig).
-- Alternativ B: Avsnitt med metodologi-merknad ved hver tekst.
+### S13: Tidsseriegraf - akkumulert eller per måned
 
-### S13: Tidsseriegraf - akkumulert eller per måned?
-
-- **Forslag:** Toggle med to moduser:
-  - "Per måned" - stolper viser månedssum (rådata fra
-    `tidsserier_maanedlig.csv`).
-  - "Akkumulert" - linje som summerer fra 2022-01 til hver måned
-    (default-modus, lettere å lese trend).
-- Alternativ: Bare én modus (akkumulert linjegraf), enklere.
+**Beslutning:** Toggle med to moduser. **Akkumulert** (linje fra
+2022-01 til hver måned) er default; **Per måned** (stolper) er
+sekundær modus.
 
 ### S14: Tooltips - innholdsnivå
 
-- **Forslag:** Standard Plotly-tooltips, men med eksplisitt format:
-  hver tooltip viser landnavn, verdi i både EUR og NOK
-  (der relevant), referanseår for BNP/folketall (når
-  vi viser relative tall), og rangering-posisjon. Norsk språk.
-- Alternativ: Bare standardverdier (rask å implementere, mindre
-  pedagogisk).
+**Beslutning:** Norsk språk, eksplisitt format. Hver tooltip viser
+landnavn, verdi i EUR og NOK (der relevant), referanseår for
+BNP/folketall (når relative tall vises), og rangering-posisjon.
 
 ## 3. Tekniske valg (mine å ta som dataingenior/frontend)
 
