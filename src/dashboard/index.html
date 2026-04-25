@@ -20,35 +20,51 @@
   </header>
 
   <main id="hovedinnhold">
-    <section class="nokkel-tall" aria-label="Nøkkeltall for Norge">
-      <div class="kort">
-        <div class="tall" id="total-allocation">-</div>
-        <div class="label">Total allokering (€ mrd)</div>
+    <section class="hero-seksjon" aria-labelledby="hero-tittel">
+      <h2 id="hero-tittel" class="visuelt-skjult">Norge i tall</h2>
+      <div class="grid hero-grid">
+        <article class="kpi-kort hero col-span-6"
+                 role="group" aria-labelledby="kpi-total-etikett">
+          <div class="kpi-verdi" id="total-allocation">–</div>
+          <div class="kpi-etikett" id="kpi-total-etikett">Total allokering</div>
+          <div class="kpi-kontekst">€ mrd, kumulativt 2022-2026</div>
+        </article>
+
+        <div class="hero-stotte col-span-6">
+          <article class="kpi-kort"
+                   role="group" aria-labelledby="kpi-endring-etikett">
+            <div class="kpi-verdi" id="endring-siste">–</div>
+            <div class="kpi-etikett" id="kpi-endring-etikett">Endring siden forrige rapport</div>
+            <div class="kpi-kontekst">€ mrd</div>
+          </article>
+
+          <article class="kpi-kort"
+                   role="group" aria-labelledby="kpi-rang-etikett">
+            <div class="kpi-verdi" id="rangering-alloc">–</div>
+            <div class="kpi-etikett" id="kpi-rang-etikett">Rangering blant giverland</div>
+            <div class="kpi-kontekst">total allokering</div>
+          </article>
+
+          <article class="kpi-kort"
+                   role="group" aria-labelledby="kpi-bnp-etikett">
+            <div class="kpi-verdi" id="andel-bnp">–</div>
+            <div class="kpi-etikett" id="kpi-bnp-etikett">Andel av BNP</div>
+            <div class="kpi-kontekst">kumulativt mot Verdensbanken 2024</div>
+          </article>
+        </div>
       </div>
-      <div class="kort">
-        <div class="tall" id="andel-bnp">-</div>
-        <div class="label">Andel av BNP (kumulativt)</div>
-      </div>
-      <div class="kort">
-        <div class="tall" id="per-capita">-</div>
-        <div class="label">Per innbygger (EUR)</div>
-      </div>
-      <div class="kort">
-        <div class="tall" id="rangering-alloc">-</div>
-        <div class="label">Rangering allokering</div>
-      </div>
-      <div class="kort">
-        <div class="tall" id="rangering-bnp">-</div>
-        <div class="label">Rangering BNP-andel</div>
-      </div>
-      <div class="kort">
-        <div class="tall" id="rangering-capita">-</div>
-        <div class="label">Rangering per capita</div>
-      </div>
-      <div class="kort">
-        <div class="tall" id="endring-siste">-</div>
-        <div class="label">Endring siste release (€ mrd)</div>
-      </div>
+
+      <p class="hero-sekundaer">
+        <span><strong>Per innbygger:</strong> <span id="per-capita">–</span> EUR</span>
+        <span><strong>Rangering BNP-andel:</strong> <span id="rangering-bnp">–</span></span>
+        <span><strong>Rangering per capita:</strong> <span id="rangering-capita">–</span></span>
+      </p>
+
+      <p class="metode-notat">
+        Tallene følger Kiels hovedinndeling (allokering). Andel av BNP og per
+        innbygger beregnes på kumulativ allokering 2022-2026 mot Verdensbankens
+        2024-tall (S2, S6).
+      </p>
     </section>
 
     <section class="visning-bytter" aria-label="Visningsvalg">
