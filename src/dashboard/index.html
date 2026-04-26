@@ -87,58 +87,71 @@
       <p class="metode-notat" id="endringstekst-meta"></p>
     </section>
 
-    <section class="graf gruppe-filter-seksjon" aria-labelledby="filter-tittel">
-      <h2 id="filter-tittel">Sammenlign Norge med ...</h2>
-      <div class="modus-toggle" role="group" aria-label="Velg sammenligningsmodus">
-        <label>
-          <input type="radio" name="komp-modus" value="enkeltland" checked>
-          <span>Enkeltland</span>
-        </label>
-        <label>
-          <input type="radio" name="komp-modus" value="gjennomsnitt">
-          <span>Gruppegjennomsnitt</span>
-        </label>
-      </div>
-      <p class="metode-notat" id="komp-modus-notat">
-        Velg ett eller flere land. Valget styrer komparativ profil, rangering
-        og scatter. Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd>
-        (Mac) for å velge flere land i lista. Eller bruk hurtigknappene for
-        forhåndsdefinerte grupper.
-      </p>
-      <div class="komparativ-kontroller" id="komp-enkeltland-kontroller">
-        <div class="land-velger">
-          <div class="land-velger-overskrift">
-            <span class="land-velger-tittel" id="land-velger-tittel">Velg land</span>
-            <span class="land-velger-antall" id="land-velger-antall"></span>
-            <button type="button" class="land-velger-tom" id="land-velger-tom">
-              Fjern alle
-            </button>
+    <div class="komparativ-blokk">
+      <section class="graf gruppe-filter-seksjon komparativ-blokk-topp"
+               aria-labelledby="filter-tittel">
+        <details class="filter-rullgardin" id="komp-rullgardin">
+          <summary class="filter-rullgardin-summary">
+            <span id="filter-tittel" class="filter-rullgardin-tittel">
+              Sammenlign Norge med ...
+            </span>
+            <span class="filter-rullgardin-status" id="filter-rullgardin-status"></span>
+            <span class="filter-rullgardin-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="filter-rullgardin-innhold">
+            <div class="modus-toggle" role="group" aria-label="Velg sammenligningsmodus">
+              <label>
+                <input type="radio" name="komp-modus" value="enkeltland" checked>
+                <span>Enkeltland</span>
+              </label>
+              <label>
+                <input type="radio" name="komp-modus" value="gjennomsnitt">
+                <span>Gruppegjennomsnitt</span>
+              </label>
+            </div>
+            <p class="metode-notat" id="komp-modus-notat">
+              Velg ett eller flere land. Valget styrer komparativ profil, rangering
+              og scatter. Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd>
+              (Mac) for å velge flere land i lista. Eller bruk hurtigknappene for
+              forhåndsdefinerte grupper.
+            </p>
+            <div class="komparativ-kontroller" id="komp-enkeltland-kontroller">
+              <div class="land-velger">
+                <div class="land-velger-overskrift">
+                  <span class="land-velger-tittel" id="land-velger-tittel">Velg land</span>
+                  <span class="land-velger-antall" id="land-velger-antall"></span>
+                  <button type="button" class="land-velger-tom" id="land-velger-tom">
+                    Fjern alle
+                  </button>
+                </div>
+                <input type="search" id="land-velger-sok" class="land-velger-sok"
+                       placeholder="Søk etter land …"
+                       aria-controls="land-velger-liste"
+                       aria-label="Filtrer landliste">
+                <div class="land-velger-liste" id="land-velger-liste"
+                     role="group"
+                     aria-labelledby="land-velger-tittel"></div>
+              </div>
+              <div class="gruppe-knapper" role="group" aria-label="Forhåndsdefinerte landgrupper">
+                <button type="button" data-gruppe="default">Standard</button>
+                <button type="button" data-gruppe="Norden">Norden</button>
+                <button type="button" data-gruppe="EU">EU</button>
+                <button type="button" data-gruppe="G7">G7</button>
+                <button type="button" data-gruppe="NATO">NATO</button>
+              </div>
+            </div>
           </div>
-          <input type="search" id="land-velger-sok" class="land-velger-sok"
-                 placeholder="Søk etter land …"
-                 aria-controls="land-velger-liste"
-                 aria-label="Filtrer landliste">
-          <div class="land-velger-liste" id="land-velger-liste"
-               role="group"
-               aria-labelledby="land-velger-tittel"></div>
-        </div>
-        <div class="gruppe-knapper" role="group" aria-label="Forhåndsdefinerte landgrupper">
-          <button type="button" data-gruppe="default">Standard</button>
-          <button type="button" data-gruppe="Norden">Norden</button>
-          <button type="button" data-gruppe="EU">EU</button>
-          <button type="button" data-gruppe="G7">G7</button>
-          <button type="button" data-gruppe="NATO">NATO</button>
-        </div>
-      </div>
-    </section>
+        </details>
+      </section>
 
-    <section class="graf">
-      <h2>Komparativ landprofil</h2>
-      <p class="metode-notat">
-        Norge sammenlignet med valgte land på samme nøkkeltall.
-      </p>
-      <div id="komparativ-grid" class="komparativ-grid"></div>
-    </section>
+      <section class="graf komparativ-blokk-bunn">
+        <h2>Komparativ landprofil</h2>
+        <p class="metode-notat">
+          Norge sammenlignet med valgte land på samme nøkkeltall.
+        </p>
+        <div id="komparativ-grid" class="komparativ-grid"></div>
+      </section>
+    </div>
 
     <section class="graf">
       <h2>Fordeling av støtte (Norge)</h2>

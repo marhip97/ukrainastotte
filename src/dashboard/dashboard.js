@@ -700,11 +700,26 @@ function rendreLandListe(filter) {
 
 function oppdaterAntallEtikett() {
   const el = document.getElementById("land-velger-antall");
-  if (!el) return;
   const n = _valgte.size;
-  el.textContent = n === 0 ? "Ingen valgt"
+  const tekst = n === 0 ? "Ingen valgt"
     : n === 1 ? "1 valgt"
     : n + " valgte";
+  if (el) el.textContent = tekst;
+  oppdaterRullgardinStatus();
+}
+
+function oppdaterRullgardinStatus() {
+  const status = document.getElementById("filter-rullgardin-status");
+  if (!status) return;
+  const modus = lesKompModus();
+  if (modus === "gjennomsnitt") {
+    status.textContent = "Gruppegjennomsnitt";
+    return;
+  }
+  const n = _valgte.size;
+  status.textContent = n === 0 ? "Ingen land valgt"
+    : n === 1 ? "1 land valgt"
+    : n + " land valgt";
 }
 
 function lesValgteLand() {
@@ -1279,7 +1294,10 @@ async function main() {
       .forEach((r) => r.addEventListener("change", tegn));
     document
       .querySelectorAll('input[name="komp-modus"]')
-      .forEach((r) => r.addEventListener("change", tegn));
+      .forEach((r) => r.addEventListener("change", () => {
+        oppdaterRullgardinStatus();
+        tegn();
+      }));
     // Land-velger har egen tilstand; checkbox-endringer trigger tegn() via callback.
     window.__landValgtCallback = tegn;
     const sokFelt = document.getElementById("land-velger-sok");
