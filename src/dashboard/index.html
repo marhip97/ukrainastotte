@@ -81,8 +81,8 @@
       </p>
     </section>
 
-    <section class="visning-bytter" aria-label="Visningsvalg">
-      <label>Visning:
+    <section class="visning-bytter" aria-label="Visningsvalg for fordelingsgrafen">
+      <label>Visning (Fordeling-grafen):
         <select id="visning">
           <option value="allocation" selected>Allokering (Kiel-hovedinndeling)</option>
           <option value="commitment">Forpliktelse</option>
@@ -153,6 +153,17 @@
                 aria-label="Last ned rangeringsgrafen som PNG-bilde">
           Last ned PNG
         </button>
+      </div>
+      <div class="rangering-kontroller">
+        <label for="rangering-maal">Sortér på:</label>
+        <select id="rangering-maal">
+          <option value="allocation" selected>Total allokering</option>
+          <option value="commitment">Total forpliktelse</option>
+          <option value="disbursement">Kun utbetalt (finansiell)</option>
+          <option value="bnp">Andel av BNP</option>
+          <option value="capita">Per innbygger</option>
+          <option value="endring">Endring siste release</option>
+        </select>
       </div>
       <div id="rangering-graf" role="img"
            aria-label="Stolpegraf med topp 15 giverland sortert etter valgt mål"></div>

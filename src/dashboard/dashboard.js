@@ -991,12 +991,13 @@ async function main() {
     fyllKomparativVelger(alleLand, KOMPARATIV_DEFAULT);
 
     const visning = document.getElementById("visning");
+    const rangeringMaal = document.getElementById("rangering-maal");
     function tegn() {
       const valgte = lesValgteLand();
       const valuta = lesValuta();
       skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
       tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
-      tegnRangering(rader, visning.value, disbSum, relRader, endrRader, valgte, valuta);
+      tegnRangering(rader, rangeringMaal.value, disbSum, relRader, endrRader, valgte, valuta);
       tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta);
       if (tidsserieRader.length > 0) {
         tegnTidsserie(tidsserieRader, valgte, valuta);
@@ -1009,6 +1010,7 @@ async function main() {
       tegnScatter(rader, relRader, valgte, valuta);
     }
     visning.addEventListener("change", tegn);
+    rangeringMaal.addEventListener("change", tegn);
     document
       .querySelectorAll('input[name="valuta"]')
       .forEach((r) => r.addEventListener("change", tegn));
