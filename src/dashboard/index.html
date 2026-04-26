@@ -25,12 +25,23 @@
   <main id="hovedinnhold">
     <section class="hero-seksjon" aria-labelledby="hero-tittel">
       <h2 id="hero-tittel" class="visuelt-skjult">Norge i tall</h2>
+      <div class="valuta-toggle" role="group" aria-label="Velg visningsvaluta for hele dashboardet">
+        <label>
+          <input type="radio" name="valuta" value="eur" checked>
+          <span>EUR</span>
+        </label>
+        <label>
+          <input type="radio" name="valuta" value="nok">
+          <span>NOK</span>
+        </label>
+        <span class="valuta-merknad">Styrer alle pengetall i dashboardet.</span>
+      </div>
       <div class="grid hero-grid">
         <article class="kpi-kort hero col-span-6"
                  role="group" aria-labelledby="kpi-total-etikett">
           <div class="kpi-verdi" id="total-allocation">–</div>
           <div class="kpi-etikett" id="kpi-total-etikett">Total allokering</div>
-          <div class="kpi-kontekst">€ mrd, kumulativt 2022-2026</div>
+          <div class="kpi-kontekst" id="total-allocation-kontekst">milliarder, kumulativt 2022-2026</div>
         </article>
 
         <div class="hero-stotte col-span-6">
@@ -38,7 +49,7 @@
                    role="group" aria-labelledby="kpi-endring-etikett">
             <div class="kpi-verdi" id="endring-siste">–</div>
             <div class="kpi-etikett" id="kpi-endring-etikett">Endring siden forrige rapport</div>
-            <div class="kpi-kontekst">€ mrd</div>
+            <div class="kpi-kontekst" id="endring-siste-kontekst">milliarder</div>
           </article>
 
           <article class="kpi-kort"
@@ -169,12 +180,6 @@
             <option value="Military">Militær</option>
             <option value="Financial">Finansiell</option>
             <option value="Humanitarian">Humanitær</option>
-          </select>
-        </label>
-        <label>Valuta:
-          <select id="tidsserie-valuta">
-            <option value="eur" selected>EUR</option>
-            <option value="nok">NOK</option>
           </select>
         </label>
       </div>

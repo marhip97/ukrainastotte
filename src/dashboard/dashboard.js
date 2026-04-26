@@ -8,6 +8,7 @@ const REL_PATH = window.REL_PATH || "../../data/processed/country_summary_relati
 const ENDR_PATH = window.ENDR_PATH || "../../data/processed/country_summary_endring.csv";
 const TIDSSERIE_PATH = window.TIDSSERIE_PATH || "../../data/processed/tidsserier_maanedlig.csv";
 const ENDRTEKST_PATH = window.ENDRTEKST_PATH || "../../data/processed/endringstekst.json";
+const VALUTAKURSER_PATH = window.VALUTAKURSER_PATH || "../../data/reference/valutakurser.json";
 
 // Speiler src/analyze/landgrupper.py (S9). Aliaser inkludert for robusthet.
 const LAND_GRUPPER = {
@@ -174,6 +175,44 @@ function parseCsv(tekst) {
   });
 }
 
+function lesValuta() {
+  const valgt = document.querySelector('input[name="valuta"]:checked');
+  return valgt ? valgt.value : "eur";
+}
+
+// Returnerer siste tilgjengelige EUR/NOK-kurs fra valutakurser.json,
+// eller en fornuftig fallback hvis filen mangler. Brukes til å
+// approksimere NOK-verdier for delta-tall (endring siste release)
+// der vi ikke har en presis NOK-versjon.
+let SISTE_KURS = 11.5;
+
+function settSisteKurs(valutakurser) {
+  if (!valutakurser || !valutakurser.kurser) return;
+  const datoer = Object.keys(valutakurser.kurser).sort();
+  if (datoer.length > 0) {
+    const k = parseFloat(valutakurser.kurser[datoer[datoer.length - 1]]);
+    if (Number.isFinite(k) && k > 0) {
+      SISTE_KURS = k;
+    }
+  }
+}
+
+// Format en EUR-mrd-verdi i valgt valuta. Tallet i argumentet er
+// alltid i EUR (slik CSV-en lagrer det); konverteringen til NOK gjør
+// vi her med siste tilgjengelige kurs som fallback.
+function formaterMrd(eurMrd, valuta) {
+  const v = valuta === "nok" ? eurMrd * SISTE_KURS : eurMrd;
+  return v.toFixed(2);
+}
+
+function valutaKortNavn(valuta) {
+  return valuta === "nok" ? "NOK" : "€";
+}
+
+function valutaMrdEnhet(valuta) {
+  return valuta === "nok" ? "mrd NOK" : "€ mrd";
+}
+
 function tilTall(str) {
   const n = parseFloat(str);
   return Number.isFinite(n) ? n : 0;
@@ -207,9 +246,13 @@ function rangMellomKomplette(rader, felt, land) {
   return { plass, av: sortert.length };
 }
 
-function skrivNoekkeltall(norge, rader, relRader, endrRader) {
-  const alloc = tilTall(norge.total_allocation);
-  document.getElementById("total-allocation").textContent = alloc.toFixed(2);
+function skrivNoekkeltall(norge, rader, relRader, endrRader, valuta) {
+  const allocEur = tilTall(norge.total_allocation);
+  const visAlloc = valuta === "nok" ? allocEur * SISTE_KURS : allocEur;
+  document.getElementById("total-allocation").textContent = visAlloc.toFixed(2);
+  document.getElementById("total-allocation-kontekst").textContent =
+    valutaMrdEnhet(valuta) + ", kumulativt 2022-2026";
+
   const sortertAlloc = sortertEtter(rader, "total_allocation");
   const rangAlloc = sortertAlloc.findIndex((r) => r.land === "Norway") + 1;
   document.getElementById("rangering-alloc").textContent =
@@ -234,20 +277,24 @@ function skrivNoekkeltall(norge, rader, relRader, endrRader) {
   }
 
   const endrEl = document.getElementById("endring-siste");
+  const endrCtx = document.getElementById("endring-siste-kontekst");
+  if (endrCtx) endrCtx.textContent = valutaMrdEnhet(valuta);
   if (endrRader.length === 0) {
     endrEl.textContent = "–";
     endrEl.title = "Kun én Kiel-release tilgjengelig. Endring vises når neste release kommer.";
   } else {
     const endrIdx = indekser(endrRader);
     const norgeEndr = endrIdx["Norway"];
-    const d = norgeEndr ? tilTall(norgeEndr.delta_total_allocation) : 0;
+    const dEur = norgeEndr ? tilTall(norgeEndr.delta_total_allocation) : 0;
+    const d = valuta === "nok" ? dEur * SISTE_KURS : dEur;
     const tegn = d > 0 ? "+" : "";
     endrEl.textContent = tegn + d.toFixed(2);
   }
 }
 
-function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
+function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr, valuta) {
   const graf = document.getElementById("fordeling-graf");
+  const enhet = valutaMrdEnhet(valuta);
   if (maal === "endring") {
     if (!norgeEndr) {
       Plotly.purge(graf);
@@ -256,15 +303,16 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
         + 'Endringstall beregnes når neste release kommer (ukentlig henting).</p>';
       return;
     }
+    const skala = valuta === "nok" ? SISTE_KURS : 1;
     Plotly.newPlot(
       graf,
       [
         {
           x: ["Militær", "Finansiell", "Humanitær"],
           y: [
-            tilTall(norgeEndr.delta_military_allocation),
-            tilTall(norgeEndr.delta_financial_allocation),
-            tilTall(norgeEndr.delta_humanitarian_allocation),
+            tilTall(norgeEndr.delta_military_allocation) * skala,
+            tilTall(norgeEndr.delta_financial_allocation) * skala,
+            tilTall(norgeEndr.delta_humanitarian_allocation) * skala,
           ],
           type: "bar",
           marker: {
@@ -274,35 +322,36 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
               token("--kategori-humanitaer", "#4292c6"),
             ],
           },
-          hovertemplate: "<b>%{x}</b><br>Endring: %{y:,.3f} € mrd<extra></extra>",
+          hovertemplate: "<b>%{x}</b><br>Endring: %{y:,.3f} " + enhet + "<extra></extra>",
         },
       ],
       flett(tema(), {
         height: 320,
-        yaxis: { title: "Endring (€ mrd)", zeroline: true },
+        yaxis: { title: "Endring (" + enhet + ")", zeroline: true },
       }),
       { displayModeBar: false, responsive: true }
     );
     return;
   }
   if (maal === "disbursement") {
+    const verdi = valuta === "nok" ? norgeUtbetalt * SISTE_KURS : norgeUtbetalt;
     Plotly.newPlot(
       graf,
       [
         {
           x: ["Finansiell utbetaling (Norge)"],
-          y: [norgeUtbetalt],
+          y: [verdi],
           type: "bar",
           marker: { color: token("--blue-500", "#1d3557") },
-          text: [norgeUtbetalt.toFixed(3) + " € mrd"],
+          text: [verdi.toFixed(3) + " " + enhet],
           textposition: "outside",
           hovertemplate:
-            "<b>Norge</b><br>Finansiell utbetaling: %{y:,.3f} € mrd<extra></extra>",
+            "<b>Norge</b><br>Finansiell utbetaling: %{y:,.3f} " + enhet + "<extra></extra>",
         },
       ],
       flett(tema(), {
         height: 300,
-        yaxis: { title: "€ mrd", rangemode: "tozero" },
+        yaxis: { title: enhet, rangemode: "tozero" },
         annotations: [
           {
             text: "Kun finansielle budget support-utbetalinger. Militær og humanitær ikke inkludert.",
@@ -344,9 +393,10 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
     return;
   }
   const prefiks = maal === "commitment" ? "commitment" : "allocation";
-  const militaer   = tilTall(norge["military_"     + prefiks]);
-  const finansiell = tilTall(norge["financial_"    + prefiks]);
-  const humanitaer = tilTall(norge["humanitarian_" + prefiks]);
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const militaer   = tilTall(norge["military_"     + prefiks]) * skala;
+  const finansiell = tilTall(norge["financial_"    + prefiks]) * skala;
+  const humanitaer = tilTall(norge["humanitarian_" + prefiks]) * skala;
   const total = militaer + finansiell + humanitaer;
   const pct = (v) => total > 0 ? (100 * v / total).toFixed(0) + " %" : "–";
   // Tokens fra src/dashboard/tokens.css - hardkodet her i påvente av
@@ -367,7 +417,7 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
     insidetextanchor: "middle",
     hovertemplate:
       "<b>" + navn + "</b><br>" +
-      "%{x:,.2f} € mrd (" + pct(verdi) + ")<extra></extra>",
+      "%{x:,.2f} " + enhet + " (" + pct(verdi) + ")<extra></extra>",
   });
   Plotly.newPlot(
     graf,
@@ -379,7 +429,7 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
     flett(tema(), {
       barmode: "stack",
       height: 180,
-      xaxis: { title: "€ mrd", rangemode: "tozero" },
+      xaxis: { title: enhet, rangemode: "tozero" },
       yaxis: { showticklabels: false, fixedrange: true },
       showlegend: true,
       legend: { orientation: "h", y: -0.6 },
@@ -388,19 +438,21 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
   );
 }
 
-function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand) {
+function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand, valuta) {
   let verdier;
   let xTittel;
+  const enhet = valutaMrdEnhet(valuta);
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
   if (maal === "disbursement") {
     verdier = Object.keys(disbSum)
-      .map((land) => ({ land, sum: disbSum[land] }))
+      .map((land) => ({ land, sum: disbSum[land] * skala }))
       .sort((a, b) => b.sum - a.sum);
-    xTittel = "€ mrd";
+    xTittel = enhet;
   } else if (maal === "endring") {
     verdier = endrRader
-      .map((r) => ({ land: r.land, sum: tilTall(r.delta_total_allocation) }))
+      .map((r) => ({ land: r.land, sum: tilTall(r.delta_total_allocation) * skala }))
       .sort((a, b) => b.sum - a.sum);
-    xTittel = "Endring i total allokering (€ mrd)";
+    xTittel = "Endring i total allokering (" + enhet + ")";
   } else if (maal === "bnp" || maal === "capita") {
     const felt = maal === "bnp" ? "andel_bnp_pct" : "per_capita_eur";
     verdier = relRader
@@ -412,9 +464,9 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand) {
     const felt = maal === "commitment" ? "total_commitment" : "total_allocation";
     verdier = sortertEtter(rader, felt).map((r) => ({
       land: r.land,
-      sum: tilTall(r[felt]),
+      sum: tilTall(r[felt]) * skala,
     }));
-    xTittel = "€ mrd";
+    xTittel = enhet;
   }
   const topp = verdier.slice(0, 15);
   const norgeFarge = token("--blue-500", "#1d3557");
@@ -505,7 +557,7 @@ function lesValgteLand() {
   return Array.from(velger.selectedOptions).map((o) => o.value);
 }
 
-function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
+function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta) {
   const grid = document.getElementById("komparativ-grid");
   grid.innerHTML = "";
   const summaryIdx = indekser(rader);
@@ -514,12 +566,19 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
   const sortertAlloc = sortertEtter(rader, "total_allocation");
   const rangAlloc = {};
   sortertAlloc.forEach((r, i) => { rangAlloc[r.land] = i + 1; });
+  const enhet = valutaMrdEnhet(valuta);
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
 
   for (const land of valgteLand) {
     const summary = summaryIdx[land];
     if (!summary) continue;
     const rel = relIdx[land];
     const endr = endrIdx[land];
+
+    const allocVerdi = tilTall(summary.total_allocation) * skala;
+    const commVerdi = tilTall(summary.total_commitment) * skala;
+    const deltaEur = endr ? tilTall(endr.delta_total_allocation) : null;
+    const deltaVerdi = deltaEur === null ? null : deltaEur * skala;
 
     const rBnp = rel ? rangMellomKomplette(relRader, "andel_bnp_pct", land) : null;
     const rCap = rel ? rangMellomKomplette(relRader, "per_capita_eur", land) : null;
@@ -532,8 +591,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
 
     const dl = document.createElement("dl");
     const rader2 = [
-      ["Total allokering", tilTall(summary.total_allocation).toFixed(2) + " € mrd"],
-      ["Total forpliktelse", tilTall(summary.total_commitment).toFixed(2) + " € mrd"],
+      ["Total allokering", allocVerdi.toFixed(2) + " " + enhet],
+      ["Total forpliktelse", commVerdi.toFixed(2) + " " + enhet],
       [
         "Andel av BNP",
         rel && rel.andel_bnp_pct !== ""
@@ -551,10 +610,9 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
       ["Rangering per capita", rCap ? rCap.plass + " av " + rCap.av : "–"],
       [
         "Endring siden forrige release",
-        endr
-          ? (tilTall(endr.delta_total_allocation) >= 0 ? "+" : "")
-            + tilTall(endr.delta_total_allocation).toFixed(2) + " € mrd"
-          : "–",
+        deltaVerdi === null
+          ? "–"
+          : (deltaVerdi >= 0 ? "+" : "") + deltaVerdi.toFixed(2) + " " + enhet,
       ],
     ];
     for (const [navn, verdi] of rader2) {
@@ -620,11 +678,10 @@ function byggTidsserieTabell(traces, maaneder, valutaTekst, modus) {
   tabell.innerHTML = html;
 }
 
-function tegnTidsserie(rader, valgteLand) {
+function tegnTidsserie(rader, valgteLand, valuta) {
   const modus = document.getElementById("tidsserie-modus").value;
   const maal = document.getElementById("tidsserie-maal").value;
   const kategori = document.getElementById("tidsserie-kategori").value;
-  const valuta = document.getElementById("tidsserie-valuta").value;
   const valutaFelt = valuta === "nok" ? "sum_nok" : "sum_eur";
   const valutaTekst = valuta === "nok" ? "NOK" : "EUR";
   const filtrert = filtrerTidsserie(rader, valgteLand, kategori, maal);
@@ -689,10 +746,12 @@ function tegnTidsserie(rader, valgteLand) {
   );
 }
 
-function tegnScatter(rader, relRader, valgteLand) {
+function tegnScatter(rader, relRader, valgteLand, valuta) {
   const xFelt = document.getElementById("scatter-x").value;
   const yFelt = document.getElementById("scatter-y").value;
   const summaryIdx = indekser(rader);
+  const enhet = valutaMrdEnhet(valuta);
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
 
   function hentVerdi(land, felt) {
     if (felt === "andel_bnp_pct" || felt === "per_capita_eur") {
@@ -704,14 +763,17 @@ function tegnScatter(rader, relRader, valgteLand) {
     }
     const r = summaryIdx[land];
     if (!r) return null;
+    if (felt === "total_allocation" || felt === "total_commitment") {
+      return tilTall(r[felt]) * skala;
+    }
     return tilTall(r[felt]);
   }
 
   function aksetekst(felt) {
     if (felt === "andel_bnp_pct") return "Andel av BNP (%)";
     if (felt === "per_capita_eur") return "Per innbygger (EUR)";
-    if (felt === "total_allocation") return "Total allokering (€ mrd)";
-    if (felt === "total_commitment") return "Total forpliktelse (€ mrd)";
+    if (felt === "total_allocation") return "Total allokering (" + enhet + ")";
+    if (felt === "total_commitment") return "Total forpliktelse (" + enhet + ")";
     return felt;
   }
 
@@ -858,7 +920,8 @@ function tegnEndringstekst(endringstekstData) {
 
 async function main() {
   try {
-    const [csvResp, metaResp, disbResp, relResp, endrResp, tidsResp, endrTekstResp] =
+    const [csvResp, metaResp, disbResp, relResp, endrResp, tidsResp, endrTekstResp,
+           kurserResp] =
       await Promise.all([
         fetch(DATA_PATH),
         fetch(META_PATH),
@@ -867,6 +930,7 @@ async function main() {
         fetch(ENDR_PATH),
         fetch(TIDSSERIE_PATH),
         fetch(ENDRTEKST_PATH),
+        fetch(VALUTAKURSER_PATH),
       ]);
     if (!csvResp.ok) throw new Error("Fant ikke country_summary.csv");
     const csv = await csvResp.text();
@@ -908,6 +972,14 @@ async function main() {
       }
     }
 
+    if (kurserResp.ok) {
+      try {
+        settSisteKurs(await kurserResp.json());
+      } catch (e) {
+        // Behold default-fallback for SISTE_KURS.
+      }
+    }
+
     if (metaResp.ok) {
       const meta = await metaResp.json();
       document.getElementById("sist-oppdatert").textContent = meta.prosessert_dato;
@@ -921,25 +993,29 @@ async function main() {
     const visning = document.getElementById("visning");
     function tegn() {
       const valgte = lesValgteLand();
-      skrivNoekkeltall(norge, rader, relRader, endrRader);
-      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr);
-      tegnRangering(rader, visning.value, disbSum, relRader, endrRader, valgte);
-      tegnKomparativProfil(rader, valgte, relRader, endrRader);
+      const valuta = lesValuta();
+      skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
+      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
+      tegnRangering(rader, visning.value, disbSum, relRader, endrRader, valgte, valuta);
+      tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta);
       if (tidsserieRader.length > 0) {
-        tegnTidsserie(tidsserieRader, valgte);
+        tegnTidsserie(tidsserieRader, valgte, valuta);
       } else {
         document.getElementById("tidsserie-graf").innerHTML =
           '<p class="metode-notat">Ingen tidsseriedata tilgjengelig. '
           + 'Kjør <code>python -m src.ingest.normalize</code> etter at '
           + '<code>data/reference/valutakurser.json</code> er hentet.</p>';
       }
-      tegnScatter(rader, relRader, valgte);
+      tegnScatter(rader, relRader, valgte, valuta);
     }
     visning.addEventListener("change", tegn);
     document
+      .querySelectorAll('input[name="valuta"]')
+      .forEach((r) => r.addEventListener("change", tegn));
+    document
       .getElementById("komparativ-velger")
       .addEventListener("change", tegn);
-    ["tidsserie-modus", "tidsserie-maal", "tidsserie-kategori", "tidsserie-valuta",
+    ["tidsserie-modus", "tidsserie-maal", "tidsserie-kategori",
      "scatter-x", "scatter-y"]
       .forEach((id) => {
         const el = document.getElementById(id);

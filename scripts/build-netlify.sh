@@ -23,9 +23,11 @@ cp "$ROOT/data/processed/country_summary_endring.csv" "$SITE/data/" 2>/dev/null 
 cp "$ROOT/data/processed/tidsserier_maanedlig.csv" "$SITE/data/" 2>/dev/null || true
 cp "$ROOT/data/processed/country_summary_nok.csv" "$SITE/data/" 2>/dev/null || true
 cp "$ROOT/data/processed/endringstekst.json" "$SITE/data/" 2>/dev/null || true
+mkdir -p "$SITE/data/reference"
+cp "$ROOT/data/reference/valutakurser.json" "$SITE/data/reference/" 2>/dev/null || true
 
 # Sett datastier så relative URL-er peker til /data/ etter deploy.
-sed -i 's|<script src="dashboard.js"></script>|<script>window.DATA_PATH="./data/country_summary.csv";window.META_PATH="./data/metadata.json";window.DISB_PATH="./data/financial_disbursements.csv";window.REL_PATH="./data/country_summary_relative.csv";window.ENDR_PATH="./data/country_summary_endring.csv";window.TIDSSERIE_PATH="./data/tidsserier_maanedlig.csv";window.ENDRTEKST_PATH="./data/endringstekst.json";window.NOK_PATH="./data/country_summary_nok.csv";window.BILATERAL_PATH="./data/bilateral_activities.csv";</script><script src="dashboard.js"></script>|' "$SITE/index.html"
+sed -i 's|<script src="dashboard.js"></script>|<script>window.DATA_PATH="./data/country_summary.csv";window.META_PATH="./data/metadata.json";window.DISB_PATH="./data/financial_disbursements.csv";window.REL_PATH="./data/country_summary_relative.csv";window.ENDR_PATH="./data/country_summary_endring.csv";window.TIDSSERIE_PATH="./data/tidsserier_maanedlig.csv";window.ENDRTEKST_PATH="./data/endringstekst.json";window.NOK_PATH="./data/country_summary_nok.csv";window.BILATERAL_PATH="./data/bilateral_activities.csv";window.VALUTAKURSER_PATH="./data/reference/valutakurser.json";</script><script src="dashboard.js"></script>|' "$SITE/index.html"
 
 # Erstatt lokale markdown-lenker med GitHub-lenker (krever at repoet er
 # tilgjengelig; er privat i dag, men lenken er en pekepinn og skader ikke).

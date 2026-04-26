@@ -158,6 +158,50 @@ main > section:last-child {
  * mindre nøkkeltall + metode-merknad.
  */
 
+.valuta-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.valuta-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-weight: var(--fw-semi);
+  font-size: var(--fs-body);
+  color: var(--blue-700);
+}
+
+.valuta-toggle label:has(input:checked) {
+  background: var(--blue-500);
+  color: var(--card-bg);
+  border-color: var(--blue-500);
+}
+
+.valuta-toggle label:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.valuta-toggle input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.valuta-merknad {
+  color: var(--muted);
+  font-size: var(--fs-caption);
+}
+
 .hero-grid {
   align-items: stretch;
 }
