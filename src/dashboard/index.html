@@ -97,17 +97,18 @@
       <p class="metode-notat" id="endringstekst-meta"></p>
     </section>
 
-    <section class="graf">
-      <h2>Komparativ landprofil</h2>
+    <section class="graf gruppe-filter-seksjon" aria-labelledby="filter-tittel">
+      <h2 id="filter-tittel">Sammenlign Norge med ...</h2>
       <p class="metode-notat">
-        Sammenlign Norge med valgte giverland på samme nøkkeltall.
-        Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd> (Mac) for å velge flere
-        land i lista. Eller bruk hurtigknappene for forhåndsdefinerte grupper.
+        Velg ett eller flere land. Valget styrer komparativ profil, rangering
+        og scatter. Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd>
+        (Mac) for å velge flere land i lista. Eller bruk hurtigknappene for
+        forhåndsdefinerte grupper.
       </p>
       <div class="komparativ-kontroller">
         <label for="komparativ-velger">Velg land:</label>
         <select id="komparativ-velger" multiple size="6"></select>
-        <div class="gruppe-knapper">
+        <div class="gruppe-knapper" role="group" aria-label="Forhåndsdefinerte landgrupper">
           <button type="button" data-gruppe="default">Standard</button>
           <button type="button" data-gruppe="Norden">Norden</button>
           <button type="button" data-gruppe="EU">EU</button>
@@ -115,6 +116,13 @@
           <button type="button" data-gruppe="NATO">NATO</button>
         </div>
       </div>
+    </section>
+
+    <section class="graf">
+      <h2>Komparativ landprofil</h2>
+      <p class="metode-notat">
+        Norge sammenlignet med valgte land på samme nøkkeltall.
+      </p>
       <div id="komparativ-grid" class="komparativ-grid"></div>
     </section>
 
