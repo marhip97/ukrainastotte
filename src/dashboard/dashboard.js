@@ -160,7 +160,9 @@ function visFeil(tekst) {
 }
 
 function parseCsv(tekst) {
-  const linjer = tekst.trim().split("\n");
+  // Pythons csv-modul skriver CRLF som linjeskift. Splitt på begge
+  // varianter så siste kolonne ikke får et hengende \r-tegn.
+  const linjer = tekst.trim().split(/\r?\n/);
   const header = linjer[0].split(",");
   return linjer.slice(1).map((linje) => {
     const verdier = linje.split(",");
