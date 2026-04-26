@@ -7,10 +7,11 @@ med særlig fokus på Norges støtte til Ukraina sammenlignet med øvrige giverl
 **Status:** Alle fem milepæler (M1-M5) levert og godkjent.
 Prosjektet er i driftsfase.
 
-**Dashboard:** <https://ukrainastotte.netlify.app/>
+**Dashboard:** <https://marhip97.github.io/ukrainastotte/>
 
-Deployes automatisk via Netlify fra `main`. `netlify.toml` styrer bygg
-og publisering; `scripts/build-netlify.sh` bygger `_site/`.
+Deployes automatisk til GitHub Pages fra `main`. Workflow
+`.github/workflows/deploy-pages.yml` kjører `scripts/build-site.sh`,
+laster opp `_site/` som Pages-artifakt og publiserer.
 
 ## Formål
 
