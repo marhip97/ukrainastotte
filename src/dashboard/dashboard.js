@@ -684,6 +684,28 @@ function tegnTidsserie(rader, valgteLand, valuta) {
   const kategori = document.getElementById("tidsserie-kategori").value;
   const valutaFelt = valuta === "nok" ? "sum_nok" : "sum_eur";
   const valutaTekst = valuta === "nok" ? "NOK" : "EUR";
+  const grafEl = document.getElementById("tidsserie-graf");
+
+  // Kiel rapporterer Commitment kun aggregert per land (Country Summary-
+  // arket), ikke som sub-aktiviteter med dato. Tidsserien har derfor
+  // ikke månedlige forpliktelses-tall - alle verdier ville blitt 0.
+  // Vis pedagogisk tom-tilstand i stedet for en flat null-graf.
+  if (maal === "Commitment") {
+    if (typeof Plotly !== "undefined") Plotly.purge(grafEl);
+    grafEl.innerHTML =
+      '<p class="metode-notat">'
+      + '<strong>Forpliktelse er ikke tilgjengelig på månedsnivå.</strong> '
+      + 'Kiel rapporterer commitments kun aggregert per land i Country '
+      + 'Summary-arket, ikke som datostemplede sub-aktiviteter. '
+      + 'Total forpliktelse per land vises i hero-seksjonen og i '
+      + 'komparativ landprofil. Bytt til <em>Allokering</em> her for '
+      + 'å se månedlig utvikling.</p>';
+    const tabell = document.getElementById("tidsserie-tabell");
+    if (tabell) tabell.innerHTML =
+      "<caption>Forpliktelse er ikke tilgjengelig på månedsnivå.</caption>";
+    return;
+  }
+
   const filtrert = filtrerTidsserie(rader, valgteLand, kategori, maal);
   const sum = aggregerPerMaaned(filtrert, valutaFelt);
 
