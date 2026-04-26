@@ -417,7 +417,25 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
   const topp = verdier.slice(0, 15);
   const norgeFarge = token("--blue-500", "#1d3557");
   const andreFarge = token("--blue-300", "#5d8aaa");
+  const stripeFarge = token("--blue-50", "#eef2f7");
   const farger = topp.map((v) => (v.land === "Norway" ? norgeFarge : andreFarge));
+  // Norge-bakgrunnsstripe (M6.3 § 3.3.3) - kun hvis Norge er i topp 15.
+  const norgeIdxTopp = topp.findIndex((v) => v.land === "Norway");
+  const shapes = [];
+  if (norgeIdxTopp >= 0) {
+    shapes.push({
+      type: "rect",
+      xref: "paper",
+      yref: "y",
+      x0: 0,
+      x1: 1,
+      y0: norgeIdxTopp - 0.45,
+      y1: norgeIdxTopp + 0.45,
+      fillcolor: stripeFarge,
+      line: { width: 0 },
+      layer: "below",
+    });
+  }
   Plotly.newPlot(
     "rangering-graf",
     [
@@ -435,6 +453,7 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
       height: 420,
       xaxis: { title: xTittel },
       yaxis: { autorange: "reversed" },
+      shapes: shapes,
     }),
     { displayModeBar: false, responsive: true }
   );
@@ -868,6 +887,20 @@ async function main() {
         });
       });
     tegnEndringstekst(endringstekstData);
+
+    const pngKnapp = document.getElementById("rangering-png-knapp");
+    if (pngKnapp) {
+      pngKnapp.addEventListener("click", () => {
+        const dato = new Date().toISOString().slice(0, 10);
+        Plotly.downloadImage("rangering-graf", {
+          format: "png",
+          width: 1200,
+          height: 700,
+          filename: "kiel-rangering-" + dato,
+        });
+      });
+    }
+
     tegn();
   } catch (feil) {
     console.error(feil);
