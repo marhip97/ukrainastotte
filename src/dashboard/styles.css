@@ -760,17 +760,18 @@ main > .komparativ-blokk > section {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 1.25rem;
+  padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  overflow: hidden;
 }
 
 .komparativ-kort.fokus {
   background: var(--blue-50);
   border-color: var(--blue-500);
   border-width: 2px;
-  padding: calc(1.25rem - 1px);
+  padding: calc(1rem - 1px) calc(1.5rem - 1px);
 }
 
 .komparativ-kort h3 {
@@ -784,9 +785,10 @@ main > .komparativ-blokk > section {
   margin: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 0.5rem;
+  column-gap: 0.75rem;
   row-gap: 0.35rem;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-micro);
+  min-width: 0;
 }
 
 .komparativ-kort dt {
@@ -802,6 +804,7 @@ main > .komparativ-blokk > section {
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
+  min-width: 0;
 }
 
 kbd {
