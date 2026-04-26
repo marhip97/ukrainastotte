@@ -326,9 +326,12 @@ function rangMellomKomplette(rader, felt, land) {
 function skrivNoekkeltall(norge, rader, relRader, endrRader, valuta) {
   const allocEur = tilTall(norge.total_allocation);
   const visAlloc = valuta === "nok" ? allocEur * SISTE_KURS : allocEur;
-  document.getElementById("total-allocation").textContent = visAlloc.toFixed(2);
-  document.getElementById("total-allocation-kontekst").textContent =
-    valutaMrdEnhet(valuta) + ", kumulativt 2022-2026";
+  const totalAllocEl = document.getElementById("total-allocation");
+  if (totalAllocEl) totalAllocEl.textContent = visAlloc.toFixed(2);
+  const totalAllocKtx = document.getElementById("total-allocation-kontekst");
+  if (totalAllocKtx) {
+    totalAllocKtx.textContent = valutaMrdEnhet(valuta) + ", kumulativt 2022-2026";
+  }
 
   const sortertAlloc = sortertEtter(rader, "total_allocation");
   const rangAlloc = sortertAlloc.findIndex((r) => r.land === "Norway") + 1;
@@ -339,7 +342,8 @@ function skrivNoekkeltall(norge, rader, relRader, endrRader, valuta) {
   const norgeRel = relIdx["Norway"];
   const enhetPerInn = valuta === "nok" ? "NOK" : "EUR";
   const skala = valuta === "nok" ? SISTE_KURS : 1;
-  document.getElementById("per-capita-enhet").textContent = enhetPerInn;
+  const perCapEnhetEl = document.getElementById("per-capita-enhet");
+  if (perCapEnhetEl) perCapEnhetEl.textContent = enhetPerInn;
   if (norgeRel) {
     document.getElementById("andel-bnp").textContent =
       tilTall(norgeRel.andel_bnp_pct).toFixed(2) + " %";
