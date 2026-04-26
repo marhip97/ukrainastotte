@@ -681,7 +681,7 @@ function tegnTidsserie(rader, valgteLand) {
   );
 }
 
-function tegnScatter(rader, relRader) {
+function tegnScatter(rader, relRader, valgteLand) {
   const xFelt = document.getElementById("scatter-x").value;
   const yFelt = document.getElementById("scatter-y").value;
   const summaryIdx = indekser(rader);
@@ -714,8 +714,15 @@ function tegnScatter(rader, relRader) {
     .map((l, i) => ({ land: l, x: xVerdier[i], y: yVerdier[i] }))
     .filter((p) => p.x !== null && p.y !== null);
 
+  const valgte = new Set(valgteLand || []);
+  // Norge er alltid framhevet, skilles ut som egen trace.
   const norge = filtrert.find((p) => p.land === "Norway");
-  const andre = filtrert.filter((p) => p.land !== "Norway");
+  const fremhevet = filtrert.filter((p) =>
+    p.land !== "Norway" && valgte.has(p.land)
+  );
+  const andre = filtrert.filter((p) =>
+    p.land !== "Norway" && !valgte.has(p.land)
+  );
 
   const traces = [
     {
@@ -732,6 +739,27 @@ function tegnScatter(rader, relRader) {
         + aksetekst(yFelt) + ": %{y:,.2f}<extra></extra>",
     },
   ];
+  if (fremhevet.length > 0) {
+    traces.push({
+      x: fremhevet.map((p) => p.x),
+      y: fremhevet.map((p) => p.y),
+      text: fremhevet.map((p) => norsk(p.land)),
+      mode: "markers+text",
+      type: "scatter",
+      name: "Valgte sammenligningsland",
+      marker: {
+        color: token("--blue-500", "#1d3557"),
+        size: 12,
+        symbol: "circle",
+      },
+      textposition: "top center",
+      textfont: { size: 12, color: token("--blue-700", "#13315c") },
+      hovertemplate:
+        "<b>%{text}</b><br>"
+        + aksetekst(xFelt) + ": %{x:,.2f}<br>"
+        + aksetekst(yFelt) + ": %{y:,.2f}<extra></extra>",
+    });
+  }
   if (norge) {
     traces.push({
       x: [norge.x],
@@ -742,11 +770,12 @@ function tegnScatter(rader, relRader) {
       name: "Norge",
       marker: {
         color: token("--blue-500", "#1d3557"),
-        size: 14,
+        size: 16,
         symbol: "circle",
         line: { color: token("--blue-900", "#0b2545"), width: 2 },
       },
       textposition: "top center",
+      textfont: { size: 13, color: token("--blue-900", "#0b2545"), family: token("--font-sans", "sans-serif") },
       hovertemplate:
         "<b>Norge</b><br>"
         + aksetekst(xFelt) + ": %{x:,.2f}<br>"
@@ -864,7 +893,7 @@ async function main() {
           + 'Kjør <code>python -m src.ingest.normalize</code> etter at '
           + '<code>data/reference/valutakurser.json</code> er hentet.</p>';
       }
-      tegnScatter(rader, relRader);
+      tegnScatter(rader, relRader, valgte);
     }
     visning.addEventListener("change", tegn);
     document
