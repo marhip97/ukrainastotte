@@ -246,7 +246,49 @@ main > section:last-child {
 
 .graf h2 {
   margin-top: 0;
-  font-size: 1.2rem;
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semi);
+  color: var(--blue-700);
+}
+
+.seksjon-overskrift {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.seksjon-overskrift h2 {
+  margin: 0;
+}
+
+.knapp-sekundaer {
+  background: var(--card-bg);
+  border: 1px solid var(--blue-500);
+  color: var(--blue-500);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semi);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.knapp-sekundaer:hover {
+  background: var(--blue-50);
+}
+
+.knapp-sekundaer:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.knapp-sekundaer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .uthev {
