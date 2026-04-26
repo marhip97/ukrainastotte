@@ -34,6 +34,66 @@ const LAND_GRUPPER = {
 // S10-default for komparativ profil: Norge + Tyskland, Frankrike, Storbritannia.
 const KOMPARATIV_DEFAULT = ["Norway", "Germany", "France", "United Kingdom"];
 
+// Oversettelse fra Kiels engelske landsnavn til norsk visningsnavn.
+// CSV-data beholder engelsk (data-koblingen krever det). Visningen
+// (KPI, grafer, tooltips, kort) bruker norsk navn via norsk()-helperen.
+const LAND_TIL_NORSK = {
+  "Albania": "Albania",
+  "Australia": "Australia",
+  "Austria": "Østerrike",
+  "Belgium": "Belgia",
+  "Bulgaria": "Bulgaria",
+  "Canada": "Canada",
+  "China": "Kina",
+  "Croatia": "Kroatia",
+  "Cyprus": "Kypros",
+  "Czechia": "Tsjekkia",
+  "Czech Republic": "Tsjekkia",
+  "Denmark": "Danmark",
+  "Estonia": "Estland",
+  "Finland": "Finland",
+  "France": "Frankrike",
+  "Germany": "Tyskland",
+  "Greece": "Hellas",
+  "Hungary": "Ungarn",
+  "Iceland": "Island",
+  "India": "India",
+  "Ireland": "Irland",
+  "Italy": "Italia",
+  "Japan": "Japan",
+  "Korea, Rep.": "Sør-Korea",
+  "Latvia": "Latvia",
+  "Lithuania": "Litauen",
+  "Luxembourg": "Luxembourg",
+  "Malta": "Malta",
+  "Montenegro": "Montenegro",
+  "Netherlands": "Nederland",
+  "New Zealand": "New Zealand",
+  "North Macedonia": "Nord-Makedonia",
+  "Norway": "Norge",
+  "Poland": "Polen",
+  "Portugal": "Portugal",
+  "Romania": "Romania",
+  "Slovakia": "Slovakia",
+  "Slovenia": "Slovenia",
+  "South Korea": "Sør-Korea",
+  "Spain": "Spania",
+  "Sweden": "Sverige",
+  "Switzerland": "Sveits",
+  "Turkey": "Tyrkia",
+  "Turkiye": "Tyrkia",
+  "United Kingdom": "Storbritannia",
+  "United States": "USA",
+  "EU (Commission and Council)": "EU (Kommisjonen og Rådet)",
+  "EU Institutions": "EU-institusjoner",
+  "European Investment Bank": "Den europeiske investeringsbanken",
+  "Taiwan": "Taiwan",
+};
+
+function norsk(land) {
+  return LAND_TIL_NORSK[land] || land;
+}
+
 // Plotly-tema som speiler designtokens (M6.3 § 3.4.4). Leses fra
 // :root via getComputedStyle slik at tokens.css er én sannhet.
 function token(navn, fallback) {
@@ -363,7 +423,7 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
     [
       {
         x: topp.map((v) => v.sum),
-        y: topp.map((v) => v.land),
+        y: topp.map((v) => norsk(v.land)),
         type: "bar",
         orientation: "h",
         marker: { color: farger },
@@ -407,7 +467,7 @@ function fyllKomparativVelger(alleLand, valgte) {
   for (const land of alleLand) {
     const opt = document.createElement("option");
     opt.value = land;
-    opt.textContent = land;
+    opt.textContent = norsk(land);
     if (valgte.includes(land)) opt.selected = true;
     velger.appendChild(opt);
   }
@@ -440,7 +500,7 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
     const kort = document.createElement("article");
     kort.className = "komparativ-kort" + (land === "Norway" ? " fokus" : "");
     const overskrift = document.createElement("h3");
-    overskrift.textContent = land;
+    overskrift.textContent = norsk(land);
     kort.appendChild(overskrift);
 
     const dl = document.createElement("dl");
@@ -509,6 +569,30 @@ function aggregerPerMaaned(rader, valutaFelt) {
   return sum;
 }
 
+function byggTidsserieTabell(traces, maaneder, valutaTekst, modus) {
+  const tabell = document.getElementById("tidsserie-tabell");
+  if (!tabell) return;
+  const valuTittel = modus === "akkumulert"
+    ? "Akkumulert (" + valutaTekst + ")"
+    : "Per måned (" + valutaTekst + ")";
+  let html = "<caption>Tidsseriedata - " + valuTittel + "</caption>";
+  html += "<thead><tr><th scope=\"col\">Måned</th>";
+  for (const t of traces) {
+    html += "<th scope=\"col\">" + t.name + "</th>";
+  }
+  html += "</tr></thead><tbody>";
+  for (let i = 0; i < maaneder.length; i++) {
+    html += "<tr><th scope=\"row\">" + maaneder[i] + "</th>";
+    for (const t of traces) {
+      const v = t.y[i];
+      html += "<td>" + (typeof v === "number" ? v.toFixed(3) : "–") + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody>";
+  tabell.innerHTML = html;
+}
+
 function tegnTidsserie(rader, valgteLand) {
   const modus = document.getElementById("tidsserie-modus").value;
   const maal = document.getElementById("tidsserie-maal").value;
@@ -542,7 +626,7 @@ function tegnTidsserie(rader, valgteLand) {
     traces.push({
       x: sortertMaaneder,
       y: yVerdier,
-      name: land,
+      name: norsk(land),
       type: modus === "akkumulert" ? "scatter" : "bar",
       mode: modus === "akkumulert" ? "lines+markers" : undefined,
       line: erNorge
@@ -560,8 +644,9 @@ function tegnTidsserie(rader, valgteLand) {
   }
 
   const yTittel = modus === "akkumulert"
-    ? "Akkumulert " + valutaTekst + " (raw)"
+    ? "Akkumulert (" + valutaTekst + ")"
     : "Per måned (" + valutaTekst + ")";
+  byggTidsserieTabell(traces, sortertMaaneder, valutaTekst, modus);
   Plotly.newPlot(
     "tidsserie-graf",
     traces,
@@ -617,7 +702,7 @@ function tegnScatter(rader, relRader) {
     {
       x: andre.map((p) => p.x),
       y: andre.map((p) => p.y),
-      text: andre.map((p) => p.land),
+      text: andre.map((p) => norsk(p.land)),
       mode: "markers",
       type: "scatter",
       name: "Andre giverland",
@@ -636,7 +721,12 @@ function tegnScatter(rader, relRader) {
       mode: "markers+text",
       type: "scatter",
       name: "Norge",
-      marker: { color: token("--blue-500", "#1d3557"), size: 14, symbol: "star" },
+      marker: {
+        color: token("--blue-500", "#1d3557"),
+        size: 14,
+        symbol: "circle",
+        line: { color: token("--blue-900", "#0b2545"), width: 2 },
+      },
       textposition: "top center",
       hovertemplate:
         "<b>Norge</b><br>"

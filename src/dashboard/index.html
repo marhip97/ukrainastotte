@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Norges støtte til Ukraina - Kiel Ukraine Support Tracker</title>
+  <title>SFSs Ukraina-støtte overvåker</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
@@ -11,9 +11,10 @@
 <body>
   <header>
     <div class="header-innhold">
-      <h1>Norges støtte til Ukraina</h1>
+      <h1>SFSs Ukraina-støtte overvåker</h1>
       <p class="subtitle">
-        Data fra <a href="https://www.kielinstitut.de/topics/war-against-ukraine/ukraine-support-tracker">Kiel
+        Norges støtte til Ukraina i kontekst, basert på data fra
+        <a href="https://www.kielinstitut.de/topics/war-against-ukraine/ukraine-support-tracker">Kiel
         Ukraine Support Tracker</a>. Sist oppdatert: <span id="sist-oppdatert">laster...</span>
       </p>
     </div>
@@ -158,7 +159,9 @@
           </select>
         </label>
       </div>
-      <div id="tidsserie-graf"></div>
+      <div id="tidsserie-graf" role="img"
+           aria-label="Tidsseriegraf - se tabellen under for tilgjengelig versjon"></div>
+      <table id="tidsserie-tabell" class="visuelt-skjult" aria-label="Tidsseriedata som tabell"></table>
       <p class="metode-notat">
         Aktiviteter uten dato i Kiel-datasettet er utelatt fra tidsserien
         (de telles fortsatt i totalsummene andre steder). NOK-tall bruker
