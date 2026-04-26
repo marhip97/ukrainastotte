@@ -185,16 +185,37 @@ function lesValuta() {
 // approksimere NOK-verdier for delta-tall (endring siste release)
 // der vi ikke har en presis NOK-versjon.
 let SISTE_KURS = 11.5;
+let SISTE_KURS_DATO = null;
 
 function settSisteKurs(valutakurser) {
   if (!valutakurser || !valutakurser.kurser) return;
   const datoer = Object.keys(valutakurser.kurser).sort();
   if (datoer.length > 0) {
-    const k = parseFloat(valutakurser.kurser[datoer[datoer.length - 1]]);
+    const dato = datoer[datoer.length - 1];
+    const k = parseFloat(valutakurser.kurser[dato]);
     if (Number.isFinite(k) && k > 0) {
       SISTE_KURS = k;
+      SISTE_KURS_DATO = dato;
     }
   }
+}
+
+function oppdaterValutaMerknad(valuta) {
+  const el = document.getElementById("valuta-kursmerknad");
+  if (!el) return;
+  if (valuta !== "nok") {
+    el.textContent = "Styrer alle pengetall i dashboardet.";
+    return;
+  }
+  const kurs = SISTE_KURS.toFixed(4).replace(".", ",");
+  const datoTekst = SISTE_KURS_DATO || "ukjent dato";
+  el.innerHTML =
+    "Aggregerte tall (hero, fordeling, rangering, komparativ, scatter) "
+    + "konverteres med EUR/NOK-kurs <strong>" + kurs + "</strong> "
+    + "per <strong>" + datoTekst + "</strong> "
+    + '(<a href="https://www.norges-bank.no/tema/Statistikk/valutakurser/" '
+    + 'target="_blank" rel="noopener">Norges Bank</a>). '
+    + "Tidsseriegrafen bruker historisk kurs på utbetalingsdato.";
 }
 
 // Format en EUR-mrd-verdi i valgt valuta. Tallet i argumentet er
@@ -994,6 +1015,7 @@ async function main() {
     function tegn() {
       const valgte = lesValgteLand();
       const valuta = lesValuta();
+      oppdaterValutaMerknad(valuta);
       skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
       tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
       tegnRangering(rader, visning.value, disbSum, relRader, endrRader, valgte, valuta);
