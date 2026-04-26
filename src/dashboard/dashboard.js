@@ -337,11 +337,15 @@ function skrivNoekkeltall(norge, rader, relRader, endrRader, valuta) {
 
   const relIdx = indekser(relRader);
   const norgeRel = relIdx["Norway"];
+  const enhetPerInn = valuta === "nok" ? "NOK" : "EUR";
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  document.getElementById("per-capita-enhet").textContent = enhetPerInn;
   if (norgeRel) {
     document.getElementById("andel-bnp").textContent =
       tilTall(norgeRel.andel_bnp_pct).toFixed(2) + " %";
+    const perCapEur = tilTall(norgeRel.per_capita_eur);
     document.getElementById("per-capita").textContent =
-      Math.round(tilTall(norgeRel.per_capita_eur)).toLocaleString("nb-NO");
+      Math.round(perCapEur * skala).toLocaleString("nb-NO");
     const rBnp = rangMellomKomplette(relRader, "andel_bnp_pct", "Norway");
     const rCap = rangMellomKomplette(relRader, "per_capita_eur", "Norway");
     document.getElementById("rangering-bnp").textContent = rBnp.plass + " / " + rBnp.av;
@@ -355,11 +359,13 @@ function skrivNoekkeltall(norge, rader, relRader, endrRader, valuta) {
 
   const endrEl = document.getElementById("endring-siste");
   const endrCtx = document.getElementById("endring-siste-kontekst");
-  if (endrCtx) endrCtx.textContent = valutaMrdEnhet(valuta);
   if (endrRader.length === 0) {
     endrEl.textContent = "–";
-    endrEl.title = "Kun én Kiel-release tilgjengelig. Endring vises når neste release kommer.";
+    if (endrCtx) {
+      endrCtx.textContent = "Vises når neste Kiel-utgivelse publiseres.";
+    }
   } else {
+    if (endrCtx) endrCtx.textContent = valutaMrdEnhet(valuta);
     const endrIdx = indekser(endrRader);
     const norgeEndr = endrIdx["Norway"];
     const dEur = norgeEndr ? tilTall(norgeEndr.delta_total_allocation) : 0;
@@ -443,11 +449,17 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr, valuta) 
   }
   if (maal === "bnp" || maal === "capita") {
     const tittel = maal === "bnp" ? "Andel av BNP (Norge)" : "Per innbygger (Norge)";
+    const perCapEnh = valuta === "nok" ? "NOK" : "EUR";
     const verdi = maal === "bnp"
       ? tilTall(norgeRel ? norgeRel.andel_bnp_pct : 0)
-      : tilTall(norgeRel ? norgeRel.per_capita_eur : 0);
-    const tekst = maal === "bnp" ? verdi.toFixed(2) + " %" : Math.round(verdi).toLocaleString("nb-NO") + " EUR";
-    const aksetittel = maal === "bnp" ? "% av BNP (2024)" : "EUR per innbygger (2024)";
+      : (tilTall(norgeRel ? norgeRel.per_capita_eur : 0)
+         * (valuta === "nok" ? SISTE_KURS : 1));
+    const tekst = maal === "bnp"
+      ? verdi.toFixed(2) + " %"
+      : Math.round(verdi).toLocaleString("nb-NO") + " " + perCapEnh;
+    const aksetittel = maal === "bnp"
+      ? "% av BNP (2024)"
+      : perCapEnh + " per innbygger (2024)";
     Plotly.newPlot(
       graf,
       [
@@ -686,7 +698,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
               ? tilTall(norgeRel.andel_bnp_pct).toFixed(2) + " %" : "–"],
           ["Per innbygger",
             norgeRel && norgeRel.per_capita_eur !== ""
-              ? Math.round(tilTall(norgeRel.per_capita_eur)).toLocaleString("nb-NO") + " EUR"
+              ? Math.round(tilTall(norgeRel.per_capita_eur) * skala).toLocaleString("nb-NO")
+                + " " + (valuta === "nok" ? "NOK" : "EUR")
               : "–"],
           ["Endring siste release",
             deltaN === null ? "–"
@@ -717,7 +730,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
               : profil.andel_bnp_pct.toFixed(2) + " %"],
           ["Per innbygger",
             profil.per_capita_eur === null ? "–"
-              : Math.round(profil.per_capita_eur).toLocaleString("nb-NO") + " EUR"],
+              : Math.round(profil.per_capita_eur * skala).toLocaleString("nb-NO")
+                + " " + (valuta === "nok" ? "NOK" : "EUR")],
           ["Endring siste release",
             deltaG === null ? "–"
               : (deltaG >= 0 ? "+" : "") + deltaG.toFixed(2) + " " + enhet],
@@ -763,7 +777,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
       [
         "Per innbygger",
         rel && rel.per_capita_eur !== ""
-          ? Math.round(tilTall(rel.per_capita_eur)).toLocaleString("nb-NO") + " EUR"
+          ? Math.round(tilTall(rel.per_capita_eur) * skala).toLocaleString("nb-NO")
+            + " " + (valuta === "nok" ? "NOK" : "EUR")
           : "–",
       ],
       ["Rangering allokering", rangAlloc[land] + " av " + rader.length],
@@ -925,7 +940,11 @@ function tegnScatter(rader, relRader, valgteLand, valuta) {
       if (!r) return null;
       const v = r[felt];
       if (v === "" || v === undefined) return null;
-      return tilTall(v);
+      const tall = tilTall(v);
+      if (felt === "per_capita_eur" && valuta === "nok") {
+        return tall * SISTE_KURS;
+      }
+      return tall;
     }
     const r = summaryIdx[land];
     if (!r) return null;
@@ -937,7 +956,7 @@ function tegnScatter(rader, relRader, valgteLand, valuta) {
 
   function aksetekst(felt) {
     if (felt === "andel_bnp_pct") return "Andel av BNP (%)";
-    if (felt === "per_capita_eur") return "Per innbygger (EUR)";
+    if (felt === "per_capita_eur") return "Per innbygger (" + (valuta === "nok" ? "NOK" : "EUR") + ")";
     if (felt === "total_allocation") return "Total allokering (" + enhet + ")";
     if (felt === "total_commitment") return "Total forpliktelse (" + enhet + ")";
     return felt;
