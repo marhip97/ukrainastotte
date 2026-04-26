@@ -81,29 +81,6 @@
       </p>
     </section>
 
-    <section class="visning-bytter" aria-label="Visningsvalg for fordelingsgrafen">
-      <label>Visning (Fordeling-grafen):
-        <select id="visning">
-          <option value="allocation" selected>Allokering (Kiel-hovedinndeling)</option>
-          <option value="commitment">Forpliktelse</option>
-          <option value="disbursement">Kun utbetalt (finansiell)</option>
-          <option value="bnp">Andel av BNP</option>
-          <option value="capita">Per innbygger</option>
-          <option value="endring">Endring siste release</option>
-        </select>
-      </label>
-      <p class="metode-notat">
-        <strong>Allokering</strong> (standard) er det Kiel har øremerket for levering.
-        <strong>Forpliktelse</strong> inkluderer lovnader som ennå ikke er konkretisert.
-        <strong>Kun utbetalt</strong> viser faktiske finansielle utbetalinger (budget support) -
-        dekker <em>ikke</em> militær eller humanitær støtte.
-        <strong>Andel BNP</strong> og <strong>per innbygger</strong> beregnes på total
-        allokering (kumulativt 2022-2024) mot Verdensbankens 2024-tall for BNP og folketall.
-        Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
-        og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
-      </p>
-    </section>
-
     <section class="graf" id="endringstekst-seksjon" hidden>
       <h2>Endring siden forrige Kiel-rapport</h2>
       <p class="endringstekst-tekst" id="endringstekst-norge"></p>
@@ -141,8 +118,30 @@
 
     <section class="graf">
       <h2>Fordeling av støtte (Norge)</h2>
+      <div class="fordeling-kontroller">
+        <label>Visning:
+          <select id="visning">
+            <option value="allocation" selected>Allokering (Kiel-hovedinndeling)</option>
+            <option value="commitment">Forpliktelse</option>
+            <option value="disbursement">Kun utbetalt (finansiell)</option>
+            <option value="bnp">Andel av BNP</option>
+            <option value="capita">Per innbygger</option>
+            <option value="endring">Endring siste release</option>
+          </select>
+        </label>
+      </div>
       <div id="fordeling-graf" role="img"
            aria-label="Fordeling av Norges støtte mellom militær, finansiell og humanitær kategori"></div>
+      <p class="metode-notat">
+        <strong>Allokering</strong> (standard) er det Kiel har øremerket for levering.
+        <strong>Forpliktelse</strong> inkluderer lovnader som ennå ikke er konkretisert.
+        <strong>Kun utbetalt</strong> viser faktiske finansielle utbetalinger (budget support) -
+        dekker <em>ikke</em> militær eller humanitær støtte.
+        <strong>Andel BNP</strong> og <strong>per innbygger</strong> beregnes på total
+        allokering (kumulativt 2022-2026) mot Verdensbankens 2024-tall for BNP og folketall.
+        Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
+        og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
+      </p>
     </section>
 
     <section class="graf">
