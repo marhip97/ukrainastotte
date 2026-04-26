@@ -1,0 +1,10 @@
+{
+  "name": "ukrainastotte-a11y",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tilgjengelighetslinting for dashboardet (kun for CI - ikke en del av selve dashboardet).",
+  "dependencies": {
+    "puppeteer": "^23.0.0",
+    "@axe-core/puppeteer": "^4.10.0"
+  }
+}

@@ -5,12 +5,16 @@ on:
     paths:
       - "src/dashboard/**"
       - "scripts/build-netlify.sh"
+      - "scripts/run-axe.js"
+      - "scripts/package.json"
       - ".github/workflows/a11y.yml"
   push:
     branches: [main]
     paths:
       - "src/dashboard/**"
       - "scripts/build-netlify.sh"
+      - "scripts/run-axe.js"
+      - "scripts/package.json"
       - ".github/workflows/a11y.yml"
   workflow_dispatch: {}
 
@@ -26,6 +30,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Installer puppeteer + axe-core (laster ned Chromium)
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
 
       - name: Bygg dashboard til _site/
         run: bash scripts/build-netlify.sh
@@ -47,14 +55,10 @@ jobs:
           exit 1
 
       - name: Kjør axe-core mot dashboardet
-        # @axe-core/cli krever Chromium. ubuntu-latest har det forhåndsinstallert.
-        # Tags = WCAG 2.0 A/AA + WCAG 2.1 A/AA + WCAG 2.2 AA, samt best-practice.
-        # --exit gjør at jobben feiler dersom det er funn på serious/critical-nivå.
-        run: |
-          npx --yes @axe-core/cli@4 \
-            http://localhost:8765/ \
-            --tags wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22aa \
-            --exit
+        # Feiler på serious/critical-funn (ikke moderate/minor) iht.
+        # docs/m6.3/04-implementation-plan.md § 4.4 Steg 11.
+        working-directory: scripts
+        run: node run-axe.js http://localhost:8765/ --terskel serious
 
       - name: Stopp HTTP-server
         if: always()
