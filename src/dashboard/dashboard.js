@@ -527,7 +527,7 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr, valuta) 
   );
 }
 
-function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand, valuta) {
+function beregnRangeringVerdier(rader, maal, disbSum, relRader, endrRader, valuta) {
   let verdier;
   let xTittel;
   const enhet = valutaMrdEnhet(valuta);
@@ -544,11 +544,14 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand, va
     xTittel = "Endring i total allokering (" + enhet + ")";
   } else if (maal === "bnp" || maal === "capita") {
     const felt = maal === "bnp" ? "andel_bnp_pct" : "per_capita_eur";
+    const skala2 = (maal === "capita" && valuta === "nok") ? SISTE_KURS : 1;
     verdier = relRader
       .filter((r) => r[felt] !== "" && r[felt] !== undefined)
-      .map((r) => ({ land: r.land, sum: tilTall(r[felt]) }))
+      .map((r) => ({ land: r.land, sum: tilTall(r[felt]) * skala2 }))
       .sort((a, b) => b.sum - a.sum);
-    xTittel = maal === "bnp" ? "% av BNP (2024)" : "EUR per innbygger (2024)";
+    xTittel = maal === "bnp"
+      ? "% av BNP (2024)"
+      : (valuta === "nok" ? "NOK" : "EUR") + " per innbygger (2024)";
   } else {
     const felt = maal === "commitment" ? "total_commitment" : "total_allocation";
     verdier = sortertEtter(rader, felt).map((r) => ({
@@ -557,6 +560,22 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand, va
     }));
     xTittel = enhet;
   }
+  return { verdier, xTittel };
+}
+
+function rangeringSeksjonsTittel(maal) {
+  if (maal === "disbursement") return "Topp 15 - kun finansielt utbetalt";
+  if (maal === "endring") return "Topp 15 - endring siden forrige Kiel-utgivelse";
+  if (maal === "bnp") return "Topp 15 - andel av BNP";
+  if (maal === "capita") return "Topp 15 - per innbygger";
+  if (maal === "commitment") return "Topp 15 giverland - total forpliktelse";
+  return "Topp 15 giverland - total allokering";
+}
+
+function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand, valuta) {
+  const { verdier, xTittel } = beregnRangeringVerdier(
+    rader, maal, disbSum, relRader, endrRader, valuta
+  );
   const topp = verdier.slice(0, 15);
   const norgeFarge = token("--blue-500", "#1d3557");
   const andreFarge = token("--blue-300", "#5d8aaa");
@@ -1237,24 +1256,91 @@ async function main() {
 
     const pngKnapp = document.getElementById("rangering-png-knapp");
     if (pngKnapp) {
-      pngKnapp.addEventListener("click", () => {
+      pngKnapp.addEventListener("click", async () => {
         const dato = new Date().toISOString().slice(0, 10);
         const filnavn = "kiel-rangering-" + dato;
-        const opts = { format: "png", width: 1200, height: 700 };
-        // iOS Safari respekterer ikke <a download> for klient-genererte
-        // bilder. Åpne bildet i ny fane så brukeren kan trykke og holde
-        // for å lagre det manuelt. På andre nettlesere brukes vanlig
-        // nedlasting.
-        const erIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-        if (erIOS) {
-          Plotly.toImage("rangering-graf", opts).then((dataUrl) => {
+        // Bygg en print-vennlig versjon av grafen i en skjult div for
+        // PNG-eksport: hvit bakgrunn, plass til lange landsnavn, verdi-
+        // etiketter, tittel og kildehenvisning.
+        const valuta = lesValuta();
+        const { verdier, xTittel } = beregnRangeringVerdier(
+          rader, rangeringMaal.value, disbSum, relRader, endrRader, valuta
+        );
+        const topp = verdier.slice(0, 15);
+        const norgeFarge = "#1d3557";
+        const andreFarge = "#5d8aaa";
+        const farger = topp.map((v) =>
+          v.land === "Norway" ? norgeFarge : andreFarge
+        );
+        const tekstEtikett = topp.map((v) => v.sum.toFixed(2));
+
+        const skjult = document.createElement("div");
+        skjult.style.position = "fixed";
+        skjult.style.top = "-10000px";
+        skjult.style.left = "-10000px";
+        skjult.style.width = "1400px";
+        skjult.style.height = "900px";
+        document.body.appendChild(skjult);
+
+        try {
+          await Plotly.newPlot(skjult, [{
+            x: topp.map((v) => v.sum),
+            y: topp.map((v) => norsk(v.land)),
+            type: "bar",
+            orientation: "h",
+            marker: { color: farger },
+            text: tekstEtikett,
+            textposition: "outside",
+            cliponaxis: false,
+            textfont: { color: "#1a1a1a", size: 14, family: "Arial, sans-serif" },
+            hoverinfo: "skip",
+          }], {
+            title: {
+              text: rangeringSeksjonsTittel(rangeringMaal.value),
+              font: { size: 22, color: "#0b2545", family: "Arial, sans-serif" },
+              x: 0.02,
+              xanchor: "left",
+              y: 0.97,
+            },
+            paper_bgcolor: "#ffffff",
+            plot_bgcolor: "#ffffff",
+            font: { family: "Arial, sans-serif", color: "#1a1a1a", size: 14 },
+            margin: { t: 80, b: 100, l: 280, r: 90 },
+            xaxis: {
+              title: { text: xTittel, font: { color: "#555", size: 13 } },
+              gridcolor: "#e0e0e0",
+              linecolor: "#e0e0e0",
+              tickfont: { color: "#555" },
+              zeroline: true,
+              zerolinecolor: "#555",
+            },
+            yaxis: {
+              autorange: "reversed",
+              tickfont: { color: "#1a1a1a", size: 14 },
+              gridcolor: "#ffffff",
+              linecolor: "#e0e0e0",
+            },
+            annotations: [{
+              text: "Kilde: Kiel Institute for the World Economy, Ukraine Support Tracker. Hentet "
+                + dato + ". SFSs Ukraina-støtte overvåker.",
+              xref: "paper", yref: "paper", x: 0, y: -0.09, showarrow: false,
+              font: { size: 11, color: "#777" },
+              xanchor: "left",
+            }],
+          }, { staticPlot: true });
+
+          const dataUrl = await Plotly.toImage(skjult, {
+            format: "png", width: 1400, height: 900,
+          });
+
+          const erIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+          if (erIOS) {
             const w = window.open("", "_blank");
             if (w && w.document) {
               w.document.write(
                 "<!doctype html><html lang=\"nb\"><head>"
-                + "<meta charset=\"utf-8\">"
-                + "<title>" + filnavn + ".png</title>"
+                + "<meta charset=\"utf-8\"><title>" + filnavn + ".png</title>"
                 + "<style>body{margin:0;padding:1rem;font-family:-apple-system,sans-serif;background:#f8f9fa;}"
                 + "p{color:#555;font-size:0.9rem;margin:0 0 1rem;}"
                 + "img{max-width:100%;height:auto;border:1px solid #e0e0e0;}</style>"
@@ -1264,16 +1350,20 @@ async function main() {
                 + "</body></html>"
               );
               w.document.close();
-            } else {
-              // Pop-up blokkert: fall tilbake til vanlig nedlasting
-              Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
             }
-          }).catch(() => {
-            Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
-          });
-          return;
+          } else {
+            const a = document.createElement("a");
+            a.href = dataUrl;
+            a.download = filnavn + ".png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+        } catch (e) {
+          console.error("PNG-eksport feilet:", e);
+        } finally {
+          document.body.removeChild(skjult);
         }
-        Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
       });
     }
 
