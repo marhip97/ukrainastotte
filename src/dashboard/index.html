@@ -106,8 +106,22 @@
         forhåndsdefinerte grupper.
       </p>
       <div class="komparativ-kontroller" id="komp-enkeltland-kontroller">
-        <label for="komparativ-velger">Velg land:</label>
-        <select id="komparativ-velger" multiple size="6"></select>
+        <div class="land-velger">
+          <div class="land-velger-overskrift">
+            <span class="land-velger-tittel" id="land-velger-tittel">Velg land</span>
+            <span class="land-velger-antall" id="land-velger-antall"></span>
+            <button type="button" class="land-velger-tom" id="land-velger-tom">
+              Fjern alle
+            </button>
+          </div>
+          <input type="search" id="land-velger-sok" class="land-velger-sok"
+                 placeholder="Søk etter land …"
+                 aria-controls="land-velger-liste"
+                 aria-label="Filtrer landliste">
+          <div class="land-velger-liste" id="land-velger-liste"
+               role="listbox" aria-multiselectable="true"
+               aria-labelledby="land-velger-tittel"></div>
+        </div>
         <div class="gruppe-knapper" role="group" aria-label="Forhåndsdefinerte landgrupper">
           <button type="button" data-gruppe="default">Standard</button>
           <button type="button" data-gruppe="Norden">Norden</button>

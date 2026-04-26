@@ -627,21 +627,69 @@ function landFraGruppe(gruppe, alleLand) {
   return liste.filter((l) => sett.has(l));
 }
 
+// Tilstand for land-velgeren. _alleLand holder hele listen, _valgte er
+// en Set med valgte engelske landsnavn (samme som CSV-en bruker).
+let _alleLand = [];
+let _valgte = new Set();
+
 function fyllKomparativVelger(alleLand, valgte) {
-  const velger = document.getElementById("komparativ-velger");
-  velger.innerHTML = "";
-  for (const land of alleLand) {
-    const opt = document.createElement("option");
-    opt.value = land;
-    opt.textContent = norsk(land);
-    if (valgte.includes(land)) opt.selected = true;
-    velger.appendChild(opt);
+  _alleLand = alleLand.slice();
+  _valgte = new Set(valgte || []);
+  rendreLandListe(document.getElementById("land-velger-sok").value || "");
+  oppdaterAntallEtikett();
+}
+
+function rendreLandListe(filter) {
+  const liste = document.getElementById("land-velger-liste");
+  if (!liste) return;
+  const f = (filter || "").toLowerCase().trim();
+  liste.innerHTML = "";
+  let synlige = 0;
+  for (const land of _alleLand) {
+    const navn = norsk(land);
+    if (f && !navn.toLowerCase().includes(f)) continue;
+    synlige++;
+    const erValgt = _valgte.has(land);
+    const rad = document.createElement("label");
+    rad.className = "land-velger-rad" + (erValgt ? " valgt" : "");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = land;
+    input.checked = erValgt;
+    input.addEventListener("change", (e) => {
+      if (e.target.checked) _valgte.add(land);
+      else _valgte.delete(land);
+      rad.classList.toggle("valgt", e.target.checked);
+      oppdaterAntallEtikett();
+      if (typeof window.__landValgtCallback === "function") {
+        window.__landValgtCallback();
+      }
+    });
+    const span = document.createElement("span");
+    span.textContent = navn;
+    rad.appendChild(input);
+    rad.appendChild(span);
+    liste.appendChild(rad);
+  }
+  if (synlige === 0) {
+    const tom = document.createElement("div");
+    tom.className = "land-velger-tom-melding";
+    tom.textContent = f ? "Ingen treff for \"" + filter + "\"." : "Ingen land i listen.";
+    liste.appendChild(tom);
   }
 }
 
+function oppdaterAntallEtikett() {
+  const el = document.getElementById("land-velger-antall");
+  if (!el) return;
+  const n = _valgte.size;
+  el.textContent = n === 0 ? "Ingen valgt"
+    : n === 1 ? "1 valgt"
+    : n + " valgte";
+}
+
 function lesValgteLand() {
-  const velger = document.getElementById("komparativ-velger");
-  return Array.from(velger.selectedOptions).map((o) => o.value);
+  return Array.from(_valgte);
 }
 
 function lagKomparativKort(opts) {
@@ -689,8 +737,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
         tittel: "Norge",
         fokus: true,
         rader2: [
-          ["Total allokering", allocN.toFixed(2) + " " + enhet],
-          ["Total forpliktelse", commN.toFixed(2) + " " + enhet],
+          ["Total allokering", allocN.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
+          ["Total forpliktelse", commN.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
           ["Andel av BNP",
             norgeRel && norgeRel.andel_bnp_pct !== ""
               ? tilTall(norgeRel.andel_bnp_pct).toFixed(2) + " %" : "–"],
@@ -701,7 +749,7 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
               : "–"],
           ["Endring siste release",
             deltaN === null ? "–"
-              : (deltaN >= 0 ? "+" : "") + deltaN.toFixed(2) + " " + enhet],
+              : (deltaN >= 0 ? "+" : "") + deltaN.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
         ],
       }));
     }
@@ -720,9 +768,9 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
         fokus: false,
         rader2: [
           ["Total allokering",
-            allocG === null ? "–" : allocG.toFixed(2) + " " + enhet],
+            allocG === null ? "–" : allocG.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
           ["Total forpliktelse",
-            commG === null ? "–" : commG.toFixed(2) + " " + enhet],
+            commG === null ? "–" : commG.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
           ["Andel av BNP",
             profil.andel_bnp_pct === null ? "–"
               : profil.andel_bnp_pct.toFixed(2) + " %"],
@@ -732,7 +780,7 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
                 + " " + (valuta === "nok" ? "NOK" : "EUR")],
           ["Endring siste release",
             deltaG === null ? "–"
-              : (deltaG >= 0 ? "+" : "") + deltaG.toFixed(2) + " " + enhet],
+              : (deltaG >= 0 ? "+" : "") + deltaG.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
         ],
       }));
     }
@@ -764,8 +812,8 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
 
     const dl = document.createElement("dl");
     const rader2 = [
-      ["Total allokering", allocVerdi.toFixed(2) + " " + enhet],
-      ["Total forpliktelse", commVerdi.toFixed(2) + " " + enhet],
+      ["Total allokering", allocVerdi.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
+      ["Total forpliktelse", commVerdi.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet],
       [
         "Andel av BNP",
         rel && rel.andel_bnp_pct !== ""
@@ -786,7 +834,7 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, mo
         "Endring siden forrige release",
         deltaVerdi === null
           ? "–"
-          : (deltaVerdi >= 0 ? "+" : "") + deltaVerdi.toFixed(2) + " " + enhet,
+          : (deltaVerdi >= 0 ? "+" : "") + deltaVerdi.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "\u00A0" + enhet,
       ],
     ];
     for (const [navn, verdi] of rader2) {
@@ -1213,9 +1261,23 @@ async function main() {
     document
       .querySelectorAll('input[name="komp-modus"]')
       .forEach((r) => r.addEventListener("change", tegn));
-    document
-      .getElementById("komparativ-velger")
-      .addEventListener("change", tegn);
+    // Land-velger har egen tilstand; checkbox-endringer trigger tegn() via callback.
+    window.__landValgtCallback = tegn;
+    const sokFelt = document.getElementById("land-velger-sok");
+    if (sokFelt) {
+      sokFelt.addEventListener("input", (e) => {
+        rendreLandListe(e.target.value);
+      });
+    }
+    const tomKnapp = document.getElementById("land-velger-tom");
+    if (tomKnapp) {
+      tomKnapp.addEventListener("click", () => {
+        _valgte.clear();
+        rendreLandListe(sokFelt ? sokFelt.value : "");
+        oppdaterAntallEtikett();
+        tegn();
+      });
+    }
     ["tidsserie-modus", "tidsserie-kategori",
      "scatter-x", "scatter-y"]
       .forEach((id) => {

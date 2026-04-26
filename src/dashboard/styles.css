@@ -249,18 +249,20 @@ main > section:last-child {
 .kpi-kort.hero {
   background: var(--blue-50);
   border-color: var(--blue-300);
-  padding: 2rem;
-  justify-content: center;
+  padding: 1.25rem;
+  justify-content: flex-start;
+  align-self: stretch;
 }
 
 .kpi-kort.hero .kpi-verdi {
-  font-size: var(--fs-hero);
+  font-size: 2.25rem;
   color: var(--blue-500);
   line-height: var(--lh-hero);
 }
 
 .kpi-kort.hero .kpi-etikett {
-  font-size: var(--fs-h3);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semi);
 }
 
 .hero-sekundaer {
@@ -486,24 +488,122 @@ a { color: var(--accent); }
   margin: 1rem 0 0 0;
 }
 
-.komparativ-kontroller select {
-  min-width: 240px;
-  padding: 0.5rem;
-  font-size: var(--fs-body);
-  font-family: var(--font-sans);
+/*
+ * Land-velger: erstatning for native <select multiple>. Bruker
+ * checkbokser i en scrollbar liste med søkefelt og tellerteks.
+ */
+.land-velger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--card-bg);
+  padding: 0.75rem;
+  min-width: 280px;
+  flex: 1 1 280px;
+  max-width: 360px;
 }
 
-.komparativ-kontroller select:focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 2px;
+.land-velger-overskrift {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.komparativ-kontroller > label {
+.land-velger-tittel {
   font-weight: var(--fw-semi);
-  margin-top: 0.5rem;
+  color: var(--blue-700);
+}
+
+.land-velger-antall {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+
+.land-velger-tom {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--blue-500);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semi);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.land-velger-tom:hover {
+  background: var(--blue-50);
+}
+
+.land-velger-sok {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.land-velger-sok:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+  border-color: var(--blue-500);
+}
+
+.land-velger-liste {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.land-velger-rad {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--fs-body);
+  user-select: none;
+}
+
+.land-velger-rad:hover {
+  background: var(--blue-50);
+}
+
+.land-velger-rad.valgt {
+  background: var(--blue-50);
+  color: var(--blue-700);
+  font-weight: var(--fw-semi);
+}
+
+.land-velger-rad input[type="checkbox"] {
+  accent-color: var(--blue-500);
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.land-velger-rad:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.land-velger-tom-melding {
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--fs-caption);
+  padding: 1rem;
 }
 
 .gruppe-knapper {
@@ -597,6 +697,7 @@ a { color: var(--accent); }
   color: var(--fg);
   font-variant-numeric: tabular-nums;
   text-align: right;
+  white-space: nowrap;
 }
 
 kbd {
