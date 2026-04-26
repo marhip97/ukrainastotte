@@ -158,7 +158,8 @@ main > section:last-child {
  * mindre nøkkeltall + metode-merknad.
  */
 
-.valuta-toggle {
+.valuta-toggle,
+.modus-toggle {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -166,7 +167,8 @@ main > section:last-child {
   margin: 0 0 1rem 0;
 }
 
-.valuta-toggle label {
+.valuta-toggle label,
+.modus-toggle label {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -179,18 +181,21 @@ main > section:last-child {
   color: var(--blue-700);
 }
 
-.valuta-toggle label:has(input:checked) {
+.valuta-toggle label:has(input:checked),
+.modus-toggle label:has(input:checked) {
   background: var(--blue-500);
   color: var(--card-bg);
   border-color: var(--blue-500);
 }
 
-.valuta-toggle label:focus-within {
+.valuta-toggle label:focus-within,
+.modus-toggle label:focus-within {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
-.valuta-toggle input[type="radio"] {
+.valuta-toggle input[type="radio"],
+.modus-toggle input[type="radio"] {
   position: absolute;
   width: 1px;
   height: 1px;
