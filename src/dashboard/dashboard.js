@@ -34,6 +34,125 @@ const LAND_GRUPPER = {
 // S10-default for komparativ profil: Norge + Tyskland, Frankrike, Storbritannia.
 const KOMPARATIV_DEFAULT = ["Norway", "Germany", "France", "United Kingdom"];
 
+// Oversettelse fra Kiels engelske landsnavn til norsk visningsnavn.
+// CSV-data beholder engelsk (data-koblingen krever det). Visningen
+// (KPI, grafer, tooltips, kort) bruker norsk navn via norsk()-helperen.
+const LAND_TIL_NORSK = {
+  "Albania": "Albania",
+  "Australia": "Australia",
+  "Austria": "Østerrike",
+  "Belgium": "Belgia",
+  "Bulgaria": "Bulgaria",
+  "Canada": "Canada",
+  "China": "Kina",
+  "Croatia": "Kroatia",
+  "Cyprus": "Kypros",
+  "Czechia": "Tsjekkia",
+  "Czech Republic": "Tsjekkia",
+  "Denmark": "Danmark",
+  "Estonia": "Estland",
+  "Finland": "Finland",
+  "France": "Frankrike",
+  "Germany": "Tyskland",
+  "Greece": "Hellas",
+  "Hungary": "Ungarn",
+  "Iceland": "Island",
+  "India": "India",
+  "Ireland": "Irland",
+  "Italy": "Italia",
+  "Japan": "Japan",
+  "Korea, Rep.": "Sør-Korea",
+  "Latvia": "Latvia",
+  "Lithuania": "Litauen",
+  "Luxembourg": "Luxembourg",
+  "Malta": "Malta",
+  "Montenegro": "Montenegro",
+  "Netherlands": "Nederland",
+  "New Zealand": "New Zealand",
+  "North Macedonia": "Nord-Makedonia",
+  "Norway": "Norge",
+  "Poland": "Polen",
+  "Portugal": "Portugal",
+  "Romania": "Romania",
+  "Slovakia": "Slovakia",
+  "Slovenia": "Slovenia",
+  "South Korea": "Sør-Korea",
+  "Spain": "Spania",
+  "Sweden": "Sverige",
+  "Switzerland": "Sveits",
+  "Turkey": "Tyrkia",
+  "Turkiye": "Tyrkia",
+  "United Kingdom": "Storbritannia",
+  "United States": "USA",
+  "EU (Commission and Council)": "EU (Kommisjonen og Rådet)",
+  "EU Institutions": "EU-institusjoner",
+  "European Investment Bank": "Den europeiske investeringsbanken",
+  "Taiwan": "Taiwan",
+};
+
+function norsk(land) {
+  return LAND_TIL_NORSK[land] || land;
+}
+
+// Plotly-tema som speiler designtokens (M6.3 § 3.4.4). Leses fra
+// :root via getComputedStyle slik at tokens.css er én sannhet.
+function token(navn, fallback) {
+  try {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue(navn).trim();
+    return v || fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function tema() {
+  const fg = token("--neutral-900", "#1a1a1a");
+  const muted = token("--neutral-600", "#555555");
+  const grid = token("--neutral-200", "#e0e0e0");
+  const accent = token("--blue-500", "#1d3557");
+  const fontFamily = token("--font-sans",
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+  const akse = {
+    gridcolor: grid,
+    linecolor: grid,
+    tickfont: { color: muted, family: fontFamily, size: 12 },
+    title: { font: { color: muted, family: fontFamily, size: 13 } },
+    zeroline: true,
+    zerolinecolor: muted,
+    zerolinewidth: 1,
+  };
+  return {
+    font: { family: fontFamily, color: fg, size: 13 },
+    paper_bgcolor: "transparent",
+    plot_bgcolor: "transparent",
+    xaxis: { ...akse },
+    yaxis: { ...akse },
+    hoverlabel: {
+      bgcolor: accent,
+      bordercolor: accent,
+      font: { color: "#ffffff", family: fontFamily, size: 12 },
+    },
+    margin: { t: 24, r: 16, b: 56, l: 64 },
+  };
+}
+
+function flett(...lag) {
+  // Dyp-flett av Plotly-layout (overrides etter tema()-defaults).
+  const ut = {};
+  for (const l of lag) {
+    for (const k in l) {
+      const v = l[k];
+      if (v && typeof v === "object" && !Array.isArray(v) && ut[k] && typeof ut[k] === "object") {
+        ut[k] = flett(ut[k], v);
+      } else {
+        ut[k] = v;
+      }
+    }
+  }
+  return ut;
+}
+
 function visFeil(tekst) {
   const el = document.getElementById("feilmelding");
   el.textContent = tekst;
@@ -146,15 +265,20 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
             tilTall(norgeEndr.delta_humanitarian_allocation),
           ],
           type: "bar",
-          marker: { color: ["#d71418", "#1a4d8f", "#2e8540"] },
+          marker: {
+            color: [
+              token("--kategori-militaer", "#08306b"),
+              token("--kategori-finansiell", "#2171b5"),
+              token("--kategori-humanitaer", "#4292c6"),
+            ],
+          },
           hovertemplate: "<b>%{x}</b><br>Endring: %{y:,.3f} € mrd<extra></extra>",
         },
       ],
-      {
-        margin: { t: 30, b: 40, l: 50, r: 20 },
+      flett(tema(), {
         height: 320,
         yaxis: { title: "Endring (€ mrd)", zeroline: true },
-      },
+      }),
       { displayModeBar: false, responsive: true }
     );
     return;
@@ -167,25 +291,24 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
           x: ["Finansiell utbetaling (Norge)"],
           y: [norgeUtbetalt],
           type: "bar",
-          marker: { color: "#1a4d8f" },
+          marker: { color: token("--blue-500", "#1d3557") },
           text: [norgeUtbetalt.toFixed(3) + " € mrd"],
           textposition: "outside",
           hovertemplate:
             "<b>Norge</b><br>Finansiell utbetaling: %{y:,.3f} € mrd<extra></extra>",
         },
       ],
-      {
-        margin: { t: 30, b: 40, l: 50, r: 20 },
+      flett(tema(), {
         height: 300,
         yaxis: { title: "€ mrd", rangemode: "tozero" },
         annotations: [
           {
             text: "Kun finansielle budget support-utbetalinger. Militær og humanitær ikke inkludert.",
             xref: "paper", yref: "paper", x: 0, y: 1.12, showarrow: false,
-            font: { size: 11, color: "#555" },
+            font: { size: 11, color: token("--neutral-600", "#555") },
           },
         ],
-      },
+      }),
       { displayModeBar: false, responsive: true }
     );
     return;
@@ -204,17 +327,16 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
           x: [tittel],
           y: [verdi],
           type: "bar",
-          marker: { color: "#d71418" },
+          marker: { color: token("--blue-500", "#1d3557") },
           text: [tekst],
           textposition: "outside",
           hovertemplate: "<b>Norge</b><br>" + aksetittel + ": %{y:,.2f}<extra></extra>",
         },
       ],
-      {
-        margin: { t: 30, b: 40, l: 60, r: 20 },
+      flett(tema(), {
         height: 300,
         yaxis: { title: aksetittel, rangemode: "tozero" },
-      },
+      }),
       { displayModeBar: false, responsive: true }
     );
     return;
@@ -252,15 +374,14 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
       trace("Finansiell", finansiell, KAT_FIN),
       trace("Humanitær", humanitaer, KAT_HUM),
     ],
-    {
+    flett(tema(), {
       barmode: "stack",
-      margin: { t: 20, b: 60, l: 30, r: 20 },
       height: 180,
       xaxis: { title: "€ mrd", rangemode: "tozero" },
       yaxis: { showticklabels: false, fixedrange: true },
       showlegend: true,
       legend: { orientation: "h", y: -0.6 },
-    },
+    }),
     { displayModeBar: false, responsive: true }
   );
 }
@@ -294,25 +415,27 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
     xTittel = "€ mrd";
   }
   const topp = verdier.slice(0, 15);
-  const farger = topp.map((v) => (v.land === "Norway" ? "#d71418" : "#1a4d8f"));
+  const norgeFarge = token("--blue-500", "#1d3557");
+  const andreFarge = token("--blue-300", "#5d8aaa");
+  const farger = topp.map((v) => (v.land === "Norway" ? norgeFarge : andreFarge));
   Plotly.newPlot(
     "rangering-graf",
     [
       {
         x: topp.map((v) => v.sum),
-        y: topp.map((v) => v.land),
+        y: topp.map((v) => norsk(v.land)),
         type: "bar",
         orientation: "h",
         marker: { color: farger },
         hovertemplate: "<b>%{y}</b><br>" + xTittel + ": %{x:,.2f}<extra></extra>",
       },
     ],
-    {
-      margin: { t: 20, b: 40, l: 140, r: 20 },
+    flett(tema(), {
+      margin: { l: 140 },
       height: 420,
       xaxis: { title: xTittel },
       yaxis: { autorange: "reversed" },
-    },
+    }),
     { displayModeBar: false, responsive: true }
   );
   const rang = verdier.findIndex((v) => v.land === "Norway") + 1;
@@ -344,7 +467,7 @@ function fyllKomparativVelger(alleLand, valgte) {
   for (const land of alleLand) {
     const opt = document.createElement("option");
     opt.value = land;
-    opt.textContent = land;
+    opt.textContent = norsk(land);
     if (valgte.includes(land)) opt.selected = true;
     velger.appendChild(opt);
   }
@@ -377,7 +500,7 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader) {
     const kort = document.createElement("article");
     kort.className = "komparativ-kort" + (land === "Norway" ? " fokus" : "");
     const overskrift = document.createElement("h3");
-    overskrift.textContent = land;
+    overskrift.textContent = norsk(land);
     kort.appendChild(overskrift);
 
     const dl = document.createElement("dl");
@@ -446,6 +569,30 @@ function aggregerPerMaaned(rader, valutaFelt) {
   return sum;
 }
 
+function byggTidsserieTabell(traces, maaneder, valutaTekst, modus) {
+  const tabell = document.getElementById("tidsserie-tabell");
+  if (!tabell) return;
+  const valuTittel = modus === "akkumulert"
+    ? "Akkumulert (" + valutaTekst + ")"
+    : "Per måned (" + valutaTekst + ")";
+  let html = "<caption>Tidsseriedata - " + valuTittel + "</caption>";
+  html += "<thead><tr><th scope=\"col\">Måned</th>";
+  for (const t of traces) {
+    html += "<th scope=\"col\">" + t.name + "</th>";
+  }
+  html += "</tr></thead><tbody>";
+  for (let i = 0; i < maaneder.length; i++) {
+    html += "<tr><th scope=\"row\">" + maaneder[i] + "</th>";
+    for (const t of traces) {
+      const v = t.y[i];
+      html += "<td>" + (typeof v === "number" ? v.toFixed(3) : "–") + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody>";
+  tabell.innerHTML = html;
+}
+
 function tegnTidsserie(rader, valgteLand) {
   const modus = document.getElementById("tidsserie-modus").value;
   const maal = document.getElementById("tidsserie-maal").value;
@@ -479,11 +626,15 @@ function tegnTidsserie(rader, valgteLand) {
     traces.push({
       x: sortertMaaneder,
       y: yVerdier,
-      name: land,
+      name: norsk(land),
       type: modus === "akkumulert" ? "scatter" : "bar",
       mode: modus === "akkumulert" ? "lines+markers" : undefined,
-      line: erNorge ? { color: "#d71418", width: 3 } : undefined,
-      marker: erNorge ? { color: "#d71418" } : undefined,
+      line: erNorge
+        ? { color: token("--blue-500", "#1d3557"), width: 3 }
+        : { color: token("--blue-300", "#5d8aaa"), width: 1.5 },
+      marker: erNorge
+        ? { color: token("--blue-500", "#1d3557") }
+        : { color: token("--blue-300", "#5d8aaa") },
       hovertemplate:
         "<b>%{fullData.name}</b><br>"
         + "Måned: %{x}<br>"
@@ -493,20 +644,20 @@ function tegnTidsserie(rader, valgteLand) {
   }
 
   const yTittel = modus === "akkumulert"
-    ? "Akkumulert " + valutaTekst + " (raw)"
+    ? "Akkumulert (" + valutaTekst + ")"
     : "Per måned (" + valutaTekst + ")";
+  byggTidsserieTabell(traces, sortertMaaneder, valutaTekst, modus);
   Plotly.newPlot(
     "tidsserie-graf",
     traces,
-    {
-      margin: { t: 20, b: 60, l: 80, r: 20 },
+    flett(tema(), {
       height: 420,
       xaxis: { title: "Måned" },
       yaxis: { title: yTittel, rangemode: "tozero" },
-      hovermode: "closest",
+      hovermode: modus === "akkumulert" ? "x unified" : "closest",
       barmode: "group",
       legend: { orientation: "h", y: -0.2 },
-    },
+    }),
     { displayModeBar: false, responsive: true }
   );
 }
@@ -551,11 +702,11 @@ function tegnScatter(rader, relRader) {
     {
       x: andre.map((p) => p.x),
       y: andre.map((p) => p.y),
-      text: andre.map((p) => p.land),
+      text: andre.map((p) => norsk(p.land)),
       mode: "markers",
       type: "scatter",
       name: "Andre giverland",
-      marker: { color: "#1a4d8f", size: 9 },
+      marker: { color: token("--blue-300", "#5d8aaa"), size: 9 },
       hovertemplate:
         "<b>%{text}</b><br>"
         + aksetekst(xFelt) + ": %{x:,.2f}<br>"
@@ -570,7 +721,12 @@ function tegnScatter(rader, relRader) {
       mode: "markers+text",
       type: "scatter",
       name: "Norge",
-      marker: { color: "#d71418", size: 14, symbol: "star" },
+      marker: {
+        color: token("--blue-500", "#1d3557"),
+        size: 14,
+        symbol: "circle",
+        line: { color: token("--blue-900", "#0b2545"), width: 2 },
+      },
       textposition: "top center",
       hovertemplate:
         "<b>Norge</b><br>"
@@ -582,14 +738,13 @@ function tegnScatter(rader, relRader) {
   Plotly.newPlot(
     "scatter-graf",
     traces,
-    {
-      margin: { t: 20, b: 60, l: 80, r: 20 },
+    flett(tema(), {
       height: 420,
       xaxis: { title: aksetekst(xFelt), rangemode: "tozero" },
       yaxis: { title: aksetekst(yFelt), rangemode: "tozero" },
       hovermode: "closest",
       legend: { orientation: "h", y: -0.2 },
-    },
+    }),
     { displayModeBar: false, responsive: true }
   );
 }
