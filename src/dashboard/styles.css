@@ -208,13 +208,7 @@ main > section:last-child {
 }
 
 .hero-grid {
-  align-items: stretch;
-}
-
-.hero-stotte {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gutter);
+  align-items: start;
 }
 
 .kpi-kort {
@@ -789,14 +783,16 @@ main > .komparativ-blokk > section {
 .komparativ-kort dl {
   margin: 0;
   display: grid;
-  grid-template-columns: max-content auto;
-  column-gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.5rem;
   row-gap: 0.35rem;
   font-size: var(--fs-caption);
 }
 
 .komparativ-kort dt {
   color: var(--muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .komparativ-kort dd {
