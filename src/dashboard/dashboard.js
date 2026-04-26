@@ -1222,12 +1222,41 @@ async function main() {
     if (pngKnapp) {
       pngKnapp.addEventListener("click", () => {
         const dato = new Date().toISOString().slice(0, 10);
-        Plotly.downloadImage("rangering-graf", {
-          format: "png",
-          width: 1200,
-          height: 700,
-          filename: "kiel-rangering-" + dato,
-        });
+        const filnavn = "kiel-rangering-" + dato;
+        const opts = { format: "png", width: 1200, height: 700 };
+        // iOS Safari respekterer ikke <a download> for klient-genererte
+        // bilder. Åpne bildet i ny fane så brukeren kan trykke og holde
+        // for å lagre det manuelt. På andre nettlesere brukes vanlig
+        // nedlasting.
+        const erIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if (erIOS) {
+          Plotly.toImage("rangering-graf", opts).then((dataUrl) => {
+            const w = window.open("", "_blank");
+            if (w && w.document) {
+              w.document.write(
+                "<!doctype html><html lang=\"nb\"><head>"
+                + "<meta charset=\"utf-8\">"
+                + "<title>" + filnavn + ".png</title>"
+                + "<style>body{margin:0;padding:1rem;font-family:-apple-system,sans-serif;background:#f8f9fa;}"
+                + "p{color:#555;font-size:0.9rem;margin:0 0 1rem;}"
+                + "img{max-width:100%;height:auto;border:1px solid #e0e0e0;}</style>"
+                + "</head><body>"
+                + "<p>Trykk og hold på bildet for å lagre det i Bilder.</p>"
+                + "<img src=\"" + dataUrl + "\" alt=\"Topp 15 giverland\">"
+                + "</body></html>"
+              );
+              w.document.close();
+            } else {
+              // Pop-up blokkert: fall tilbake til vanlig nedlasting
+              Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
+            }
+          }).catch(() => {
+            Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
+          });
+          return;
+        }
+        Plotly.downloadImage("rangering-graf", { ...opts, filename: filnavn });
       });
     }
 
