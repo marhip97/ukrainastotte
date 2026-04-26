@@ -1,11 +1,11 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.3
+**Versjon:** 2.4
 **Dato opprettet:** 22. april 2026
-**Dato sist oppdatert:** 25. april 2026
+**Dato sist oppdatert:** 26. april 2026
 **Prosjekteier:** [Brukerens navn]
 **Prosjektleder:** Claude Code (agent: `prosjektleder`)
-**Status:** Drift + ny utvidelsesfase M6 starter
+**Status:** Drift
 
 ---
 
@@ -322,6 +322,12 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-25 | M6.2: Analytisk innhold | Ferdig | PR #25 merget til main av prosjekteier. M6.2 fullført. | prosjekteier, prosjektleder | — |
 | 2026-04-25 | M6.3: Visuelt redesign | Pågår | Designgrunnlag levert som fem dokumenter under `docs/m6.3/` (PR #26 merget): prinsipper, informasjonsarkitektur, komponenter og grafer, implementasjonsplan, README. S15 åpnet og lukket: M6.3-tidsanslag utvidet fra 1 til 2 uker etter prosjekteiers beslutning. Implementering starter på Steg 1 (Designtokens og temabytte). | prosjektleder, frontend | Godkjenning per utviklings-PR. |
 | 2026-04-26 | Drift | Endring | Hosting flyttet fra Netlify til **GitHub Pages**. Repoet gjort offentlig (S7 overstyrt). Ny workflow `.github/workflows/deploy-pages.yml`, `scripts/build-netlify.sh` omdøpt til `build-site.sh`, `netlify.toml` slettet. Ny URL: <https://marhip97.github.io/ukrainastotte/>. S16 åpnet og lukket samme dag. | prosjektleder, devops | — |
+| 2026-04-26 | M6.3: Visuelt redesign | Pågår | PR #52 merget: hero-bokser krympet (padding 2rem → 1,25rem, hero-tall 3rem → 2,25rem), komparativ-profil bruker 1 desimal med ikke-brytende mellomrom, native `<select multiple>` byttet ut med custom land-velger (søkefelt, checkbox-rader, "Fjern alle"-knapp, ARIA-attributter). Axe-fix: `role="listbox"` byttet til `role="group"` på land-velger-listen siden barna er native checkboxer. | frontend, qa | — |
+| 2026-04-26 | M6.3: Visuelt redesign | Pågår | PR #54 merget: kompaktere hero/KPI-kort, "Sammenlign Norge med …" som native `<details>`-rullgardin med statustekst og chevron, filter og "Komparativ landprofil" pakket i `.komparativ-blokk` så de visuelt opptrer som ett sammenhengende kort. | frontend | — |
+| 2026-04-26 | M6.3: Visuelt redesign | Pågår | PR #55 merget: hero som flat 2x2 (fjernet `.hero-stotte`-wrapper), komparativ-grid bruker `repeat(N, minmax(0, 1fr))` så lange labels ikke presser kortene utenfor parent. | frontend | — |
+| 2026-04-26 | M6.3: Visuelt redesign | Pågår | PR #56 merget: mer pust mellom verdi og ramme i komparativ-kort (padding 1,25rem → 1rem 1,5rem, dl `--fs-caption` → `--fs-micro`, column-gap 0,5 → 0,75rem, defensiv `overflow: hidden` og `min-width: 0`). Verifisert med puppeteer-måling: 25 px ddToBorder konsistent på 1100-1920 px viewport. | frontend, qa | — |
+| 2026-04-26 | M6.3: Visuelt redesign | **Ferdig** | **Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase.** M6.3 lukkes etter visuelle forbedringer i PR 52/54/55/56. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` (CSV-eksport, brukerveiledning-oppdatering, ytterligere komponentpolering) tas inn i drift som forbedringsforslag dersom prosjekteier ønsker det senere. | prosjekteier, prosjektleder | — |
+| 2026-04-26 | Drift | Aktiv | Prosjektet i ren driftfase. Ukentlig `fetch-kiel.yml`, månedlig `fetch-wdi.yml`, daglig `fetch-valutakurser.yml` kjører som planlagt. Dashboard live på <https://marhip97.github.io/ukrainastotte/>. Neste planlagte gjennomgang: kvartalsvis (jf. seksjon 10). | prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -359,7 +365,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M5: Produksjon | Uke 9 | Ferdig | Ukentlig `fetch-kiel.yml` og månedlig `fetch-wdi.yml` verifisert end-to-end. QA-rapport for Release 28 med 103 OK / 0 kritiske feil. Brukerveiledning (`docs/brukerveiledning.md`) og overlevering (`docs/drift/overlevering.md`) levert. |
 | M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
 | M6.2: Analytisk innhold | — | Ferdig | PR #25 merget til main 2026-04-25. Levert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips, automatisk regenerering ved kursoppdatering. 63/63 tester grønne. |
-| M6.3: Visuelt redesign | — | Pågår | Designgrunnlag merget (PR #26). Implementeres i 12 utviklings-PR-er (jf. `docs/m6.3/04-implementation-plan.md` § 4.4). 2 uker fra M6.2-ferdig (S15-utvidelse). |
+| M6.3: Visuelt redesign | — | Ferdig | Designgrunnlag (PR #26) + visuelle forbedringer i PR 52, 54, 55 og 56 merget til main 2026-04-26. Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` håndteres som forbedringsforslag i drift dersom ønsket senere. |
 
 ---
 
@@ -372,6 +378,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.1 | 2026-04-25 | M6.1 ferdig (PR #24 merget). M6.2 startet. Sakene S10-S14 åpnet og lukket samme dag. | prosjektleder |
 | 2.2 | 2026-04-25 | M6.2 ferdig (PR #25 merget). M6.3 startet med designgrunnlag (PR #26 merget). S15 åpnet og lukket: M6.3 utvidet fra 1 til 2 uker. | prosjektleder |
 | 2.3 | 2026-04-26 | Hosting flyttet fra Netlify til GitHub Pages. S16 åpnet og lukket. Repoet gjort offentlig. | prosjektleder, devops |
+| 2.4 | 2026-04-26 | M6.3 lukket etter prosjekteiers godkjenning av dashboardet. PR 52, 54, 55 og 56 merget med visuelle forbedringer (kompakt hero, rullgardin-filter, sammenkoblet komparativ-blokk, padding-fix). Status flyttet fra "Drift + ny utvidelsesfase M6 starter" til "Drift". | prosjektleder, frontend, qa |
 
 ---
 
