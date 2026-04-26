@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.2
+**Versjon:** 2.3
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 25. april 2026
 **Prosjekteier:** [Brukerens navn]
@@ -321,6 +321,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-25 | M6.2: Analytisk innhold | Klar for review | M6.2 levert. **Bakend:** `src/analyze/endringstekst.py` genererer 2-4 setningers norsk tekst per land med pedagogisk klarspråk; `normalize.py` skriver `data/processed/endringstekst.json`. **Frontend:** komparativ landprofil (kort-grid) med multivelger og hurtigknapper for Norden/EU/G7/NATO; tidsseriegraf med toggle akkumulert/per måned, valgbar valuta (EUR/NOK), kategori og mål; scatter plot (Andel BNP × Per capita som default, fire akse-valg) med Norge fremhevet; automatisk endringstekst-boks. Alle Plotly-tooltips harmonisert til norsk format. **Workflow:** `fetch-valutakurser.yml` regenererer normalisert data automatisk. Testsuite 63/63 grønn (10 nye tester for endringstekst, 2 nye for normalize). | dataingenior, frontend, qa, prosjektleder | Godkjenning av M6.2-leveransen før M6.3 starter. |
 | 2026-04-25 | M6.2: Analytisk innhold | Ferdig | PR #25 merget til main av prosjekteier. M6.2 fullført. | prosjekteier, prosjektleder | — |
 | 2026-04-25 | M6.3: Visuelt redesign | Pågår | Designgrunnlag levert som fem dokumenter under `docs/m6.3/` (PR #26 merget): prinsipper, informasjonsarkitektur, komponenter og grafer, implementasjonsplan, README. S15 åpnet og lukket: M6.3-tidsanslag utvidet fra 1 til 2 uker etter prosjekteiers beslutning. Implementering starter på Steg 1 (Designtokens og temabytte). | prosjektleder, frontend | Godkjenning per utviklings-PR. |
+| 2026-04-26 | Drift | Endring | Hosting flyttet fra Netlify til **GitHub Pages**. Repoet gjort offentlig (S7 overstyrt). Ny workflow `.github/workflows/deploy-pages.yml`, `scripts/build-netlify.sh` omdøpt til `build-site.sh`, `netlify.toml` slettet. Ny URL: <https://marhip97.github.io/ukrainastotte/>. S16 åpnet og lukket samme dag. | prosjektleder, devops | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -345,6 +346,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S13 | 2026-04-25 | 2026-04-25 | Tidsseriegraf - akkumulert eller per måned | Prosjekteier godkjente forslag: **toggle med akkumulert som default**, per måned som sekundær modus. |
 | S14 | 2026-04-25 | 2026-04-25 | Tooltips - innholdsnivå | Prosjekteier godkjente forslag: **norsk språk** med EUR+NOK, referanseår og rangering-posisjon. |
 | S15 | 2026-04-25 | 2026-04-25 | Tidsanslag M6.3: 8-16 utviklingsdager mot prosjektplanens 1-ukes estimat | Prosjekteier valgte **alternativ 1: utvid M6.3 til 2 uker** (prosjektleders tilrådning). Begrunnelse: brukerveiledning og CSV-eksport bør være med i samme fase som det visuelle redesignet, ikke flyttes til M6.4. M6.3-raden i seksjon 5 oppdatert til "2 uker". |
+| S16 | 2026-04-26 | 2026-04-26 | Hosting-omvalg: skifte fra Netlify til GitHub Pages | Prosjekteier ønsket å flytte til GitHub Pages for tettere kobling til repo og enklere CI/CD. Krevde at repoet ble gjort offentlig (overstyrer S3/S7). Implementert med ny `deploy-pages.yml`-workflow, omdøpt build-script, slettet `netlify.toml`. Ny URL: <https://marhip97.github.io/ukrainastotte/>. |
 
 ### 11.4 Milepælsstatus
 
@@ -369,6 +371,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.0 | 2026-04-25 | Lagt til milepæl M6 med tre delfaser. Sakene S8 og S9 åpnet og lukket. | prosjektleder |
 | 2.1 | 2026-04-25 | M6.1 ferdig (PR #24 merget). M6.2 startet. Sakene S10-S14 åpnet og lukket samme dag. | prosjektleder |
 | 2.2 | 2026-04-25 | M6.2 ferdig (PR #25 merget). M6.3 startet med designgrunnlag (PR #26 merget). S15 åpnet og lukket: M6.3 utvidet fra 1 til 2 uker. | prosjektleder |
+| 2.3 | 2026-04-26 | Hosting flyttet fra Netlify til GitHub Pages. S16 åpnet og lukket. Repoet gjort offentlig. | prosjektleder, devops |
 
 ---
 

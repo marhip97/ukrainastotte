@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "src/dashboard/**"
-      - "scripts/build-netlify.sh"
+      - "scripts/build-site.sh"
       - "scripts/run-axe.js"
       - "scripts/package.json"
       - ".github/workflows/a11y.yml"
@@ -12,7 +12,7 @@ on:
     branches: [main]
     paths:
       - "src/dashboard/**"
-      - "scripts/build-netlify.sh"
+      - "scripts/build-site.sh"
       - "scripts/run-axe.js"
       - "scripts/package.json"
       - ".github/workflows/a11y.yml"
@@ -36,7 +36,7 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Bygg dashboard til _site/
-        run: bash scripts/build-netlify.sh
+        run: bash scripts/build-site.sh
 
       - name: Start statisk HTTP-server i bakgrunn
         run: |

@@ -1,6 +1,6 @@
 # Brukerveiledning - Norges Ukraina-støttedashboard
 
-Dashboardet finnes på <https://ukrainastotte.netlify.app/>. Dette
+Dashboardet finnes på <https://marhip97.github.io/ukrainastotte/>. Dette
 dokumentet hjelper journalister, utredere, forskere og andre som vil
 bruke tallene i analyser eller omtale.
 

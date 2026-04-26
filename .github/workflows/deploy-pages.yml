@@ -1,0 +1,51 @@
+name: Deploy dashboard til GitHub Pages
+
+# Bygger _site/ via scripts/build-site.sh og deployer til GitHub Pages.
+# Trigger: push til main eller manuell kjøring.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/dashboard/**"
+      - "data/processed/**"
+      - "data/reference/**"
+      - "scripts/build-site.sh"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch: {}
+
+# GitHub Pages krever disse rettighetene.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Kun ett samtidig deploy. Køer opp neste hvis det allerede kjører.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bygg dashboard til _site/
+        run: bash scripts/build-site.sh
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
