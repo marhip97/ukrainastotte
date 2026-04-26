@@ -1,0 +1,68 @@
+name: Tilgjengelighetslinting (axe-core)
+
+on:
+  pull_request:
+    paths:
+      - "src/dashboard/**"
+      - "scripts/build-netlify.sh"
+      - "scripts/run-axe.js"
+      - "scripts/package.json"
+      - ".github/workflows/a11y.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/dashboard/**"
+      - "scripts/build-netlify.sh"
+      - "scripts/run-axe.js"
+      - "scripts/package.json"
+      - ".github/workflows/a11y.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installer puppeteer + axe-core (laster ned Chromium)
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Bygg dashboard til _site/
+        run: bash scripts/build-netlify.sh
+
+      - name: Start statisk HTTP-server i bakgrunn
+        run: |
+          cd _site
+          nohup python3 -m http.server 8765 > /tmp/server.log 2>&1 &
+          echo "$!" > /tmp/server.pid
+          for i in 1 2 3 4 5; do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8765/ | grep -q 200; then
+              echo "Server kjører."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server startet ikke."
+          cat /tmp/server.log
+          exit 1
+
+      - name: Kjør axe-core mot dashboardet
+        # Feiler på serious/critical-funn (ikke moderate/minor) iht.
+        # docs/m6.3/04-implementation-plan.md § 4.4 Steg 11.
+        working-directory: scripts
+        run: node run-axe.js http://localhost:8765/ --terskel serious
+
+      - name: Stopp HTTP-server
+        if: always()
+        run: |
+          if [ -f /tmp/server.pid ]; then
+            kill "$(cat /tmp/server.pid)" 2>/dev/null || true
+          fi
