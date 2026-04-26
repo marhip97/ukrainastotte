@@ -251,11 +251,11 @@ main > section:last-child {
   border-color: var(--blue-300);
   padding: 1rem 1.125rem;
   justify-content: flex-start;
-  align-self: stretch;
+  align-self: start;
 }
 
 .kpi-kort.hero .kpi-verdi {
-  font-size: 1.875rem;
+  font-size: 1.75rem;
   color: var(--blue-500);
   line-height: var(--lh-hero);
 }
@@ -518,7 +518,22 @@ main > .komparativ-blokk > section {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  border: 1px solid var(--blue-300);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: background 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.filter-rullgardin > summary:hover {
+  background: var(--blue-50);
+  border-color: var(--blue-500);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+.filter-rullgardin[open] > summary {
+  border-color: var(--blue-500);
 }
 
 .filter-rullgardin > summary::-webkit-details-marker {
@@ -528,7 +543,6 @@ main > .komparativ-blokk > section {
 .filter-rullgardin > summary:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 .filter-rullgardin-tittel {
@@ -540,21 +554,32 @@ main > .komparativ-blokk > section {
 .filter-rullgardin-status {
   font-size: var(--fs-caption);
   color: var(--blue-700);
-  font-weight: var(--fw-regular);
+  font-weight: var(--fw-medium);
+}
+
+.filter-rullgardin-hint {
+  font-size: var(--fs-caption);
+  color: var(--blue-700);
+  font-style: italic;
+  margin-left: auto;
+}
+
+.filter-rullgardin[open] > summary .filter-rullgardin-hint {
+  display: none;
 }
 
 .filter-rullgardin-chevron {
-  margin-left: auto;
-  width: 0.7rem;
-  height: 0.7rem;
-  border-right: 2px solid var(--blue-700);
-  border-bottom: 2px solid var(--blue-700);
-  transform: rotate(45deg);
+  width: 1rem;
+  height: 1rem;
+  border-right: 3px solid var(--blue-700);
+  border-bottom: 3px solid var(--blue-700);
+  transform: rotate(45deg) translate(-2px, -2px);
   transition: transform 0.15s ease-out;
+  flex-shrink: 0;
 }
 
 .filter-rullgardin[open] > summary .filter-rullgardin-chevron {
-  transform: rotate(-135deg);
+  transform: rotate(-135deg) translate(-2px, -2px);
 }
 
 .filter-rullgardin-innhold {
@@ -720,20 +745,20 @@ main > .komparativ-blokk > section {
 
 .komparativ-grid {
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: var(--gutter);
   margin-top: 1rem;
 }
 
 @media (min-width: 768px) {
   .komparativ-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1100px) {
   .komparativ-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
