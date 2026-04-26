@@ -180,6 +180,62 @@ function lesValuta() {
   return valgt ? valgt.value : "eur";
 }
 
+function lesKompModus() {
+  const valgt = document.querySelector('input[name="komp-modus"]:checked');
+  return valgt ? valgt.value : "enkeltland";
+}
+
+// Hvilke grupper som vises som gjennomsnitt-kort. Norge ekskluderes
+// alltid fra gruppe-snittet selv om den er medlem - slik at Norge-
+// kortet og gruppe-kortene gir en meningsfull sammenligning.
+const GJENNOMSNITT_GRUPPER = ["Norden", "EU", "G7", "NATO"];
+
+function gjennomsnitt(verdier) {
+  const tall = verdier.filter((v) => Number.isFinite(v));
+  if (tall.length === 0) return null;
+  return tall.reduce((a, b) => a + b, 0) / tall.length;
+}
+
+function beregnGruppeProfil(gruppeNavn, alleLandISett, summaryIdx, relIdx, endrIdx) {
+  const medlemmer = LAND_GRUPPER[gruppeNavn] || [];
+  const land = [...new Set(
+    medlemmer.filter((l) => l !== "Norway" && alleLandISett.has(l))
+  )];
+  if (land.length === 0) return null;
+
+  const samle = (felt, hentVerdi) =>
+    land.map((l) => hentVerdi(l, felt)).filter((v) => v !== null);
+
+  const fraSummary = (l, felt) => {
+    const r = summaryIdx[l];
+    if (!r) return null;
+    const v = parseFloat(r[felt]);
+    return Number.isFinite(v) ? v : null;
+  };
+  const fraRel = (l, felt) => {
+    const r = relIdx[l];
+    if (!r || r[felt] === "" || r[felt] === undefined) return null;
+    const v = parseFloat(r[felt]);
+    return Number.isFinite(v) ? v : null;
+  };
+  const fraEndr = (l, felt) => {
+    const r = endrIdx[l];
+    if (!r) return null;
+    const v = parseFloat(r[felt]);
+    return Number.isFinite(v) ? v : null;
+  };
+
+  return {
+    gruppe: gruppeNavn,
+    antall: land.length,
+    total_allocation: gjennomsnitt(samle("total_allocation", fraSummary)),
+    total_commitment: gjennomsnitt(samle("total_commitment", fraSummary)),
+    andel_bnp_pct: gjennomsnitt(samle("andel_bnp_pct", fraRel)),
+    per_capita_eur: gjennomsnitt(samle("per_capita_eur", fraRel)),
+    delta_total_allocation: gjennomsnitt(samle("delta_total_allocation", fraEndr)),
+  };
+}
+
 // Returnerer siste tilgjengelige EUR/NOK-kurs fra valutakurser.json,
 // eller en fornuftig fallback hvis filen mangler. Brukes til å
 // approksimere NOK-verdier for delta-tall (endring siste release)
@@ -578,7 +634,27 @@ function lesValgteLand() {
   return Array.from(velger.selectedOptions).map((o) => o.value);
 }
 
-function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta) {
+function lagKomparativKort(opts) {
+  const { tittel, fokus, rader2 } = opts;
+  const kort = document.createElement("article");
+  kort.className = "komparativ-kort" + (fokus ? " fokus" : "");
+  const overskrift = document.createElement("h3");
+  overskrift.textContent = tittel;
+  kort.appendChild(overskrift);
+  const dl = document.createElement("dl");
+  for (const [navn, verdi] of rader2) {
+    const dt = document.createElement("dt");
+    dt.textContent = navn;
+    const dd = document.createElement("dd");
+    dd.textContent = verdi;
+    dl.appendChild(dt);
+    dl.appendChild(dd);
+  }
+  kort.appendChild(dl);
+  return kort;
+}
+
+function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta, modus) {
   const grid = document.getElementById("komparativ-grid");
   grid.innerHTML = "";
   const summaryIdx = indekser(rader);
@@ -589,6 +665,70 @@ function tegnKomparativProfil(rader, valgteLand, relRader, endrRader, valuta) {
   sortertAlloc.forEach((r, i) => { rangAlloc[r.land] = i + 1; });
   const enhet = valutaMrdEnhet(valuta);
   const skala = valuta === "nok" ? SISTE_KURS : 1;
+
+  if (modus === "gjennomsnitt") {
+    // Norge-kort først
+    const norgeSummary = summaryIdx["Norway"];
+    if (norgeSummary) {
+      const norgeRel = relIdx["Norway"];
+      const norgeEndr = endrIdx["Norway"];
+      const allocN = tilTall(norgeSummary.total_allocation) * skala;
+      const commN = tilTall(norgeSummary.total_commitment) * skala;
+      const deltaN = norgeEndr ? tilTall(norgeEndr.delta_total_allocation) * skala : null;
+      grid.appendChild(lagKomparativKort({
+        tittel: "Norge",
+        fokus: true,
+        rader2: [
+          ["Total allokering", allocN.toFixed(2) + " " + enhet],
+          ["Total forpliktelse", commN.toFixed(2) + " " + enhet],
+          ["Andel av BNP",
+            norgeRel && norgeRel.andel_bnp_pct !== ""
+              ? tilTall(norgeRel.andel_bnp_pct).toFixed(2) + " %" : "–"],
+          ["Per innbygger",
+            norgeRel && norgeRel.per_capita_eur !== ""
+              ? Math.round(tilTall(norgeRel.per_capita_eur)).toLocaleString("nb-NO") + " EUR"
+              : "–"],
+          ["Endring siste release",
+            deltaN === null ? "–"
+              : (deltaN >= 0 ? "+" : "") + deltaN.toFixed(2) + " " + enhet],
+        ],
+      }));
+    }
+
+    // Gruppegjennomsnitt-kort
+    const alleLandISett = new Set(rader.map((r) => r.land));
+    for (const gruppe of GJENNOMSNITT_GRUPPER) {
+      const profil = beregnGruppeProfil(gruppe, alleLandISett, summaryIdx, relIdx, endrIdx);
+      if (!profil) continue;
+      const allocG = profil.total_allocation === null ? null : profil.total_allocation * skala;
+      const commG = profil.total_commitment === null ? null : profil.total_commitment * skala;
+      const deltaG = profil.delta_total_allocation === null ? null
+        : profil.delta_total_allocation * skala;
+      grid.appendChild(lagKomparativKort({
+        tittel: gruppe + " (snitt, " + profil.antall + " land)",
+        fokus: false,
+        rader2: [
+          ["Total allokering",
+            allocG === null ? "–" : allocG.toFixed(2) + " " + enhet],
+          ["Total forpliktelse",
+            commG === null ? "–" : commG.toFixed(2) + " " + enhet],
+          ["Andel av BNP",
+            profil.andel_bnp_pct === null ? "–"
+              : profil.andel_bnp_pct.toFixed(2) + " %"],
+          ["Per innbygger",
+            profil.per_capita_eur === null ? "–"
+              : Math.round(profil.per_capita_eur).toLocaleString("nb-NO") + " EUR"],
+          ["Endring siste release",
+            deltaG === null ? "–"
+              : (deltaG >= 0 ? "+" : "") + deltaG.toFixed(2) + " " + enhet],
+        ],
+      }));
+    }
+    if (grid.children.length === 0) {
+      grid.innerHTML = '<p class="metode-notat">Ingen gruppe-data tilgjengelig.</p>';
+    }
+    return;
+  }
 
   for (const land of valgteLand) {
     const summary = summaryIdx[land];
@@ -1021,11 +1161,23 @@ async function main() {
     function tegn() {
       const valgte = lesValgteLand();
       const valuta = lesValuta();
+      const kompModus = lesKompModus();
       oppdaterValutaMerknad(valuta);
+      // Skjul multi-velger og gruppe-knapper i gjennomsnitt-modus.
+      const enkeltKontroller = document.getElementById("komp-enkeltland-kontroller");
+      const modusNotat = document.getElementById("komp-modus-notat");
+      if (enkeltKontroller) {
+        enkeltKontroller.hidden = (kompModus === "gjennomsnitt");
+      }
+      if (modusNotat) {
+        modusNotat.textContent = kompModus === "gjennomsnitt"
+          ? "Sammenligner Norge med gjennomsnittet for medlemslandene i hver gruppe (Norge er ekskludert fra gruppe-snittet selv om den er medlem). Gruppe-snittene styrer kun komparativ profil; rangering og scatter beholder valgte enkeltland."
+          : "Velg ett eller flere land. Valget styrer komparativ profil, rangering og scatter. Hold inne Ctrl (Windows) eller Cmd (Mac) for å velge flere. Bruk hurtigknappene for forhåndsdefinerte grupper.";
+      }
       skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
       tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
       tegnRangering(rader, rangeringMaal.value, disbSum, relRader, endrRader, valgte, valuta);
-      tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta);
+      tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta, kompModus);
       if (tidsserieRader.length > 0) {
         tegnTidsserie(tidsserieRader, valgte, valuta);
       } else {
@@ -1040,6 +1192,9 @@ async function main() {
     rangeringMaal.addEventListener("change", tegn);
     document
       .querySelectorAll('input[name="valuta"]')
+      .forEach((r) => r.addEventListener("change", tegn));
+    document
+      .querySelectorAll('input[name="komp-modus"]')
       .forEach((r) => r.addEventListener("change", tegn));
     document
       .getElementById("komparativ-velger")

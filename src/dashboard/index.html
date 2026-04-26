@@ -89,13 +89,23 @@
 
     <section class="graf gruppe-filter-seksjon" aria-labelledby="filter-tittel">
       <h2 id="filter-tittel">Sammenlign Norge med ...</h2>
-      <p class="metode-notat">
+      <div class="modus-toggle" role="group" aria-label="Velg sammenligningsmodus">
+        <label>
+          <input type="radio" name="komp-modus" value="enkeltland" checked>
+          <span>Enkeltland</span>
+        </label>
+        <label>
+          <input type="radio" name="komp-modus" value="gjennomsnitt">
+          <span>Gruppegjennomsnitt</span>
+        </label>
+      </div>
+      <p class="metode-notat" id="komp-modus-notat">
         Velg ett eller flere land. Valget styrer komparativ profil, rangering
         og scatter. Hold inne <kbd>Ctrl</kbd> (Windows) eller <kbd>Cmd</kbd>
         (Mac) for å velge flere land i lista. Eller bruk hurtigknappene for
         forhåndsdefinerte grupper.
       </p>
-      <div class="komparativ-kontroller">
+      <div class="komparativ-kontroller" id="komp-enkeltland-kontroller">
         <label for="komparativ-velger">Velg land:</label>
         <select id="komparativ-velger" multiple size="6"></select>
         <div class="gruppe-knapper" role="group" aria-label="Forhåndsdefinerte landgrupper">
