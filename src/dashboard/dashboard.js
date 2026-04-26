@@ -386,7 +386,7 @@ function tegnFordeling(norge, maal, norgeUtbetalt, norgeRel, norgeEndr) {
   );
 }
 
-function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
+function tegnRangering(rader, maal, disbSum, relRader, endrRader, valgteLand) {
   let verdier;
   let xTittel;
   if (maal === "disbursement") {
@@ -416,9 +416,15 @@ function tegnRangering(rader, maal, disbSum, relRader, endrRader) {
   }
   const topp = verdier.slice(0, 15);
   const norgeFarge = token("--blue-500", "#1d3557");
+  const valgtFarge = token("--blue-500", "#1d3557");
   const andreFarge = token("--blue-300", "#5d8aaa");
   const stripeFarge = token("--blue-50", "#eef2f7");
-  const farger = topp.map((v) => (v.land === "Norway" ? norgeFarge : andreFarge));
+  const valgteSet = new Set(valgteLand || []);
+  const farger = topp.map((v) => {
+    if (v.land === "Norway") return norgeFarge;
+    if (valgteSet.has(v.land)) return valgtFarge;
+    return andreFarge;
+  });
   // Norge-bakgrunnsstripe (M6.3 § 3.3.3) - kun hvis Norge er i topp 15.
   const norgeIdxTopp = topp.findIndex((v) => v.land === "Norway");
   const shapes = [];
@@ -880,10 +886,10 @@ async function main() {
 
     const visning = document.getElementById("visning");
     function tegn() {
+      const valgte = lesValgteLand();
       skrivNoekkeltall(norge, rader, relRader, endrRader);
       tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr);
-      tegnRangering(rader, visning.value, disbSum, relRader, endrRader);
-      const valgte = lesValgteLand();
+      tegnRangering(rader, visning.value, disbSum, relRader, endrRader, valgte);
       tegnKomparativProfil(rader, valgte, relRader, endrRader);
       if (tidsserieRader.length > 0) {
         tegnTidsserie(tidsserieRader, valgte);

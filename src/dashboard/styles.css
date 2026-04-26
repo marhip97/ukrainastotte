@@ -335,18 +335,47 @@ a { color: var(--accent); }
   margin: 0.5rem 0 0.5rem 0;
 }
 
+/*
+ * Global filter-seksjon (M6.3 § 2.4 og § 4.4 Steg 9). Styrer
+ * hvilke land som vises framhevet i komparativ profil, rangering
+ * og scatter. Visuelt distinkt fra ordinære grafer for å signalisere
+ * at den kontrollerer flere seksjoner.
+ */
+.gruppe-filter-seksjon {
+  background: var(--blue-50);
+  border-color: var(--blue-300);
+}
+
+.gruppe-filter-seksjon h2 {
+  color: var(--blue-900);
+}
+
 .komparativ-kontroller {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 1rem;
-  margin: 1rem 0;
+  margin: 1rem 0 0 0;
 }
 
 .komparativ-kontroller select {
-  min-width: 220px;
-  padding: 0.25rem;
-  font-size: 0.95rem;
+  min-width: 240px;
+  padding: 0.5rem;
+  font-size: var(--fs-body);
+  font-family: var(--font-sans);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+}
+
+.komparativ-kontroller select:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.komparativ-kontroller > label {
+  font-weight: var(--fw-semi);
+  margin-top: 0.5rem;
 }
 
 .gruppe-knapper {
@@ -357,15 +386,25 @@ a { color: var(--accent); }
 
 .gruppe-knapper button {
   background: var(--card-bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--blue-500);
+  color: var(--blue-500);
   border-radius: var(--radius-md);
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semi);
+  font-family: var(--font-sans);
+  min-height: 40px;
 }
 
 .gruppe-knapper button:hover {
-  background: var(--blue-50);
+  background: var(--blue-500);
+  color: var(--card-bg);
+}
+
+.gruppe-knapper button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .komparativ-grid {
