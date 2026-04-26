@@ -617,7 +617,8 @@ kbd {
 }
 
 .tidsserie-kontroller,
-.scatter-kontroller {
+.scatter-kontroller,
+.rangering-kontroller {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -625,7 +626,8 @@ kbd {
 }
 
 .tidsserie-kontroller label,
-.scatter-kontroller label {
+.scatter-kontroller label,
+.rangering-kontroller label {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -633,6 +635,7 @@ kbd {
 }
 
 .tidsserie-kontroller select,
-.scatter-kontroller select {
+.scatter-kontroller select,
+.rangering-kontroller select {
   padding: 0.25rem 0.5rem;
 }
