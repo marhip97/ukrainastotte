@@ -803,6 +803,38 @@ function tegnScatter(rader, relRader, valgteLand) {
   );
 }
 
+// Eksportlenker bygges fra de samme stiene som dashboardet leser data
+// fra. På Netlify peker disse til ./data/, lokalt til ../../data/processed/.
+const EKSPORT_FILER = [
+  ["country_summary.csv", "Aggregat per land", () => DATA_PATH],
+  ["country_summary_relative.csv", "Andel av BNP og per innbygger", () => REL_PATH],
+  ["country_summary_endring.csv", "Endring siden forrige Kiel-utgave", () => ENDR_PATH],
+  ["country_summary_nok.csv", "Aggregat per land i NOK", () => (window.NOK_PATH || "../../data/processed/country_summary_nok.csv")],
+  ["bilateral_activities.csv", "Alle aktiviteter (langformat, sub-aktivitet)", () => (window.BILATERAL_PATH || "../../data/processed/bilateral_activities.csv")],
+  ["financial_disbursements.csv", "Månedlige finansielle utbetalinger", () => DISB_PATH],
+  ["tidsserier_maanedlig.csv", "Månedlige aggregater (EUR og NOK)", () => TIDSSERIE_PATH],
+  ["endringstekst.json", "Automatisk generert endringstekst", () => ENDRTEKST_PATH],
+  ["metadata.json", "Metadata: kildefil, sha256, prosesseringsdato", () => META_PATH],
+];
+
+function byggEksportLenker() {
+  const ul = document.getElementById("eksport-lenker");
+  if (!ul) return;
+  ul.innerHTML = "";
+  for (const [filnavn, beskrivelse, hentSti] of EKSPORT_FILER) {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = hentSti();
+    a.textContent = filnavn;
+    a.setAttribute("download", filnavn);
+    const span = document.createElement("span");
+    span.textContent = beskrivelse;
+    li.appendChild(a);
+    li.appendChild(span);
+    ul.appendChild(li);
+  }
+}
+
 function tegnEndringstekst(endringstekstData) {
   const seksjon = document.getElementById("endringstekst-seksjon");
   if (!endringstekstData || !endringstekstData.tekster) {
@@ -922,6 +954,7 @@ async function main() {
         });
       });
     tegnEndringstekst(endringstekstData);
+    byggEksportLenker();
 
     const pngKnapp = document.getElementById("rangering-png-knapp");
     if (pngKnapp) {
