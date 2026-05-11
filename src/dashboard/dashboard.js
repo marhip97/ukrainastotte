@@ -1306,7 +1306,7 @@ function tegnFlakForhandsvisning(opts) {
             .toLocaleString("nb-NO") + " " + valutaNavn
         : "–",
     ],
-    ["Rangering blant giverland", rangAlloc + " av " + antall],
+    ["Rangering (total allokering)", rangAlloc + " av " + antall],
     ["Total forpliktelse", f(commEur, 2) + " " + mrdEnhet],
     ["Militær allokering", f(milEur, 2) + " " + mrdEnhet],
     ["Finansiell allokering", f(finEur, 2) + " " + mrdEnhet],
@@ -1385,7 +1385,7 @@ function _bygFlakRader(opts) {
         ? _formaterPerCapita(tilTall(norgeRelAktiv.per_capita_eur), valuta) + " " + valutaNavn
         : "–",
     ],
-    ["Rangering blant giverland", rangAlloc + " av " + aktiveRader.length],
+    ["Rangering (total allokering)", rangAlloc + " av " + aktiveRader.length],
     ["Total forpliktelse", _formaterMrd(norgeAktiv.total_commitment, valuta) + " " + mrdEnhet],
     ["Militær allokering", _formaterMrd(norgeAktiv.military_allocation, valuta) + " " + mrdEnhet],
     ["Finansiell allokering", _formaterMrd(norgeAktiv.financial_allocation, valuta) + " " + mrdEnhet],
