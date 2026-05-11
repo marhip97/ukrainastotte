@@ -1,11 +1,11 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.4
+**Versjon:** 2.5
 **Dato opprettet:** 22. april 2026
-**Dato sist oppdatert:** 26. april 2026
+**Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
 **Prosjektleder:** Claude Code (agent: `prosjektleder`)
-**Status:** Drift
+**Status:** Drift + ny utvidelsesfase M7 starter
 
 ---
 
@@ -103,8 +103,11 @@ Prosjektet deles i fem faser. Hver fase har en tydelig leveranse som godkjennes 
 | M6.1: Datafundament | Dynamisk historisk valutakurs (EUR/NOK), tidsserie-aggregering, land-grupperinger | 1 uke fra M6-oppstart | Prosjekteier |
 | M6.2: Analytisk innhold | Komparative profiler, tidsseriegraf, scatter plot, automatisk endringstekst, tooltips | 2 uker fra M6.1 ferdig | Prosjekteier |
 | M6.3: Visuelt redesign | Blå palett, ny informasjonsarkitektur, eksport (PNG/CSV), land-gruppefiltre | 2 uker fra M6.2 ferdig | Prosjekteier |
+| M7: Metodisk migrering og flak-generering | Dashboard migreres til excel-metoden (redistr-verdier, Kiels BNP 2021, EU-fordelingsnøkkel), ny flak-eksport til Word, periode- og EU-bryter | 2-3 uker | Prosjekteier per delfase |
 
-Etter M5 går prosjektet over i driftsfase (se seksjon 10).
+Etter M5 går prosjektet over i driftsfase (se seksjon 10). M7 er en
+metodisk migrering på toppen av driften, jf. egen plan i
+`docs/planer/M7 plan.md`.
 
 ---
 
@@ -328,10 +331,15 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-26 | M6.3: Visuelt redesign | Pågår | PR #56 merget: mer pust mellom verdi og ramme i komparativ-kort (padding 1,25rem → 1rem 1,5rem, dl `--fs-caption` → `--fs-micro`, column-gap 0,5 → 0,75rem, defensiv `overflow: hidden` og `min-width: 0`). Verifisert med puppeteer-måling: 25 px ddToBorder konsistent på 1100-1920 px viewport. | frontend, qa | — |
 | 2026-04-26 | M6.3: Visuelt redesign | **Ferdig** | **Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase.** M6.3 lukkes etter visuelle forbedringer i PR 52/54/55/56. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` (CSV-eksport, brukerveiledning-oppdatering, ytterligere komponentpolering) tas inn i drift som forbedringsforslag dersom prosjekteier ønsker det senere. | prosjekteier, prosjektleder | — |
 | 2026-04-26 | Drift | Aktiv | Prosjektet i ren driftfase. Ukentlig `fetch-kiel.yml`, månedlig `fetch-wdi.yml`, daglig `fetch-valutakurser.yml` kjører som planlagt. Dashboard live på <https://marhip97.github.io/ukrainastotte/>. Neste planlagte gjennomgang: kvartalsvis (jf. seksjon 10). | prosjektleder | — |
+| 2026-05-11 | M7: Metodisk migrering | Oppstart | Prosjekteier godkjente planutkastet `docs/planer/M7 plan.md` og bekreftet at M7.0 (migrerings-QA) starter umiddelbart uten ytterligere avklaringer. Foreslått rekkefølge S21 → S20 → S19 godkjent. Excelen brukes ikke som datakilde i repoet; alle metode-konstanter (BNP 2021, EU-fordelingsnøkkel) leses direkte fra Kiels XLSX. `docs/qa/m7-fasitverdier.md` er ekstrahert fra FINs excel og brukes som gylne tall for QA. Arbeidsbranch: `claude/migrate-excel-to-dashboard-t8LoD` (plattform-pålagt). | prosjektleder | S19, S20, S21 åpnet. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
-*(Ingen åpne saker. S8-S14 er besluttet og flyttet til 11.3.)*
+| ID | Dato løftet | Sak | Frist | Tilrådning fra prosjektleder |
+|---|---|---|---|---|
+| S19 | 2026-05-11 | Skal flak-malen `flak-mal.docx` ligge i repoet som visuell referanse, eller skal docx-en bygges fra grunnen i kode uten referansemal? | Før M7.6 | Mal i repoet under `src/dashboard/maler/flak-mal.docx` som visuell referanse. Docx-en bygges programmatisk, men utviklerne har kvalitetssjekk å sammenligne mot. |
+| S20 | 2026-05-11 | Hvilke målepunkt skal flaket vise i tabell 1? Excel-flaket viser 9 rader - skal denne være konfigurerbar eller låst til malens struktur? | Før M7.5 | Låst til malens 9 rader i første versjon. Konfigurerbart kan legges til senere som forbedring uten å påvirke flak-malens visuelle integritet. |
+| S21 | 2026-05-11 | Hvordan kommuniseres metodisk migrering til brukerne? | Før M7.3 | Tre kanaler: (1) "Hva er endret"-seksjon i `brukerveiledning.md`, (2) kort merknad i dashboardets header i overgangsperiode (4-6 uker), (3) varsel til kjente brukere via vanlig kanal. Reduserer risiko R17/R20. |
 
 ### 11.3 Lukkede saker
 
@@ -366,6 +374,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
 | M6.2: Analytisk innhold | — | Ferdig | PR #25 merget til main 2026-04-25. Levert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips, automatisk regenerering ved kursoppdatering. 63/63 tester grønne. |
 | M6.3: Visuelt redesign | — | Ferdig | Designgrunnlag (PR #26) + visuelle forbedringer i PR 52, 54, 55 og 56 merget til main 2026-04-26. Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` håndteres som forbedringsforslag i drift dersom ønsket senere. |
+| M7: Metodisk migrering og flak-generering | — | Pågår | Oppstart 2026-05-11. Plan i `docs/planer/M7 plan.md`. Syv delfaser (M7.0-M7.6). M7.0 Migrerings-QA er første utviklingssteg og krever ingen åpne saker besluttet på forhånd. Fasitverdier ligger i `docs/qa/m7-fasitverdier.md`. |
 
 ---
 
@@ -379,6 +388,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.2 | 2026-04-25 | M6.2 ferdig (PR #25 merget). M6.3 startet med designgrunnlag (PR #26 merget). S15 åpnet og lukket: M6.3 utvidet fra 1 til 2 uker. | prosjektleder |
 | 2.3 | 2026-04-26 | Hosting flyttet fra Netlify til GitHub Pages. S16 åpnet og lukket. Repoet gjort offentlig. | prosjektleder, devops |
 | 2.4 | 2026-04-26 | M6.3 lukket etter prosjekteiers godkjenning av dashboardet. PR 52, 54, 55 og 56 merget med visuelle forbedringer (kompakt hero, rullgardin-filter, sammenkoblet komparativ-blokk, padding-fix). Status flyttet fra "Drift + ny utvidelsesfase M6 starter" til "Drift". | prosjektleder, frontend, qa |
+| 2.5 | 2026-05-11 | M7 Metodisk migrering åpnet som ny milepæl. Lagt til i seksjon 5. Plan i `docs/planer/M7 plan.md` godkjent av prosjekteier. S19-S21 åpnet i 11.2. M7.0 (migrerings-QA) starter umiddelbart. Status oppdatert til "Drift + ny utvidelsesfase M7 starter". | prosjektleder |
 
 ---
 
