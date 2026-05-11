@@ -1814,15 +1814,20 @@ async function main() {
         eu: eu,
         valuta: valuta,
       });
-      // M7.6: aktiver flak-nedlastingsknapp når docx-biblioteket er lastet
-      // og oppdater click-handler med nye state-verdier.
+      // M7.6: koble click-handler med nåværende state-verdier. Knappen er
+      // alltid aktiv; docx-tilgjengelighet sjekkes i selve klikket.
       const flakKnapp = document.getElementById("flak-last-ned-knapp");
-      if (flakKnapp && typeof docx !== "undefined") {
-        flakKnapp.disabled = false;
-        flakKnapp.setAttribute("aria-disabled", "false");
-        flakKnapp.removeAttribute("title");
+      if (flakKnapp) {
         flakKnapp.onclick = async () => {
+          if (typeof docx === "undefined") {
+            alert(
+              "docx-biblioteket er ikke lastet enda. Sjekk nettforbindelsen "
+              + "og prøv igjen om noen sekunder."
+            );
+            return;
+          }
           flakKnapp.disabled = true;
+          const originalTekst = flakKnapp.textContent;
           flakKnapp.textContent = "Genererer...";
           try {
             const blob = await genererFlakDocx({
@@ -1842,7 +1847,7 @@ async function main() {
             alert("Kunne ikke generere flak: " + e.message);
           } finally {
             flakKnapp.disabled = false;
-            flakKnapp.textContent = "Last ned flak (.docx)";
+            flakKnapp.textContent = originalTekst;
           }
         };
       }

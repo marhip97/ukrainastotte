@@ -20,10 +20,10 @@
         Ukraine Support Tracker</a>. Sist oppdatert: <span id="sist-oppdatert">laster...</span>
       </p>
       <p class="metode-merknad" role="status">
-        <strong>Metode oppdatert mai 2026:</strong> BNP-andel og enkelte
-        tall kan avvike fra tidligere visninger. Se
-        <a href="https://github.com/marhip97/ukrainastotte/blob/main/docs/brukerveiledning.md#hva-er-endret-mai-2026---m7-migrering">
-        "Hva er endret"</a> i brukerveiledningen.
+        Dashboardet henter og oppdaterer seg automatisk ved nye Kiel-
+        publiseringer. Se
+        <a href="https://github.com/marhip97/ukrainastotte/blob/main/docs/brukerveiledning.md">brukerveiledningen</a>
+        for metode og bruk.
       </p>
     </div>
   </header>
@@ -54,11 +54,11 @@
         <span class="toggle-etikett">EU-fordeling:</span>
         <label>
           <input type="radio" name="eu" value="ekskl" checked>
-          <span>EKSKL EU</span>
+          <span>Ekskl. EU</span>
         </label>
         <label>
           <input type="radio" name="eu" value="inkl">
-          <span>INKL EU</span>
+          <span>Inkl. EU</span>
         </label>
         <span class="eu-merknad" id="eu-merknad" role="status"></span>
       </div>
@@ -179,6 +179,31 @@
     </div>
 
     <section class="graf">
+      <div class="seksjon-overskrift">
+        <h2>Topp 15 giverland</h2>
+        <button type="button" class="knapp-sekundaer"
+                id="rangering-png-knapp"
+                aria-label="Last ned rangeringsgrafen som PNG-bilde">
+          Last ned PNG
+        </button>
+      </div>
+      <div class="rangering-kontroller">
+        <label for="rangering-maal">Sortér på:</label>
+        <select id="rangering-maal">
+          <option value="allocation" selected>Total allokering</option>
+          <option value="commitment">Total forpliktelse</option>
+          <option value="disbursement">Kun utbetalt (finansiell)</option>
+          <option value="bnp">Andel av BNP</option>
+          <option value="capita">Per innbygger</option>
+          <option value="endring">Endring siste release</option>
+        </select>
+      </div>
+      <div id="rangering-graf" role="img"
+           aria-label="Stolpegraf med topp 15 giverland sortert etter valgt mål"></div>
+      <p class="uthev" id="norge-plassering"></p>
+    </section>
+
+    <section class="graf">
       <h2>Fordeling av støtte (Norge)</h2>
       <div class="fordeling-kontroller">
         <label>Visning:
@@ -204,31 +229,6 @@
         Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
         og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
       </p>
-    </section>
-
-    <section class="graf">
-      <div class="seksjon-overskrift">
-        <h2>Topp 15 giverland</h2>
-        <button type="button" class="knapp-sekundaer"
-                id="rangering-png-knapp"
-                aria-label="Last ned rangeringsgrafen som PNG-bilde">
-          Last ned PNG
-        </button>
-      </div>
-      <div class="rangering-kontroller">
-        <label for="rangering-maal">Sortér på:</label>
-        <select id="rangering-maal">
-          <option value="allocation" selected>Total allokering</option>
-          <option value="commitment">Total forpliktelse</option>
-          <option value="disbursement">Kun utbetalt (finansiell)</option>
-          <option value="bnp">Andel av BNP</option>
-          <option value="capita">Per innbygger</option>
-          <option value="endring">Endring siste release</option>
-        </select>
-      </div>
-      <div id="rangering-graf" role="img"
-           aria-label="Stolpegraf med topp 15 giverland sortert etter valgt mål"></div>
-      <p class="uthev" id="norge-plassering"></p>
     </section>
 
     <section class="graf" id="tidsserie-seksjon">
@@ -295,9 +295,7 @@
         <h2 id="flak-tittel">Flak: Norges Ukraina-støtte</h2>
         <button type="button" id="flak-last-ned-knapp"
                 class="flak-knapp"
-                aria-label="Last ned flak som Word-dokument"
-                aria-disabled="true" disabled
-                title="Kommer i M7.6">
+                aria-label="Last ned flak som Word-dokument">
           Last ned flak (.docx)
         </button>
       </div>
