@@ -1,4 +1,4 @@
-# M7 Flak-generering og metodisk samkjøring med excel-arbeidsverktøy - plan
+# M7 Metodisk migrering og flak-generering - plan
 
 **Status:** Utkast til godkjenning hos prosjekteier.
 **Dato:** 2026-05-11
@@ -11,52 +11,72 @@ funksjonelle krav.
 
 Brukerne har historisk brukt et excel-arbeidsverktøy ved siden av dashboardet
 for å produsere flak til intern bruk og ekstern kommunikasjon. Excelen
-inneholder tre arbeidsark - "Aggregert per land", "2025" og "2026" - som
 implementerer en metode som avviker fra dashboardets nåværende beregninger
-på fem viktige punkter, jf. seksjon 2. Brukerne ønsker (a) at dashboardet
-kan reprodusere excel-tallene, og (b) en funksjon for å generere flak som
-Word-fil basert på dashboardets data.
+på flere punkter, jf. seksjon 2.
 
-## 2. Metodiske avvik mellom excel og dashboard
+Prosjekteier har besluttet at dashboardet over tid skal landes på excelens
+metode som ny autoritativ kilde. Dashboardet får oppdatert formål: innhente
+og analysere data fra Kiel automatisk, visualisere med mulighet for analyse,
+og eksportere data til flak. Designet (farger, moduler, graftyper) beholdes
+i tråd med gjeldende dashboard slik det ble levert i M6.3. Metodikken
+endres for å samsvare med FINs excelfil.
 
-| Tema | Excel (brukernes metode) | Dashboardet i dag |
+Det betyr at M7 ikke er en utvidelse - det er en migrering av hele
+dashboardet til ny metodisk grunn, pluss en ny flak-funksjon på toppen.
+
+## 2. Metodiske endringer som migrering medfører
+
+| Tema | Før (dashboard i dag) | Etter (excel-metode) |
 |---|---|---|
-| Tidsperiode | Velger år (2025 = `month` i [36, 49], 2026 = [48, 61]) | Kumulativt 2022→ |
-| Datofiltrering | Filtrerer på `month_exists_dummy = 1` | Tidsserien filtrerer udaterte rader, hero/rangering/scatter inkluderer dem |
-| Verdikolonne | `tot_sub_activity_value_EUR_redistr` (redistribuert) | `tot_sub_activity_value_EUR` (rå) |
-| EU-fordeling | Allokerer EU-institusjoners støtte ut på medlemsland via `EU share allocations` | EU-institusjoner som separat giver |
-| Befolkning og BNP | Fast 2021-BNP og fast befolkning fra egen `Country data`-tabell | Verdensbanken WDI med ferskeste tilgjengelige år |
+| Verdikolonne | `tot_sub_activity_value_EUR` (rå) | `tot_sub_activity_value_EUR_redistr` (redistribuert) |
+| BNP og befolkning | Verdensbanken WDI, ferskeste tilgjengelige år (typisk 2024) | Fast 2021-BNP og fast befolkning fra `Country data` |
+| EU-institusjoner | Egen rad i rangering, separat giver | Allokeres ut på medlemsland via finansieringsnøkkel, bryter for av/på |
+| Tidsperiode | Kun kumulativt 2022→ | Kumulativt 2022→ pluss enkeltår (2025, 2026 osv.) |
+| Datofiltrering | Tidsserien filtrerer udaterte rader, hero/rangering inkluderer dem | Alle enkeltår-visninger filtrerer på `month_exists_dummy = 1` |
 
-## 3. Føringer fra prosjekteier
+## 3. Føringer fra prosjekteier (allerede besluttet)
 
-Tre føringer er allerede besluttet og legges til grunn:
-
-- **F1 (flak-format):** Flaket lastes ned som Word-fil i tråd med mal.
-  Ingen interaktiv tekstredigering i dashboardet. Brukeren redigerer i Word
-  etter nedlasting.
-- **F2 (EU-fordeling):** Inkluderes som valgbar bryter ved siden av
-  eksisterende visninger - ikke som ny standardvisning.
-- **F3 (EU-bryterens scope):** EU-fordeling brukes kun på akkumulerte tall
-  (2022 til siste tilgjengelige måned). For enkeltår-visninger (2025, 2026)
-  brukes alltid kun direkte bilateral støtte uten EU-fordeling. Dette
-  samsvarer med hvordan excelen og flaket faktisk fungerer.
+- **F1 (flak-format):** Flaket lastes ned som Word-fil i tråd med mal. Ingen
+  interaktiv tekstredigering i dashboardet. Brukeren redigerer i Word etter
+  nedlasting.
+- **F2 (EU-fordeling):** Implementeres som valgbar bryter, ikke ny
+  standardvisning.
+- **F3 (EU-bryterens scope):** EU-fordeling brukes kun på kumulative tall
+  (2022 til nå). For enkeltår er bryteren grået ut. Enkeltår-visninger
+  bruker likevel redistr-verdier og Country data - hele excel-metoden minus
+  EU-tillegget.
+- **F4 (migreringsmodell):** Modell 1 - excel-metoden blir ny standard for
+  dashboardet, ikke et alternativ. Redistr-verdier blir hovedverdi.
+  `Country data` erstatter WDI for BNP og befolkning. Dashboardet og flaket
+  viser dermed samme tall.
+- **F5 (designkontinuitet):** Designet, herunder farger, moduler og
+  graftyper, beholdes i tråd med M6.3-leveransen. Designnotatene i M7
+  spesifiserer kun plassering av nye kontroller og oppførsel ved
+  tilstandsendring - ikke ny visuell identitet.
 
 ## 4. Leveranseomfang
 
-M7 deles i seks delfaser. Hver delfase blir én pull request mot `main`.
+M7 deles i syv delfaser. M7.0 er migrerings-QA før noen kodeendringer
+rulles ut til brukere. Hver delfase blir én pull request mot `main`.
 
-### 4.1 Verifiseringssteg (før utvikling)
+### 4.1 M7.0 Migrerings-QA (verifisering)
 
-Før koding starter: kjør et engangs-skript mot brukernes excel-fil og
-mål nøyaktig hvor mye Norges tall endrer seg når man går fra
-`tot_sub_activity_value_EUR` til `tot_sub_activity_value_EUR_redistr`.
-Resultatet dokumenteres i denne planen og brukes som gyldenverdi i
-krysssjekk-testene i M7.3.
+Engangs-skript som kvantifiserer avvik per land mellom dagens metode og
+excel-metoden. Måler:
 
-Krever ingen kodeendringer i repoet. Skriptet kjøres lokalt mot den
-opplastede excel-filen. Estimert tid: under en time.
+- Norges total allokering: rå vs. redistr, ekskl. og inkl. EU-andel.
+- Tysklands, Sveriges, Frankrikes total allokering: samme.
+- BNP-andel og per innbygger: WDI 2024 vs. Country data 2021-BNP og fast
+  befolkning.
+- Topp 15-rangeringer: plasseringer som endrer seg.
 
-### 4.2 M7.1 Parser-utvidelse
+Resultatet leveres som rapport (`docs/qa/m7-migrering-avvik.md`) til
+prosjekteier før kodeendringer rulles til brukere. Rapporten brukes også
+som gyldne verdier i krysssjekk-testene senere i M7.
+
+Omfang: S. Avhengigheter: ingen.
+
+### 4.2 M7.1 Parser- og referansetabell-utvidelse
 
 Utvide `src/ingest/parse_kiel.py` til å lese:
 
@@ -64,110 +84,137 @@ Utvide `src/ingest/parse_kiel.py` til å lese:
   merk samme kolonnebokstav som dagens verdi, ulikt feltnavn). Sjekkes
   via kolonnenavn, ikke posisjon.
 - `month` (kolonne AV) og `month_exists_dummy` (kolonne BF).
-- En ny `parse_country_data`-funksjon som leser arket "Country data"
-  med kolonnene `Land`, `Befolkning (mill.)`, `EU share allocations`,
+- Ny `parse_country_data`-funksjon som leser arket "Country data" med
+  kolonnene `Land`, `Befolkning (mill.)`, `EU share allocations`,
   `EU share commitments`, `NATO`, `Europa`, `BNP mill EUR`.
 
 Datamodellen utvides: `Aktivitet` får nye felter `verdi_eur_redistr`,
-`maaned_nr`, `maaned_finnes`. Ny dataklasse `LandReferanse` for
-Country data-tabellen.
+`maaned_nr`, `maaned_finnes`. Ny dataklasse `LandReferanse` for Country
+data-tabellen. Eksisterende `verdi_eur`-felt fjernes ikke ennå - det
+ryddes vekk i M7.3 etter at migreringen er bekreftet.
+
+`Country data` versjoneres som `data/reference/country_data.csv` i
+repoet. Hentes manuelt fra brukernes excel ved hver Kiel-release, eller
+genereres automatisk hvis brukerne kan dele excel-filen i repoet. Sak
+S18 avgjør dette.
 
 Tester: ny fixture med redistr-kolonne, maaned-kolonne og Country data.
-Eksisterende tester må fortsatt passere.
+Eksisterende tester må fortsatt passere på rå-verdiene.
 
 Omfang: M. Avhengigheter: ingen.
 
-### 4.3 M7.2 Aggregering per år og EU-fordeling
+### 4.3 M7.2 Migrering av analyselaget
 
-Ny modul `src/analyze/aar_aggregat.py` med tre funksjoner:
+`normalize.py` og analysemodulene oppdateres slik at redistr-verdier
+blir hovedverdi:
 
-- `aggregerPerAar(aktiviteter, aar)`: summerer redistr-verdier per
-  land/kategori/mål for et gitt år, filtrert på `month_exists_dummy = 1`
-  og månedsintervall (jf. excel-formelen).
-- `fordelEuStotte(summary, country_data)`: tar et kumulativt summary og
-  fordeler EU-institusjonenes støtte ut på medlemsland via
-  `EU share allocations`/`EU share commitments`.
-- `noekkeltallPerAar(aggregater, country_data)`: beregner per innbygger
-  og som andel av BNP basert på `Country data` (fast befolkning og
-  2021-BNP, ikke WDI). Dette er bevisst - excelen bruker faste verdier
-  for å sikre at tallene er sammenlignbare på tvers av releaser.
+- `country_summary.csv` regnes nå fra redistr, ikke fra rå-verdier. Rå
+  rader fra Country Summary-arket i Kiel-xlsx beholdes som referanse
+  men brukes ikke i hovedaggregatet.
+- `country_summary_relative.csv` byttes til Country data: 2021-BNP og
+  fast befolkning. WDI brukes ikke lenger.
+- Ny CSV `country_summary_aar.csv` med dimensjonene (land, aar,
+  kategori, maal, verdi_eur_mrd, per_capita_eur, andel_bnp_pct). Filen
+  produseres for hvert tilgjengelig år.
+- Ny modul `src/analyze/eu_fordeling.py` med funksjon
+  `fordelEuStotte(summary, country_data)` som tar et kumulativt summary
+  og fordeler EU-institusjonenes støtte ut på medlemsland.
 
-`normalize.py` utvides til å skrive `data/processed/country_summary_aar.csv`
-med dimensjonene (land, aar, kategori, maal, verdi_eur_mrd, per_capita_eur,
-andel_bnp_pct). Filen produseres for hvert tilgjengelig år samt for
-kumulativ periode.
+Workflow `fetch-wdi.yml` markeres som deaktivert (commentet ut, ikke
+slettet i denne PR-en). `wdi.json` beholdes som referanse til M7.6.
 
-Tester: gylne verdier for Norge 2025 (3,63 mrd. EUR ekskl. EU iht. excel),
-Tyskland og Sverige.
+Tester: gylne verdier fra M7.0-rapporten brukes som forventede tall.
 
 Omfang: L. Avhengigheter: M7.1.
 
-### 4.4 M7.3 Krysssjekk mot excel
+### 4.4 M7.3 Opprydding etter migrering
 
-`scripts/qa_krysssjekk.py` utvides med ny sjekkgruppe som verifiserer
-at dashboardets nye tall samsvarer med excel-tallene innenfor 1 prosent
-toleranse for:
+Ryddesteg som ikke kunne gjøres i M7.2 fordi det ville brutt parallell
+QA:
 
-- Norge 2025 allokering ekskl. EU (gylden verdi: 3,63 mrd. EUR)
-- Norge 2026 allokering ekskl. EU
-- Norge kumulativt allokering inkl. EU (gylden verdi: tba fra
-  verifiseringsskriptet)
-- Tyskland og Sverige for de samme tre målepunktene
+- Fjern gamle `verdi_eur`-referanser i parser og analyselag der de ikke
+  lenger brukes.
+- Slett `fetch_wdi.py`, `fetch-wdi.yml`, `wdi.json` etter at M7.2-QA er
+  bestått og prosjekteier har godkjent migreringen.
+- Oppdater `brukerveiledning.md` med ny "Hva er endret"-seksjon som
+  forklarer overgangen, dato, og hvilke tall som er berørt. Sak S21
+  styrer formuleringen.
 
-QA-rapport oppdateres når sjekkene er på plass.
-
-Omfang: S. Avhengigheter: M7.2.
+Omfang: S. Avhengigheter: M7.2 godkjent.
 
 ### 4.5 M7.4 Dashboard-utvidelse: per år og EU-bryter
 
-To nye kontroller på dashboardet:
+Designnotat først, deretter implementering.
 
-- **Periode-bryter** ved siden av eksisterende visning: "Kumulativt"
-  (default) eller spesifikt år (2022, 2023, 2024, 2025, 2026). Når et år
-  er valgt, leser dashboardet `country_summary_aar.csv` og oppdaterer
-  hero, rangering, scatter og komparativ profil. EU-bryteren grås ut
-  (jf. F3).
-- **EU-bryter** "Inkl. EU-andel": kun synlig når periode = "Kumulativt".
-  Når slått på, brukes EU-fordelte verdier i alle nøkkeltall, rangeringer
-  og kart. Default av.
+**Steg 1 - designnotat:** Ett dokument under `docs/m7-design/m7-4-design.md`
+som spesifiserer:
 
-Metode-merknader oppdateres slik at hver visning forklarer hvilke valg
-som er aktive, og hvorfor enkeltår ikke kan kombineres med EU-fordeling.
+- Plassering av periode-bryteren (kandidatposisjoner: rad over hero, ved
+  siden av valuta-bryter, eller tabs øverst).
+- Plassering av EU-bryteren og hvordan grået-ut tilstand signaliseres når
+  enkeltår er valgt.
+- Hvordan hero-seksjonen endrer seg ved periode = enkeltår (eksempelvis
+  forsvinner "Endring siden forrige rapport"-kortet, eller får ny
+  betydning).
+- Oppførsel for rangering, scatter og komparativ profil ved
+  tilstandsendring.
+- Wireframe eller skisse for hver hovedtilstand: kumulativt + EU av,
+  kumulativt + EU på, enkeltår.
 
-Omfang: L. Avhengigheter: M7.2, M7.3.
+Designet bygger på eksisterende tokens i `tokens.css` og komponenter i
+`dashboard.js`. Ingen nye farger, fonter eller graftyper. Designnotatet
+godkjennes av prosjekteier før koding starter.
+
+**Steg 2 - implementering:** Når designnotat er godkjent:
+
+- Ny periode-bryter: "Kumulativt" (default) eller spesifikt år.
+- Ny EU-bryter "Inkl. EU-andel": kun synlig når periode = "Kumulativt".
+  Default av.
+- Alle hovedvisninger (hero, rangering, scatter, komparativ profil) leser
+  riktig CSV avhengig av periode, og riktig kolonner avhengig av
+  EU-bryter.
+- Metode-merknader oppdateres slik at hver visning forklarer aktive valg.
+
+Omfang: L. Avhengigheter: M7.2, M7.3, design godkjent.
 
 ### 4.6 M7.5 Flak-forhåndsvisning
 
-Ny seksjon i dashboardet, eller egen side under `/flak`, som viser
-nøyaktig hvilke tall og figurer som vil havne i Word-flaket gitt
-aktive bryterinnstillinger:
+Designnotat først, deretter implementering.
 
-- Tabell 1 (plasseringer per kategori) genereres dynamisk.
-- Figurene 1-3 (allokert 2025: absolutt, per innbygger, andel av BNP)
-  rendres som forhåndsvisning.
-- "Last ned flak (.docx)"-knapp øverst i seksjonen.
+**Steg 1 - designnotat:** Ett dokument under `docs/m7-design/m7-5-design.md`
+som spesifiserer:
 
-Ingen redigerbar tekst. Hvis tallene ser feil ut, justerer brukeren
-filtre i dashboardet og laster ned på nytt.
+- Plassering av flak-funksjonen i dashboardet (egen seksjon nederst,
+  egen URL, eller annet).
+- Presentasjon av tabell 1 i forhåndsvisningen: faktisk skjermbilde av
+  Word-utgaven, eller data-tabell?
+- Presentasjon av figurene 1-3: rendret med samme Plotly-tema som
+  hoveddashboardet, eller egen rendering?
+- Knappens utseende og hvordan brukeren oppdager flak-funksjonen.
+
+**Steg 2 - implementering:** Når designnotat er godkjent, bygges
+forhåndsvisningen og "Last ned flak (.docx)"-knappen. Ingen redigerbar
+tekst. Hvis tallene ser feil ut, justerer brukeren filtre i dashboardet
+og laster ned på nytt.
 
 Omfang: M. Avhengigheter: M7.4.
 
 ### 4.7 M7.6 Docx-generering klientside
 
-JavaScript-modul som genererer Word-fil basert på flak-malen levert av
-brukerne. Bruker en lett npm-pakke (kandidat: `docx` via CDN-distribusjon
-fra esm.run eller jsdelivr) som lar oss bygge .docx fra JavaScript uten
-serverside-prosessering.
+JavaScript-modul som genererer Word-fil basert på flak-malen.
+Vurderer `docx`-pakken via CDN-distribusjon fra esm.run eller jsdelivr -
+lar oss bygge .docx fra JavaScript uten serverside-prosessering.
 
 Maldokumentet (`Støtte_til_Ukraina_-_Kiel-instituttets_tall.docx`)
 legges i repoet under `src/dashboard/maler/flak-mal.docx` og brukes som
 referanse for stil og struktur. Ferdig fil bygges fra grunnen av i kode
 (ikke via mal-substitusjon), siden klientside-biblioteker for
-mal-substitusjon i Word er umodne.
+mal-substitusjon i Word er umodne. Sak S19 kan endre dette.
 
 Norsk språk, FIN-tallformat (komma som desimaltegn, mellomrom som
 tusenseparator, "pst." for prosent, "mrd. kroner" for milliarder),
-plasseringstabell og figurer i tråd med malen.
+plasseringstabell og figurer i tråd med malen. WDI-relaterte filer
+slettes i denne PR-en.
 
 Omfang: L. Avhengigheter: M7.5.
 
@@ -177,59 +224,66 @@ Skala: S = ½-1 dag, M = 1-2 dager, L = 2-3 dager.
 
 | Delfase | Omfang | Dager |
 |---|---|---|
-| Verifisering | (under 1 time) | 0 |
+| M7.0 Migrerings-QA | S | 0,5-1 |
 | M7.1 Parser-utvidelse | M | 1-2 |
-| M7.2 Aggregering per år | L | 2-3 |
-| M7.3 Krysssjekk | S | 0,5-1 |
-| M7.4 Dashboard-utvidelse | L | 2-3 |
-| M7.5 Flak-forhåndsvisning | M | 1-2 |
+| M7.2 Migrering av analyselag | L | 2-3 |
+| M7.3 Opprydding | S | 0,5-1 |
+| M7.4 Dashboard (design + impl.) | L+L | 3-4 |
+| M7.5 Flak-forhåndsvisning (design + impl.) | M+M | 2-3 |
 | M7.6 Docx-generering | L | 2-3 |
-| **Sum** | | **9-14 dager** |
+| **Sum** | | **11-17 dager** |
 
-Estimert leveringstid: omtrent 2 ukers utviklingstid.
+Estimert leveringstid: omtrent 2-3 ukers utviklingstid.
 
 ## 6. Åpne saker som må besluttes før utvikling starter
 
 | Sak | Beskrivelse | Frist |
 |---|---|---|
-| S17 | Skal befolkning og BNP være fast (excel-metoden) eller fra WDI (dashboardet i dag)? Excel bruker 2021-BNP og fast befolkning. Dashboardet bruker ferskeste WDI-tall. For M7 foreslås at flak-tallene bruker excel-metoden (sikrer reproduserbarhet mot excel), men at dashboardet beholder WDI som default for ordinære visninger. | Før M7.2 |
-| S18 | Skal `Country data`-tabellen versjoneres i repoet som `data/reference/country_data.csv`, eller hentes dynamisk fra excel-filen hver gang? Foreslås versjonering, slik at tallene er stabile mellom releaser. | Før M7.1 |
-| S19 | Skal flak-malen `flak-mal.docx` ligge i repoet, eller skal docx-generering bygges fra grunnen i kode uten referansemal? | Før M7.6 |
+| S18 | Skal `Country data` versjoneres som `data/reference/country_data.csv` i repoet, eller automatisk hentes fra excelens `Country data`-ark hver gang Kiel-fil oppdateres? Foreslås manuell versjonering med årlig oppdatering, fordi excelen ikke er en automatisert datakilde. | Før M7.1 |
+| S19 | Skal flak-malen `flak-mal.docx` ligge i repoet som referanse, eller skal docx-generering bygges fra grunnen i kode? | Før M7.6 |
 | S20 | Hvilke målepunkt skal flaket vise i tabell 1? Excel-flaket viser 9 rader. Skal denne være konfigurerbar, eller låst til malens struktur? | Før M7.5 |
+| S21 | Hvordan kommuniseres metodisk migrering til brukerne? Forslag: "Hva er endret"-seksjon i brukerveiledning, kort merknad i dashboardets header i en overgangsperiode, og varsel til kjente brukere via vanlig kanal. | Før M7.3 |
+
+S17 (BNP/befolkning-kilde) ble besvart 2026-05-11 med valg av Country
+data. Saken er lukket.
 
 ## 7. Risiko
 
 | ID | Risiko | Sannsynlighet | Konsekvens | Tiltak |
 |---|---|---|---|---|
-| R15 | Redistr-kolonnen avviker mer fra rå-kolonnen enn forventet, særlig for Norge i 2025 | Lav | Middels | Verifiseringssteget før utvikling kvantifiserer dette. Hvis avviket er stort, må kommunikasjonen rundt skiftet i dashboardet håndteres tydelig. |
-| R16 | Docx-generering klientside fungerer dårlig på iOS/Safari | Middels | Middels | Test tidlig (allerede i M7.6 første dag). Fallback: server-side via en lett funksjon - krever ny S-sak om hosting. |
-| R17 | Excel-metoden og dashboardet kan vise to forskjellige tall for samme spørsmål, noe som kan forvirre brukerne | Middels | Middels | Tydelige metode-merknader på hver visning. Brukerveiledning utvides med kort sammenligning av excel- og dashboard-tall. |
-| R18 | EU-fordelingsnøkkelen i `Country data` er en momentanstørrelse - den kan endre seg over tid (Brexit, utvidelser) | Lav | Lav | Versjoner `country_data.csv`. Dokumenter at den er kopiert fra excel pr. dato XX og må oppdateres manuelt ved EU-endringer. |
+| R15 | Redistr-kolonnen avviker mer fra rå-kolonnen enn forventet for Norge | Lav | Middels | M7.0 kvantifiserer dette før utrulling. |
+| R16 | Docx-generering klientside fungerer dårlig på iOS/Safari | Middels | Middels | Test tidlig i M7.6. Fallback: server-side via en lett funksjon - krever ny S-sak om hosting. |
+| R17 | Brukere som kjenner dagens tall blir forvirret av metodebytte | Middels | Middels | Tydelige metode-merknader. M7.3 har egen leveranse for kommunikasjon (S21). |
+| R18 | EU-fordelingsnøkkelen i `Country data` er momentanstørrelse - kan endre seg over tid (Brexit, EU-utvidelser) | Lav | Lav | Versjoner `country_data.csv`. Dokumenter at den må oppdateres manuelt ved EU-endringer. |
+| R19 | Bytte til 2021-BNP virker utdatert mot 2026-data | Middels | Lav | Tydelig metode-merknad. Merknad i veiledning: "BNP-tallene er bevisst faste 2021-tall for å sikre stabile sammenligninger over tid." |
+| R20 | Brukere oppdager at WDI-baserte tall i tidligere kommunikasjon ikke matcher nye tall i dashboardet | Lav | Middels | Migreringskommunikasjon i M7.3 inkluderer en kort "Hva er endret"-seksjon med dato og hvilke verdier som er berørt. |
 
 ## 8. Konsekvenser for eksisterende kode og dokumentasjon
 
-- `parse_kiel.py` og `normalize.py` får nye felter i `Aktivitet` og ny
-  CSV `country_summary_aar.csv`.
+- `parse_kiel.py` og `normalize.py` får nye felter og produserer nye
+  hovedverdier.
 - `dashboard.js` får to nye globale brytere som styrer alle hovedvisninger.
-- `brukerveiledning.md` utvides med kort metode-forklaring av enkeltår-
-  visning og EU-fordeling.
-- `prosjektplan.md` får M7 som ny milepæl i seksjon 5, og endringslogg
-  i seksjon 12 oppdateres.
+- `brukerveiledning.md` får ny "Hva er endret"-seksjon (S21).
+- `prosjektplan.md` får M7 som ny milepæl i seksjon 5, endringslogg i
+  seksjon 12 oppdateres.
+- `fetch_wdi.py`, `fetch-wdi.yml`, `wdi.json` avvikles i M7.6.
+- `docs/qa/qa-rapport-release28.md` får erstatning eller oppdatering med
+  ny metode.
 - `CLAUDE.md` trenger ingen endringer.
 
 ## 9. Rollefordeling
 
 | Delfase | Primær rolle |
 |---|---|
-| Verifisering | dataingenior |
+| M7.0 Migrerings-QA | qa |
 | M7.1 Parser-utvidelse | dataingenior |
-| M7.2 Aggregering per år | analytiker |
-| M7.3 Krysssjekk | qa |
-| M7.4 Dashboard-utvidelse | frontend |
+| M7.2 Migrering av analyselag | analytiker |
+| M7.3 Opprydding | dataingenior |
+| M7.4 Dashboard | frontend |
 | M7.5 Flak-forhåndsvisning | frontend |
 | M7.6 Docx-generering | frontend |
 
 ---
 
-*Plan oppdateres etter at S17-S20 er besvart. Endelig versjon godkjennes
-av prosjekteier før utvikling på `feature/m7-flak-generering` starter.*
+*Plan oppdateres etter at S18-S21 er besvart. Endelig versjon godkjennes
+av prosjekteier før utvikling på `feature/m7-metodisk-migrering` starter.*
