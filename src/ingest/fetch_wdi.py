@@ -1,24 +1,20 @@
-"""Henter BNP og folketall fra Verdensbanken WDI for Kiels giverland.
+"""Henter folketall fra Verdensbanken WDI for Kiels giverland.
 
-Bruker "Most Recent Value"-strategien (`MRV=1`) for å få de ferskeste
-endelige tallene per land. Typisk 2024-tall for utviklede land, 2023
-eller eldre for noen.
+Etter M7.2-migreringen brukes ikke lenger BNP fra WDI - BNP hentes
+direkte fra Kiels `Country Summary (€)` (`GDP (2021)` i EUR). Denne
+modulen er slanket til å kun hente folketall (`SP.POP.TOTL`) med
+"Most Recent Value"-strategien (MRV=1).
 
-Output: `data/reference/wdi.json` med struktur:
+Output: `data/reference/folketall.json` med struktur:
 
 ```json
 {
-  "hentet_dato": "2026-04-22",
-  "indikatorer": {
-    "NY.GDP.MKTP.CD": "BNP i løpende USD",
-    "SP.POP.TOTL": "Total folketall"
-  },
+  "hentet_dato": "2026-05-11",
+  "indikator": "SP.POP.TOTL",
   "land": {
     "Norway": {
       "iso3": "NOR",
-      "bnp_usd": 485000000000,
-      "bnp_aar": 2024,
-      "folketall": 5550000,
+      "folketall": 5572279,
       "folketall_aar": 2024
     },
     ...
@@ -27,8 +23,8 @@ Output: `data/reference/wdi.json` med struktur:
 }
 ```
 
-Brukes av `src/analyze/noekkeltall_relative.py` for å beregne
-BNP-andel og per capita.
+Brukes av `src/analyze/noekkeltall_relative.py` og `src/analyze/aarlig.py`
+for å beregne per capita.
 """
 
 from __future__ import annotations
@@ -41,7 +37,7 @@ from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-OUT_PATH = REPO_ROOT / "data" / "reference" / "wdi.json"
+OUT_PATH = REPO_ROOT / "data" / "reference" / "folketall.json"
 
 # Kiels 42 giverland + aggregater → ISO-3-koder.
 # EU-institusjoner og Taiwan er utelatt siden WDI ikke dekker dem
@@ -62,7 +58,7 @@ KIEL_TIL_ISO3: dict[str, str] = {
     "United Kingdom": "GBR", "United States": "USA",
 }
 
-# Rader i country_summary som IKKE skal hentes BNP/folketall for.
+# Rader i country_summary som IKKE skal hentes folketall for.
 UTELATT = {
     "EU (Commission and Council)",
     "EU Institutions",
@@ -70,10 +66,7 @@ UTELATT = {
     "Taiwan",  # Ikke i WDI
 }
 
-INDIKATORER = {
-    "NY.GDP.MKTP.CD": "BNP i løpende USD",
-    "SP.POP.TOTL": "Total folketall",
-}
+INDIKATOR = "SP.POP.TOTL"
 
 
 def _hent_indikator(iso3_liste: list[str], indikator: str) -> list[dict]:
@@ -93,14 +86,7 @@ def _hent_indikator(iso3_liste: list[str], indikator: str) -> list[dict]:
 
 def hent_land(kiel_navn: list[str]) -> dict:
     iso3_liste = sorted({KIEL_TIL_ISO3[n] for n in kiel_navn if n in KIEL_TIL_ISO3})
-    iso3_til_kiel = {}
-    for n in kiel_navn:
-        kode = KIEL_TIL_ISO3.get(n)
-        if kode:
-            iso3_til_kiel.setdefault(kode, n)
-
-    gdp_rader = _hent_indikator(iso3_liste, "NY.GDP.MKTP.CD")
-    pop_rader = _hent_indikator(iso3_liste, "SP.POP.TOTL")
+    pop_rader = _hent_indikator(iso3_liste, INDIKATOR)
 
     def index_paa_iso3(rader: list[dict]) -> dict[str, dict]:
         ut = {}
@@ -112,7 +98,6 @@ def hent_land(kiel_navn: list[str]) -> dict:
                 ut[kode] = r
         return ut
 
-    gdp_idx = index_paa_iso3(gdp_rader)
     pop_idx = index_paa_iso3(pop_rader)
 
     ut = {}
@@ -120,13 +105,10 @@ def hent_land(kiel_navn: list[str]) -> dict:
         kode = KIEL_TIL_ISO3.get(kiel_land)
         if kode is None:
             continue
-        if kode not in ut and (gdp_idx.get(kode) or pop_idx.get(kode)):
-            g = gdp_idx.get(kode, {})
+        if kode not in ut and pop_idx.get(kode):
             p = pop_idx.get(kode, {})
             ut[kiel_land] = {
                 "iso3": kode,
-                "bnp_usd": float(g["value"]) if g.get("value") is not None else None,
-                "bnp_aar": int(g["date"]) if g.get("date") else None,
                 "folketall": int(p["value"]) if p.get("value") is not None else None,
                 "folketall_aar": int(p["date"]) if p.get("date") else None,
             }
@@ -155,7 +137,7 @@ def main(argv: list[str]) -> int:
     utelatt = [n for n in kiel_land if n in UTELATT]
     output = {
         "hentet_dato": date.today().isoformat(),
-        "indikatorer": INDIKATORER,
+        "indikator": INDIKATOR,
         "land": land_data,
         "utelatt": utelatt,
         "manglende_mapping": manglende,

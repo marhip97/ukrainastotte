@@ -4,6 +4,38 @@ Dashboardet finnes på <https://marhip97.github.io/ukrainastotte/>. Dette
 dokumentet hjelper journalister, utredere, forskere og andre som vil
 bruke tallene i analyser eller omtale.
 
+## Hva er endret (mai 2026 - M7-migrering)
+
+Dashboardet ble i mai 2026 migrert til metoden som Finansdepartementets
+interne arbeidsverktøy har brukt i flak-produksjon. Metoden endret seg
+slik:
+
+- **Allokering** beregnes nå fra Kiels redistribuerte sub-aktivitetsverdier
+  (`tot_sub_activity_value_EUR_redistr`) istedenfor rå-verdier. For de
+  fleste land gir det identiske tall som tidligere.
+- **BNP** hentes fra Kiels eget `Country Summary`-ark (`GDP (2021)` i EUR)
+  istedenfor Verdensbanken. Det gir stabilere sammenligning på tvers av
+  Kiel-utgivelser fordi Kiel bruker 2021-BNP som referanseår. Norge har
+  2,45 prosent som BNP-andel etter migreringen (var 2,23 prosent med
+  WDI 2024-BNP).
+- **EU-fordeling** kommer som valgbar bryter i et senere steg av migreringen.
+  Når den slås på, fordeles EU-institusjonenes støtte til Ukraina ut på
+  medlemslandene basert på Kiels egne pre-aggregerte tall. Norge påvirkes
+  ikke (vi er ikke EU-medlem). Bryteren virker kun på kumulative tall -
+  ikke på enkeltår.
+- **Enkeltår** (2025, 2026 osv.) er ny visning som komplement til
+  kumulativt 2022→. Norge allokerte 4,68 mrd EUR i 2025 og 1,09 mrd EUR
+  i januar-februar 2026.
+- **Folketall** hentes fortsatt fra Verdensbanken (WDI) med "Most Recent
+  Value"-strategi. Per capita-tall kan avvike 0,5-2 prosent fra eldre
+  flak fordi folketallet oppdateres når Verdensbanken publiserer nye tall.
+- **Flak-eksport** er en kommende funksjon som vil la deg laste ned ferdig
+  Word-dokument med Norges tall i FIN-format.
+
+Endringen påvirker tallene mest for de største EU-landene (Tyskland,
+Frankrike, Italia) når EU-bryteren er på. Norske tall er stort sett
+uendret bortsett fra BNP-andelen (Kiels 2021-BNP er lavere enn WDI 2024-BNP).
+
 ## 1. Hva dashboardet viser
 
 Dashboardet henter data fra [Kiel Institute Ukraine Support

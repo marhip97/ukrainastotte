@@ -20,13 +20,17 @@ from src.ingest.parse_kiel import (
     BILATERAL_ARK,
     COUNTRY_SUMMARY_ARK,
     DISBURSEMENT_ARK,
+    EU_AID_SHARES_ARK,
     FORVENTEDE_BILATERAL_KOLONNER,
+    FORVENTEDE_EU_AID_KOLONNER,
     FORVENTEDE_SUMMARY_KOLONNER,
     KolonneKontraktFeil,
     LandSummary,
     parse_bilateral,
     parse_country_summary,
+    parse_eu_aid_shares,
     parse_financial_disbursements,
+    parse_gdp,
     validate_summary,
 )
 
@@ -37,18 +41,30 @@ def _lag_fixture(tmp_path: Path) -> Path:
 
     bil = wb.create_sheet(BILATERAL_ARK)
     bil.append(list(FORVENTEDE_BILATERAL_KOLONNER))
-    bil.append(["Norway", date(2024, 1, 15), "Military", "Allocation", 100_000_000])
-    bil.append(["Norway", date(2024, 2, 10), "Military", "Commitment", 500_000_000])
-    bil.append(["Norway", date(2024, 3, 1), "Humanitarian", "Allocation", 20_000_000])
+    # Kolonner: donor, announcement_date, aid_type_general, measure,
+    #           tot_sub_activity_value_EUR, tot_sub_activity_value_EUR_redistr,
+    #           tot_activity_value_EUR, month, month_exists_dummy
+    # Jan 2022 = month 1, Jan 2024 = month 25.
+    bil.append(["Norway", date(2024, 1, 15), "Military", "Allocation",
+                100_000_000, 95_000_000, 110_000_000, 25, 1])
+    bil.append(["Norway", date(2024, 2, 10), "Military", "Commitment",
+                500_000_000, 0, 500_000_000, 26, 1])
+    bil.append(["Norway", date(2024, 3, 1), "Humanitarian", "Allocation",
+                20_000_000, 20_000_000, 20_000_000, 27, 1])
     # Trailing whitespace i kategori - skal normaliseres bort.
-    bil.append(["Germany", date(2024, 4, 1), "Humanitarian ", "Allocation", 50_000_000])
+    bil.append(["Germany", date(2024, 4, 1), "Humanitarian ", "Allocation",
+                50_000_000, 48_000_000, 50_000_000, 28, 1])
 
     cs = wb.create_sheet(COUNTRY_SUMMARY_ARK)
     for _ in range(7):
         cs.append([])
-    cs.append(list(FORVENTEDE_SUMMARY_KOLONNER))
-    cs.append(["Norway", 0, 1, 2.03, 1.78, 6.19, 10.00, 5.03, 1.66, 18.03, 24.72])
-    cs.append(["Germany", 1, 1, 1.0, 2.0, 15.0, 18.0, 2.0, 3.0, 20.0, 25.0])
+    # Etter de 11 obligatoriske summary-kolonnene har Kiel også GDP (2021) i
+    # USD (kol 12) og EUR (kol 13). Headeren har "GDP (2021)" på begge.
+    cs.append(list(FORVENTEDE_SUMMARY_KOLONNER) + ["GDP (2021)", "GDP (2021)"])
+    cs.append(["Norway", 0, 1, 2.03, 1.78, 6.19, 10.00, 5.03, 1.66, 18.03,
+               24.72, 482.0, 407.7])
+    cs.append(["Germany", 1, 1, 1.0, 2.0, 15.0, 18.0, 2.0, 3.0, 20.0, 25.0,
+               4260.0, 3601.7])
 
     path = tmp_path / "fixture.xlsx"
     wb.save(str(path))
@@ -66,6 +82,21 @@ def test_bilateral_parser_leser_rader(tmp_path: Path) -> None:
     ]
     assert rader[0].dato == date(2024, 1, 15)
     assert rader[0].verdi_eur == pytest.approx(100_000_000)
+
+
+def test_bilateral_parser_leser_m7_kolonner(tmp_path: Path) -> None:
+    """M7.1: redistr-, activity- og maaneds-feltene leses inn."""
+    rader = parse_bilateral(_lag_fixture(tmp_path))
+    norge_alloc = rader[0]
+    assert norge_alloc.verdi_eur_redistr == pytest.approx(95_000_000)
+    assert norge_alloc.verdi_eur_activity == pytest.approx(110_000_000)
+    assert norge_alloc.maaned_nr == 25
+    assert norge_alloc.maaned_finnes is True
+    # Commitment-rad har 0 i redistr, 500m i activity (matcher Kiels mønster).
+    norge_comm = rader[1]
+    assert norge_comm.verdi_eur_redistr == pytest.approx(0.0)
+    assert norge_comm.verdi_eur_activity == pytest.approx(500_000_000)
+    assert norge_comm.maaned_finnes is True
 
 
 def test_country_summary_parser_leser_rader(tmp_path: Path) -> None:
@@ -112,6 +143,62 @@ def _lag_disbursement_fixture(tmp_path: Path) -> Path:
     path = tmp_path / "disbursement.xlsx"
     wb.save(str(path))
     return path
+
+
+def _lag_eu_aid_fixture(tmp_path: Path) -> Path:
+    """Fixture for EU Aid Shares - rad 1-8 preamble, rad 9 header, data fra rad 10."""
+    wb = Workbook()
+    wb.remove(wb.active)
+    ark = wb.create_sheet(EU_AID_SHARES_ARK)
+    for _ in range(8):
+        ark.append([])
+    # Rad 9 (header) - leading None i kol A, så Country er kol B
+    ark.append(
+        [None] + list(FORVENTEDE_EU_AID_KOLONNER)
+    )
+    # Rader 10+ - data per medlemsland
+    ark.append([None, "Germany", 28064, 0.2279, 42.74, 18.52])
+    ark.append([None, "France", 23689, 0.1924, 36.08, 15.63])
+    ark.append([None, "Sweden", 4100, 0.0333, 6.24, 2.71])
+    ark.append([None, "Total", 123000, 1.0, 187.6, 81.3])  # skal filtreres
+    path = tmp_path / "eu_aid.xlsx"
+    wb.save(str(path))
+    return path
+
+
+def test_parse_eu_aid_shares_leser_andeler(tmp_path: Path) -> None:
+    rader = parse_eu_aid_shares(_lag_eu_aid_fixture(tmp_path))
+    # "Total" skal filtreres bort av _er_aggregat_rad.
+    assert [r.land for r in rader] == ["Germany", "France", "Sweden"]
+    tyskland = rader[0]
+    assert tyskland.andel == pytest.approx(0.2279)
+    assert tyskland.share_committed_eur_mrd == pytest.approx(42.74)
+    assert tyskland.share_allocated_eur_mrd == pytest.approx(18.52)
+
+
+def test_parse_eu_aid_shares_kaster_ved_kolonneavvik(tmp_path: Path) -> None:
+    wb = Workbook()
+    wb.remove(wb.active)
+    ark = wb.create_sheet(EU_AID_SHARES_ARK)
+    for _ in range(8):
+        ark.append([])
+    ark.append([None, "Country", "Bidrag"])  # mangler tre kolonner
+    ark.append([None, "Germany", 100])
+    path = tmp_path / "trunkert_eu.xlsx"
+    wb.save(str(path))
+    with pytest.raises(KolonneKontraktFeil):
+        parse_eu_aid_shares(path)
+
+
+def test_parse_gdp_leser_eur_kolonnen(tmp_path: Path) -> None:
+    from src.ingest.parse_kiel import parse_gdp as parse_gdp_fn  # local for clarity
+    rader = parse_gdp_fn(_lag_fixture(tmp_path))
+    assert [r.land for r in rader] == ["Norway", "Germany"]
+    norge = rader[0]
+    # Fixture har GDP USD=482.0 og GDP EUR=407.7 - vi skal lese EUR-kolonnen.
+    assert norge.bnp_2021_eur_mrd == pytest.approx(407.7)
+    tyskland = rader[1]
+    assert tyskland.bnp_2021_eur_mrd == pytest.approx(3601.7)
 
 
 def test_disbursement_parser_leser_og_filtrerer(tmp_path: Path) -> None:
@@ -228,6 +315,60 @@ def test_disbursement_ekte_fil_norges_sum_under_commitment() -> None:
     assert norges_utbetalt <= norges_commitment
     # Også positivt signal: vi forventer minst noen utbetalinger.
     assert len(utbetalinger) > 50
+
+
+@pytest.mark.skipif(
+    _finn_ekte_fil() is None, reason="ingen ekte Kiel-fil i data/raw/kiel/"
+)
+def test_ekte_fil_eu_aid_shares_har_kjente_medlemmer() -> None:
+    """M7.1: EU Aid Shares-arket har 27 EU-medlemmer med andeler som summerer
+    til ~1.0. Tyskland og Frankrike skal være på topp."""
+    fil = _finn_ekte_fil()
+    assert fil is not None
+    andeler = parse_eu_aid_shares(fil)
+    assert len(andeler) >= 26  # 27 EU-medlemmer, tillater små variasjoner
+    sum_andeler = sum(a.andel for a in andeler)
+    assert sum_andeler == pytest.approx(1.0, rel=0.01)
+    # Tyskland skal være største bidragsyter.
+    andel_map = {a.land: a for a in andeler}
+    assert "Germany" in andel_map
+    assert andel_map["Germany"].andel == pytest.approx(0.228, rel=0.01)
+    assert andel_map["Germany"].share_allocated_eur_mrd > 10  # mrd EUR
+
+
+@pytest.mark.skipif(
+    _finn_ekte_fil() is None, reason="ingen ekte Kiel-fil i data/raw/kiel/"
+)
+def test_ekte_fil_gdp_norges_2021_bnp() -> None:
+    """M7.1: Norges BNP 2021 i EUR fra Country Summary skal være rundt 408 mrd
+    (verifisert mot fasit: BNP-andel 2,4542 % × 10,005 mrd = 407,7 mrd)."""
+    fil = _finn_ekte_fil()
+    assert fil is not None
+    bnp_rader = parse_gdp(fil)
+    bnp_map = {r.land: r.bnp_2021_eur_mrd for r in bnp_rader}
+    assert "Norway" in bnp_map
+    assert bnp_map["Norway"] == pytest.approx(407.7, rel=0.01)
+    # Tyskland skal være rundt 3601 mrd EUR.
+    assert bnp_map["Germany"] == pytest.approx(3601.7, rel=0.01)
+
+
+@pytest.mark.skipif(
+    _finn_ekte_fil() is None, reason="ingen ekte Kiel-fil i data/raw/kiel/"
+)
+def test_ekte_fil_bilateral_har_redistr_og_month() -> None:
+    """M7.1: Aktivitet-objekter fra ekte fil har redistr-verdi og month-felter."""
+    fil = _finn_ekte_fil()
+    assert fil is not None
+    aktiviteter = parse_bilateral(fil)
+    # Norges total redistr-allokering skal matche fasit 10,005 mrd EUR.
+    norge_alloc = sum(
+        a.verdi_eur_redistr for a in aktiviteter
+        if a.giver == "Norway" and a.maal == "Allocation"
+    )
+    assert norge_alloc / 1e9 == pytest.approx(10.005, rel=0.01)
+    # Minst noen aktiviteter skal ha maaned_finnes=True.
+    med_maaned = [a for a in aktiviteter if a.maaned_finnes]
+    assert len(med_maaned) > 100
 
 
 @pytest.mark.skipif(

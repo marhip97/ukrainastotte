@@ -9,6 +9,9 @@ const ENDR_PATH = window.ENDR_PATH || "../../data/processed/country_summary_endr
 const TIDSSERIE_PATH = window.TIDSSERIE_PATH || "../../data/processed/tidsserier_maanedlig.csv";
 const ENDRTEKST_PATH = window.ENDRTEKST_PATH || "../../data/processed/endringstekst.json";
 const VALUTAKURSER_PATH = window.VALUTAKURSER_PATH || "../../data/reference/valutakurser.json";
+// M7.4: nye CSV-er for INKL EU og enkeltår.
+const EU_PATH = window.EU_PATH || "../../data/processed/country_summary_eu.csv";
+const AAR_PATH = window.AAR_PATH || "../../data/processed/country_summary_aar.csv";
 
 // Speiler src/analyze/landgrupper.py (S9). Aliaser inkludert for robusthet.
 const LAND_GRUPPER = {
@@ -173,6 +176,101 @@ function parseCsv(tekst) {
     });
     return rad;
   });
+}
+
+// M7.4: state for periode-bryter og EU-bryter.
+function lesPeriode() {
+  const v = sessionStorage.getItem("m7_periode");
+  if (v === "kumulativt" || /^\d{4}$/.test(v || "")) return v;
+  const radio = document.querySelector('input[name="periode"]:checked');
+  return radio ? radio.value : "kumulativt";
+}
+
+function lesEu() {
+  if (lesPeriode() !== "kumulativt") return "ekskl";
+  const v = sessionStorage.getItem("m7_eu");
+  if (v === "ekskl" || v === "inkl") return v;
+  const radio = document.querySelector('input[name="eu"]:checked');
+  return radio ? radio.value : "ekskl";
+}
+
+function settPeriode(p) {
+  sessionStorage.setItem("m7_periode", p);
+}
+
+function settEu(e) {
+  sessionStorage.setItem("m7_eu", e);
+}
+
+/**
+ * Returner aktivt summary-datasett basert på periode og EU-state.
+ * Output har samme felter som country_summary.csv (`total_allocation`,
+ * `financial_allocation`, etc.) slik at tegnXX-funksjonene kan brukes
+ * uendret. For INKL EU mappes `total_allocation_inkl_eu` ned til
+ * `total_allocation`. For enkeltår filtreres `aarRader` på året.
+ */
+function aktivSummary(kumRader, euRader, aarRader, periode, eu) {
+  if (periode === "kumulativt") {
+    if (eu === "inkl" && euRader.length > 0) {
+      const euIdx = {};
+      euRader.forEach((r) => { euIdx[r.land] = r; });
+      return kumRader.map((r) => {
+        const e = euIdx[r.land];
+        if (!e) return r;
+        return Object.assign({}, r, {
+          total_allocation: e.total_allocation_inkl_eu,
+          total_commitment: e.total_commitment_inkl_eu,
+        });
+      });
+    }
+    return kumRader;
+  }
+  // Enkeltår: filtrer aarRader. Returner objekter med felt som matcher
+  // country_summary.csv-strukturen.
+  return aarRader
+    .filter((r) => String(r.aar) === String(periode))
+    .map((r) => ({
+      land: r.land,
+      er_eu_medlem: "",  // ikke i aar-CSV
+      er_geografisk_europa: "",
+      financial_allocation: r.financial_allocation,
+      humanitarian_allocation: r.humanitarian_allocation,
+      military_allocation: r.military_allocation,
+      total_allocation: r.total_allocation,
+      financial_commitment: r.financial_commitment,
+      humanitarian_commitment: r.humanitarian_commitment,
+      military_commitment: r.military_commitment,
+      total_commitment: r.total_commitment,
+    }));
+}
+
+/**
+ * Returner aktive relative tall (BNP-andel og per capita).
+ * For kumulativt: country_summary_relative.csv.
+ * For enkeltår: hentes fra aarRader (samme år) med felt
+ * `andel_bnp_pct` og `per_capita_eur`.
+ */
+function aktivRelative(relRader, aarRader, periode) {
+  if (periode === "kumulativt") {
+    return relRader;
+  }
+  return aarRader
+    .filter((r) => String(r.aar) === String(periode))
+    .map((r) => ({
+      land: r.land,
+      total_allocation_eur_mrd: r.total_allocation,
+      andel_bnp_pct: r.andel_bnp_pct,
+      per_capita_eur: r.per_capita_eur,
+      bnp_eur_mrd: "",
+      folketall: "",
+      referanseaar_bnp: "",
+      referanseaar_folketall: "",
+    }));
+}
+
+function periodeEtikett(periode) {
+  if (periode === "kumulativt") return "kumulativt 2022-2026";
+  return "i " + periode;
 }
 
 function lesValuta() {
@@ -1146,6 +1244,354 @@ const EKSPORT_FILER = [
   ["metadata.json", "Metadata: kildefil, sha256, prosesseringsdato", () => META_PATH],
 ];
 
+// M7.5: Flak-forhåndsvisning. Tabell 1 har 9 rader per S20. Rad 9
+// (endring) vises kun kumulativt; ved enkeltår erstattes den med
+// årsmerknad. Knappen for nedlasting stubbes inntil M7.6 er ferdig.
+function tegnFlakForhandsvisning(opts) {
+  const {
+    norgeAktiv, norgeRelAktiv, norgeEndr,
+    aktiveRader, periode, eu, valuta,
+  } = opts;
+  const body = document.getElementById("flak-tabell-body");
+  const tilstandEl = document.getElementById("flak-tilstand");
+  const figur1 = document.getElementById("flak-figur-1");
+  const figur2 = document.getElementById("flak-figur-2");
+  const figur3 = document.getElementById("flak-figur-3");
+  if (!body) return;
+
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const valutaNavn = valutaKortNavn(valuta);
+  const mrdEnhet = "mrd. " + valutaNavn;
+  const periodeBesk = periode === "kumulativt"
+    ? "kumulativt 2022-2026"
+    : "kalenderåret " + periode;
+  const euBesk = (periode === "kumulativt" && eu === "inkl")
+    ? "inkludert EU-fordeling"
+    : "direkte bilateral (uten EU-fordeling)";
+  tilstandEl.textContent =
+    "Reflekterer dashboardets aktive tilstand: "
+    + periodeBesk + ", " + euBesk + ", verdier i " + valutaNavn + ".";
+
+  const allocEur = tilTall(norgeAktiv.total_allocation);
+  const commEur = tilTall(norgeAktiv.total_commitment);
+  const milEur = tilTall(norgeAktiv.military_allocation);
+  const finEur = tilTall(norgeAktiv.financial_allocation);
+  const humEur = tilTall(norgeAktiv.humanitarian_allocation);
+
+  // Rangering: Norges plass i aktiveRader sortert på total_allocation.
+  const sortert = sortertEtter(aktiveRader, "total_allocation");
+  const rangAlloc = sortert.findIndex((r) => r.land === "Norway") + 1;
+  const antall = aktiveRader.length;
+
+  function f(v, des) {
+    const tall = (Number(v) || 0) * skala;
+    return tall.toLocaleString("nb-NO", {
+      minimumFractionDigits: des,
+      maximumFractionDigits: des,
+    });
+  }
+
+  const rader = [
+    ["Total allokering", f(allocEur, 2) + " " + mrdEnhet],
+    [
+      "Andel av BNP",
+      norgeRelAktiv && norgeRelAktiv.andel_bnp_pct !== "" && norgeRelAktiv.andel_bnp_pct != null
+        ? f(tilTall(norgeRelAktiv.andel_bnp_pct), 2) + " pst."
+        : "–",
+    ],
+    [
+      "Per innbygger",
+      norgeRelAktiv && norgeRelAktiv.per_capita_eur !== "" && norgeRelAktiv.per_capita_eur != null
+        ? Math.round(tilTall(norgeRelAktiv.per_capita_eur) * skala)
+            .toLocaleString("nb-NO") + " " + valutaNavn
+        : "–",
+    ],
+    ["Rangering (total allokering)", rangAlloc + " av " + antall],
+    ["Total forpliktelse", f(commEur, 2) + " " + mrdEnhet],
+    ["Militær allokering", f(milEur, 2) + " " + mrdEnhet],
+    ["Finansiell allokering", f(finEur, 2) + " " + mrdEnhet],
+    ["Humanitær allokering", f(humEur, 2) + " " + mrdEnhet],
+  ];
+  // Rad 9 - endring siste release (kun meningsfullt kumulativt).
+  if (periode === "kumulativt" && norgeEndr) {
+    const dEur = tilTall(norgeEndr.delta_total_allocation);
+    const d = dEur * skala;
+    const tegn = d > 0 ? "+" : "";
+    rader.push(["Endring siste Kiel-utgivelse", tegn + d.toFixed(2) + " " + mrdEnhet]);
+  } else if (periode === "kumulativt") {
+    rader.push(["Endring siste Kiel-utgivelse", "Vises etter neste release"]);
+  } else {
+    rader.push(["Endring siste Kiel-utgivelse", "Kun kumulativt"]);
+  }
+
+  body.innerHTML = rader.map(([etikett, verdi]) =>
+    '<tr><th scope="row">' + etikett + '</th><td>' + verdi + '</td></tr>'
+  ).join("");
+
+  // Figur-etiketter speiler aktive tilstand.
+  if (figur1 && figur2 && figur3) {
+    if (periode === "kumulativt") {
+      figur1.textContent = "Topp 15 giverland - total allokering"
+        + (eu === "inkl" ? " (inkl. EU-fordeling)" : "");
+      figur2.textContent = "Norge over tid - akkumulert allokering 2022-d.d.";
+      figur3.textContent = "Andel av BNP vs. per innbygger (alle giverland)";
+    } else {
+      figur1.textContent = "Topp 15 giverland - total allokering i " + periode;
+      figur2.textContent = "Norge - månedlig allokering i " + periode;
+      figur3.textContent = "Andel av BNP vs. per innbygger i " + periode;
+    }
+  }
+}
+
+// M7.6: docx-generering klientside. Bruker `docx`-pakken lastet via CDN
+// (UMD-build, eksponerer `docx` globalt). Strukturen i Word-filen bygges
+// fra grunnen i kode jf. M7-plan seksjon 5.7. Norsk tallformat:
+// komma som desimaltegn, ikke-brytende mellomrom som tusenseparator,
+// "pst." for prosent, "mrd. EUR" / "mrd. NOK" for milliarder.
+function _formaterMrd(eurMrd, valuta) {
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const tall = (Number(eurMrd) || 0) * skala;
+  return tall.toLocaleString("nb-NO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function _formaterPerCapita(eur, valuta) {
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const tall = Math.round((Number(eur) || 0) * skala);
+  return tall.toLocaleString("nb-NO");
+}
+
+function _bygFlakRader(opts) {
+  const { norgeAktiv, norgeRelAktiv, norgeEndr, aktiveRader, periode, valuta } = opts;
+  const valutaNavn = valutaKortNavn(valuta);
+  const mrdEnhet = "mrd. " + valutaNavn;
+  const sortert = sortertEtter(aktiveRader, "total_allocation");
+  const rangAlloc = sortert.findIndex((r) => r.land === "Norway") + 1;
+  const rader = [
+    ["Total allokering", _formaterMrd(norgeAktiv.total_allocation, valuta) + " " + mrdEnhet],
+    [
+      "Andel av BNP",
+      norgeRelAktiv && norgeRelAktiv.andel_bnp_pct !== "" && norgeRelAktiv.andel_bnp_pct != null
+        ? (Number(tilTall(norgeRelAktiv.andel_bnp_pct)) || 0).toLocaleString("nb-NO", {
+            minimumFractionDigits: 2, maximumFractionDigits: 2,
+          }) + " pst."
+        : "–",
+    ],
+    [
+      "Per innbygger",
+      norgeRelAktiv && norgeRelAktiv.per_capita_eur !== "" && norgeRelAktiv.per_capita_eur != null
+        ? _formaterPerCapita(tilTall(norgeRelAktiv.per_capita_eur), valuta) + " " + valutaNavn
+        : "–",
+    ],
+    ["Rangering (total allokering)", rangAlloc + " av " + aktiveRader.length],
+    ["Total forpliktelse", _formaterMrd(norgeAktiv.total_commitment, valuta) + " " + mrdEnhet],
+    ["Militær allokering", _formaterMrd(norgeAktiv.military_allocation, valuta) + " " + mrdEnhet],
+    ["Finansiell allokering", _formaterMrd(norgeAktiv.financial_allocation, valuta) + " " + mrdEnhet],
+    ["Humanitær allokering", _formaterMrd(norgeAktiv.humanitarian_allocation, valuta) + " " + mrdEnhet],
+  ];
+  if (periode === "kumulativt" && norgeEndr) {
+    const dEur = tilTall(norgeEndr.delta_total_allocation);
+    const d = (valuta === "nok" ? dEur * SISTE_KURS : dEur);
+    const tegn = d > 0 ? "+" : "";
+    rader.push(["Endring siste Kiel-utgivelse", tegn + d.toFixed(2) + " " + mrdEnhet]);
+  } else if (periode === "kumulativt") {
+    rader.push(["Endring siste Kiel-utgivelse", "Vises etter neste release"]);
+  } else {
+    rader.push(["Endring siste Kiel-utgivelse", "Kun kumulativt"]);
+  }
+  return rader;
+}
+
+async function _grafSomPngBuffer(divId, width, height) {
+  const div = document.getElementById(divId);
+  if (!div || typeof Plotly === "undefined") return null;
+  // Plotly-grafer renderer asynkront; sjekk at div har innhold før eksport.
+  if (!div.querySelector(".main-svg")) return null;
+  try {
+    const dataUrl = await Plotly.toImage(div, {
+      format: "png", width, height,
+    });
+    const resp = await fetch(dataUrl);
+    return new Uint8Array(await resp.arrayBuffer());
+  } catch (e) {
+    console.warn("Klarte ikke eksportere " + divId + ":", e);
+    return null;
+  }
+}
+
+async function genererFlakDocx(opts) {
+  if (typeof docx === "undefined") {
+    throw new Error("docx-biblioteket er ikke lastet (CDN-feil?)");
+  }
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun,
+    Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle,
+  } = docx;
+
+  const { periode, eu, valuta } = opts;
+  const periodeBesk = periode === "kumulativt"
+    ? "kumulativt 2022-2026"
+    : "kalenderåret " + periode;
+  const euBesk = (periode === "kumulativt" && eu === "inkl")
+    ? "inkludert EU-fordeling"
+    : "direkte bilateral (uten EU-fordeling)";
+  const valutaNavn = valutaKortNavn(valuta);
+  const dato = new Date().toLocaleDateString("nb-NO", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  const rader = _bygFlakRader(opts);
+
+  const cellBorder = {
+    top: { style: BorderStyle.SINGLE, size: 6, color: "999999" },
+    bottom: { style: BorderStyle.SINGLE, size: 6, color: "999999" },
+    left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+  };
+
+  function celle(tekst, justering, bold) {
+    return new TableCell({
+      borders: cellBorder,
+      children: [new Paragraph({
+        alignment: justering || AlignmentType.LEFT,
+        children: [new TextRun({ text: tekst, bold: !!bold })],
+      })],
+    });
+  }
+
+  const headerRad = new TableRow({
+    tableHeader: true,
+    children: [
+      celle("Målepunkt", AlignmentType.LEFT, true),
+      celle("Verdi", AlignmentType.RIGHT, true),
+    ],
+  });
+  const dataRader = rader.map(([etikett, verdi]) =>
+    new TableRow({
+      children: [
+        celle(etikett, AlignmentType.LEFT, false),
+        celle(verdi, AlignmentType.RIGHT, false),
+      ],
+    })
+  );
+
+  const tabell = new Table({
+    rows: [headerRad, ...dataRader],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+
+  const tittel = new Paragraph({
+    heading: HeadingLevel.TITLE,
+    children: [new TextRun({
+      text: "Norges støtte til Ukraina - Kiel-instituttets tall",
+      bold: true,
+    })],
+  });
+  const undertittel = new Paragraph({
+    children: [new TextRun({
+      text: "Generert " + dato + ". " + periodeBesk.charAt(0).toUpperCase()
+        + periodeBesk.slice(1) + ", " + euBesk + ". Verdier i " + valutaNavn + ".",
+      italics: true,
+    })],
+  });
+  const tabellTittel = new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    children: [new TextRun({ text: "Tabell 1 - Nøkkeltall for Norge" })],
+  });
+  // Eksporter de tre hovedgrafene som PNG og embed i docx-en.
+  // Hvis eksport feiler (graf ikke rendret enda eller iOS-begrensning),
+  // faller funksjonen tilbake på tekstmerknad.
+  const [rangPng, tidsPng, scatterPng] = await Promise.all([
+    _grafSomPngBuffer("rangering-graf", 900, 600),
+    _grafSomPngBuffer("tidsserie-graf", 900, 500),
+    _grafSomPngBuffer("scatter-graf", 800, 600),
+  ]);
+  const figurInnhold = [];
+  function lagFigur(buffer, tekst, w, h) {
+    figurInnhold.push(new Paragraph({
+      heading: HeadingLevel.HEADING_3,
+      children: [new TextRun({ text: tekst })],
+    }));
+    figurInnhold.push(new Paragraph({
+      children: [new ImageRun({
+        data: buffer,
+        transformation: { width: w, height: h },
+      })],
+    }));
+  }
+  if (rangPng) {
+    lagFigur(rangPng, "Figur 1 - Topp 15 giverland", 600, 400);
+  }
+  if (tidsPng) {
+    lagFigur(tidsPng, "Figur 2 - Utvikling over tid", 600, 333);
+  }
+  if (scatterPng) {
+    lagFigur(scatterPng, "Figur 3 - Andel BNP vs. per innbygger", 540, 405);
+  }
+  if (figurInnhold.length === 0) {
+    figurInnhold.push(new Paragraph({
+      children: [new TextRun({
+        text: "Figurer kunne ikke eksporteres automatisk. Bruk PNG-eksport-"
+          + "knappen over hver graf i dashboardet og lim inn manuelt.",
+        italics: true,
+      })],
+    }));
+  }
+  const kildeMerknad = new Paragraph({
+    children: [new TextRun({
+      text: "Kilde: Kiel Institute for the World Economy, Ukraine Support "
+        + "Tracker. Folketall: Verdensbanken (WDI). BNP: Kiels Country "
+        + "Summary, GDP 2021 (i EUR).",
+      size: 18,
+      color: "555555",
+    })],
+  });
+
+  const dokument = new Document({
+    creator: "SFSs Ukraina-støtte overvåker",
+    title: "Norges støtte til Ukraina - " + dato,
+    description: "Flak med Norges nøkkeltall basert på Kiel-data.",
+    sections: [{
+      children: [
+        tittel,
+        undertittel,
+        new Paragraph({ text: "" }),
+        tabellTittel,
+        tabell,
+        new Paragraph({ text: "" }),
+        ...figurInnhold,
+        new Paragraph({ text: "" }),
+        kildeMerknad,
+      ],
+    }],
+  });
+
+  const blob = await Packer.toBlob(dokument);
+  return blob;
+}
+
+function lastNedFlakBlob(blob, filnavn) {
+  const erIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const url = URL.createObjectURL(blob);
+  if (erIOS) {
+    // iOS Safari blokkerer programmatisk nedlasting av binærfiler. Åpne
+    // i ny fane så brukeren kan dele/lagre manuelt.
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filnavn;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function byggEksportLenker() {
   const ul = document.getElementById("eksport-lenker");
   if (!ul) return;
@@ -1186,7 +1632,7 @@ function tegnEndringstekst(endringstekstData) {
 async function main() {
   try {
     const [csvResp, metaResp, disbResp, relResp, endrResp, tidsResp, endrTekstResp,
-           kurserResp] =
+           kurserResp, euResp, aarResp] =
       await Promise.all([
         fetch(DATA_PATH),
         fetch(META_PATH),
@@ -1196,12 +1642,23 @@ async function main() {
         fetch(TIDSSERIE_PATH),
         fetch(ENDRTEKST_PATH),
         fetch(VALUTAKURSER_PATH),
+        fetch(EU_PATH),
+        fetch(AAR_PATH),
       ]);
     if (!csvResp.ok) throw new Error("Fant ikke country_summary.csv");
     const csv = await csvResp.text();
     const rader = parseCsv(csv);
     const norge = rader.find((r) => r.land === "Norway");
     if (!norge) throw new Error("Norge finnes ikke i datasettet");
+
+    let euRader = [];
+    if (euResp.ok) {
+      euRader = parseCsv(await euResp.text());
+    }
+    let aarRader = [];
+    if (aarResp.ok) {
+      aarRader = parseCsv(await aarResp.text());
+    }
 
     let disbSum = {};
     if (disbResp.ok) {
@@ -1255,12 +1712,64 @@ async function main() {
     const alleLand = rader.map((r) => r.land).sort();
     fyllKomparativVelger(alleLand, KOMPARATIV_DEFAULT);
 
+    // M7.4: bygg dynamisk år-liste basert på aarRader (nyeste først).
+    const tilgjengeligeAr = Array.from(
+      new Set(aarRader.map((r) => String(r.aar)))
+    ).sort((a, b) => b.localeCompare(a));
+    const periodeAarSpan = document.getElementById("periode-aar-knapper");
+    if (periodeAarSpan) {
+      periodeAarSpan.innerHTML = tilgjengeligeAr
+        .map((aar) =>
+          '<label><input type="radio" name="periode" value="' + aar
+          + '"><span>' + aar + '</span></label>'
+        )
+        .join("");
+    }
+    // Gjenopprett periode/EU-state fra sessionStorage hvis tilgjengelig.
+    const startPeriode = lesPeriode();
+    document.querySelectorAll('input[name="periode"]').forEach((r) => {
+      r.checked = (r.value === startPeriode);
+    });
+    const startEu = lesEu();
+    document.querySelectorAll('input[name="eu"]').forEach((r) => {
+      r.checked = (r.value === startEu);
+    });
+
+    function oppdaterEuToggleTilstand() {
+      const periode = lesPeriode();
+      const euToggle = document.getElementById("eu-toggle");
+      const euMerknad = document.getElementById("eu-merknad");
+      if (!euToggle) return;
+      if (periode === "kumulativt") {
+        euToggle.classList.remove("deaktivert");
+        document.querySelectorAll('input[name="eu"]').forEach((r) => {
+          r.disabled = false;
+          r.setAttribute("aria-disabled", "false");
+        });
+        if (euMerknad) euMerknad.textContent = "";
+      } else {
+        euToggle.classList.add("deaktivert");
+        document.querySelectorAll('input[name="eu"]').forEach((r) => {
+          r.disabled = true;
+          r.setAttribute("aria-disabled", "true");
+          if (r.value === "ekskl") r.checked = true;
+          else r.checked = false;
+        });
+        if (euMerknad) {
+          euMerknad.textContent = "EU-fordeling er kun tilgjengelig på kumulative tall.";
+        }
+      }
+    }
+
     const visning = document.getElementById("visning");
     const rangeringMaal = document.getElementById("rangering-maal");
     function tegn() {
       const valgte = lesValgteLand();
       const valuta = lesValuta();
       const kompModus = lesKompModus();
+      const periode = lesPeriode();
+      const eu = lesEu();
+      oppdaterEuToggleTilstand();
       oppdaterValutaMerknad(valuta);
       // Skjul multi-velger og gruppe-knapper i gjennomsnitt-modus.
       const enkeltKontroller = document.getElementById("komp-enkeltland-kontroller");
@@ -1273,10 +1782,20 @@ async function main() {
           ? "Sammenligner Norge med gjennomsnittet for medlemslandene i hver gruppe (Norge er ekskludert fra gruppe-snittet selv om den er medlem). Gruppe-snittene styrer kun komparativ profil; rangering og scatter beholder valgte enkeltland."
           : "Velg ett eller flere land. Valget styrer komparativ profil, rangering og scatter. Hold inne Ctrl (Windows) eller Cmd (Mac) for å velge flere. Bruk hurtigknappene for forhåndsdefinerte grupper.";
       }
-      skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
-      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
-      tegnRangering(rader, rangeringMaal.value, disbSum, relRader, endrRader, valgte, valuta);
-      tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta, kompModus);
+      // M7.4: bytt til aktive datasett basert på periode + EU-state.
+      const aktiveRader = aktivSummary(rader, euRader, aarRader, periode, eu);
+      const aktiveRel = aktivRelative(relRader, aarRader, periode);
+      const aktivNorge = aktiveRader.find((r) => r.land === "Norway") || norge;
+      const aktivNorgeRel = aktiveRel.find((r) => r.land === "Norway");
+      // Oppdater KPI-kontekst med periode-merknad.
+      const periodeEtMrd = valutaMrdEnhet(valuta) + ", " + periodeEtikett(periode);
+      const totalKtx = document.getElementById("total-allocation-kontekst");
+      if (totalKtx) totalKtx.textContent = periodeEtMrd;
+      skrivNoekkeltall(aktivNorge, aktiveRader, aktiveRel, endrRader, valuta);
+      tegnFordeling(aktivNorge, visning.value, norgeUtbetalt, aktivNorgeRel, norgeEndr, valuta);
+      tegnRangering(aktiveRader, rangeringMaal.value, disbSum, aktiveRel, endrRader, valgte, valuta);
+      tegnKomparativProfil(aktiveRader, valgte, aktiveRel, endrRader, valuta, kompModus);
+      // Tidsserien er uavhengig av periode-bryteren (viser alltid hele perioden).
       if (tidsserieRader.length > 0) {
         tegnTidsserie(tidsserieRader, valgte, valuta);
       } else {
@@ -1285,13 +1804,73 @@ async function main() {
           + 'Kjør <code>python -m src.ingest.normalize</code> etter at '
           + '<code>data/reference/valutakurser.json</code> er hentet.</p>';
       }
-      tegnScatter(rader, relRader, valgte, valuta);
+      tegnScatter(aktiveRader, aktiveRel, valgte, valuta);
+      tegnFlakForhandsvisning({
+        norgeAktiv: aktivNorge,
+        norgeRelAktiv: aktivNorgeRel,
+        norgeEndr: norgeEndr,
+        aktiveRader: aktiveRader,
+        periode: periode,
+        eu: eu,
+        valuta: valuta,
+      });
+      // M7.6: koble click-handler med nåværende state-verdier. Knappen er
+      // alltid aktiv; docx-tilgjengelighet sjekkes i selve klikket.
+      const flakKnapp = document.getElementById("flak-last-ned-knapp");
+      if (flakKnapp) {
+        flakKnapp.onclick = async () => {
+          if (typeof docx === "undefined") {
+            alert(
+              "docx-biblioteket er ikke lastet enda. Sjekk nettforbindelsen "
+              + "og prøv igjen om noen sekunder."
+            );
+            return;
+          }
+          flakKnapp.disabled = true;
+          const originalTekst = flakKnapp.textContent;
+          flakKnapp.textContent = "Genererer...";
+          try {
+            const blob = await genererFlakDocx({
+              norgeAktiv: aktivNorge,
+              norgeRelAktiv: aktivNorgeRel,
+              norgeEndr: norgeEndr,
+              aktiveRader: aktiveRader,
+              periode: periode,
+              eu: eu,
+              valuta: valuta,
+            });
+            const dato = new Date().toISOString().slice(0, 10);
+            const periodeFil = periode === "kumulativt" ? "kumulativt" : periode;
+            lastNedFlakBlob(blob, "Norges-Ukraina-stotte-" + periodeFil + "-" + dato + ".docx");
+          } catch (e) {
+            console.error("Flak-generering feilet:", e);
+            alert("Kunne ikke generere flak: " + e.message);
+          } finally {
+            flakKnapp.disabled = false;
+            flakKnapp.textContent = originalTekst;
+          }
+        };
+      }
     }
     visning.addEventListener("change", tegn);
     rangeringMaal.addEventListener("change", tegn);
     document
       .querySelectorAll('input[name="valuta"]')
       .forEach((r) => r.addEventListener("change", tegn));
+    document
+      .querySelectorAll('input[name="periode"]')
+      .forEach((r) => r.addEventListener("change", (e) => {
+        settPeriode(e.target.value);
+        tegn();
+      }));
+    document
+      .querySelectorAll('input[name="eu"]')
+      .forEach((r) => r.addEventListener("change", (e) => {
+        if (!e.target.disabled) {
+          settEu(e.target.value);
+          tegn();
+        }
+      }));
     document
       .querySelectorAll('input[name="komp-modus"]')
       .forEach((r) => r.addEventListener("change", () => {

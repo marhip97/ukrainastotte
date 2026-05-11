@@ -19,6 +19,12 @@
         <a href="https://www.kielinstitut.de/topics/war-against-ukraine/ukraine-support-tracker">Kiel
         Ukraine Support Tracker</a>. Sist oppdatert: <span id="sist-oppdatert">laster...</span>
       </p>
+      <p class="metode-merknad" role="status">
+        Dashboardet henter og oppdaterer seg automatisk ved nye Kiel-
+        publiseringer. Se
+        <a href="https://github.com/marhip97/ukrainastotte/blob/main/docs/brukerveiledning.md">brukerveiledningen</a>
+        for metode og bruk.
+      </p>
     </div>
   </header>
 
@@ -35,6 +41,26 @@
           <span>NOK</span>
         </label>
         <span class="valuta-merknad" id="valuta-kursmerknad">Styrer alle pengetall i dashboardet.</span>
+      </div>
+      <div class="periode-toggle" role="group" aria-label="Velg tidsperiode">
+        <span class="toggle-etikett">Periode:</span>
+        <label>
+          <input type="radio" name="periode" value="kumulativt" checked>
+          <span>Kumulativt</span>
+        </label>
+        <span id="periode-aar-knapper"></span>
+      </div>
+      <div class="eu-toggle" id="eu-toggle" role="group" aria-label="EU-fordeling">
+        <span class="toggle-etikett">EU-fordeling:</span>
+        <label>
+          <input type="radio" name="eu" value="ekskl" checked>
+          <span>Ekskl. EU</span>
+        </label>
+        <label>
+          <input type="radio" name="eu" value="inkl">
+          <span>Inkl. EU</span>
+        </label>
+        <span class="eu-merknad" id="eu-merknad" role="status"></span>
       </div>
       <div class="grid hero-grid">
         <article class="kpi-kort hero col-span-6"
@@ -153,6 +179,31 @@
     </div>
 
     <section class="graf">
+      <div class="seksjon-overskrift">
+        <h2>Topp 15 giverland</h2>
+        <button type="button" class="knapp-sekundaer"
+                id="rangering-png-knapp"
+                aria-label="Last ned rangeringsgrafen som PNG-bilde">
+          Last ned PNG
+        </button>
+      </div>
+      <div class="rangering-kontroller">
+        <label for="rangering-maal">Sortér på:</label>
+        <select id="rangering-maal">
+          <option value="allocation" selected>Total allokering</option>
+          <option value="commitment">Total forpliktelse</option>
+          <option value="disbursement">Kun utbetalt (finansiell)</option>
+          <option value="bnp">Andel av BNP</option>
+          <option value="capita">Per innbygger</option>
+          <option value="endring">Endring siste release</option>
+        </select>
+      </div>
+      <div id="rangering-graf" role="img"
+           aria-label="Stolpegraf med topp 15 giverland sortert etter valgt mål"></div>
+      <p class="uthev" id="norge-plassering"></p>
+    </section>
+
+    <section class="graf">
       <h2>Fordeling av støtte (Norge)</h2>
       <div class="fordeling-kontroller">
         <label>Visning:
@@ -178,31 +229,6 @@
         Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
         og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
       </p>
-    </section>
-
-    <section class="graf">
-      <div class="seksjon-overskrift">
-        <h2>Topp 15 giverland</h2>
-        <button type="button" class="knapp-sekundaer"
-                id="rangering-png-knapp"
-                aria-label="Last ned rangeringsgrafen som PNG-bilde">
-          Last ned PNG
-        </button>
-      </div>
-      <div class="rangering-kontroller">
-        <label for="rangering-maal">Sortér på:</label>
-        <select id="rangering-maal">
-          <option value="allocation" selected>Total allokering</option>
-          <option value="commitment">Total forpliktelse</option>
-          <option value="disbursement">Kun utbetalt (finansiell)</option>
-          <option value="bnp">Andel av BNP</option>
-          <option value="capita">Per innbygger</option>
-          <option value="endring">Endring siste release</option>
-        </select>
-      </div>
-      <div id="rangering-graf" role="img"
-           aria-label="Stolpegraf med topp 15 giverland sortert etter valgt mål"></div>
-      <p class="uthev" id="norge-plassering"></p>
     </section>
 
     <section class="graf" id="tidsserie-seksjon">
@@ -263,6 +289,38 @@
       </p>
     </section>
 
+    <section class="graf flak-seksjon" id="flak-seksjon"
+             aria-labelledby="flak-tittel">
+      <div class="flak-topp">
+        <h2 id="flak-tittel">Flak: Norges Ukraina-støtte</h2>
+        <button type="button" id="flak-last-ned-knapp"
+                class="flak-knapp"
+                aria-label="Last ned flak som Word-dokument">
+          Last ned flak (.docx)
+        </button>
+      </div>
+      <p class="flak-tilstand" id="flak-tilstand"></p>
+      <table class="flak-tabell" id="flak-tabell">
+        <caption>Tabell 1 - Nøkkeltall for Norge</caption>
+        <thead>
+          <tr><th scope="col">Målepunkt</th><th scope="col">Verdi</th></tr>
+        </thead>
+        <tbody id="flak-tabell-body"></tbody>
+      </table>
+      <div class="flak-figurer">
+        <h3>Figurer i nedlastet flak</h3>
+        <ol>
+          <li id="flak-figur-1">Topp 15 giverland - total allokering</li>
+          <li id="flak-figur-2">Norge over tid - akkumulert allokering</li>
+          <li id="flak-figur-3">Andel av BNP vs. per innbygger</li>
+        </ol>
+        <p class="metode-notat">
+          Figurene følger dashboardets visning og inkluderes som bilder i
+          Word-filen. Forhåndsvisning av selve grafene finner du øverst på siden.
+        </p>
+      </div>
+    </section>
+
     <section class="feil skjult" id="feilmelding" role="alert"></section>
   </main>
 
@@ -282,6 +340,7 @@
     </p>
   </footer>
 
+  <script src="https://unpkg.com/docx@9.5.0/build/index.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>
