@@ -1343,6 +1343,206 @@ function tegnFlakForhandsvisning(opts) {
   }
 }
 
+// M7.6: docx-generering klientside. Bruker `docx`-pakken lastet via CDN
+// (UMD-build, eksponerer `docx` globalt). Strukturen i Word-filen bygges
+// fra grunnen i kode jf. M7-plan seksjon 5.7. Norsk tallformat:
+// komma som desimaltegn, ikke-brytende mellomrom som tusenseparator,
+// "pst." for prosent, "mrd. EUR" / "mrd. NOK" for milliarder.
+function _formaterMrd(eurMrd, valuta) {
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const tall = (Number(eurMrd) || 0) * skala;
+  return tall.toLocaleString("nb-NO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function _formaterPerCapita(eur, valuta) {
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const tall = Math.round((Number(eur) || 0) * skala);
+  return tall.toLocaleString("nb-NO");
+}
+
+function _bygFlakRader(opts) {
+  const { norgeAktiv, norgeRelAktiv, norgeEndr, aktiveRader, periode, valuta } = opts;
+  const valutaNavn = valutaKortNavn(valuta);
+  const mrdEnhet = "mrd. " + valutaNavn;
+  const sortert = sortertEtter(aktiveRader, "total_allocation");
+  const rangAlloc = sortert.findIndex((r) => r.land === "Norway") + 1;
+  const rader = [
+    ["Total allokering", _formaterMrd(norgeAktiv.total_allocation, valuta) + " " + mrdEnhet],
+    [
+      "Andel av BNP",
+      norgeRelAktiv && norgeRelAktiv.andel_bnp_pct !== "" && norgeRelAktiv.andel_bnp_pct != null
+        ? (Number(tilTall(norgeRelAktiv.andel_bnp_pct)) || 0).toLocaleString("nb-NO", {
+            minimumFractionDigits: 2, maximumFractionDigits: 2,
+          }) + " pst."
+        : "–",
+    ],
+    [
+      "Per innbygger",
+      norgeRelAktiv && norgeRelAktiv.per_capita_eur !== "" && norgeRelAktiv.per_capita_eur != null
+        ? _formaterPerCapita(tilTall(norgeRelAktiv.per_capita_eur), valuta) + " " + valutaNavn
+        : "–",
+    ],
+    ["Rangering blant giverland", rangAlloc + " av " + aktiveRader.length],
+    ["Total forpliktelse", _formaterMrd(norgeAktiv.total_commitment, valuta) + " " + mrdEnhet],
+    ["Militær allokering", _formaterMrd(norgeAktiv.military_allocation, valuta) + " " + mrdEnhet],
+    ["Finansiell allokering", _formaterMrd(norgeAktiv.financial_allocation, valuta) + " " + mrdEnhet],
+    ["Humanitær allokering", _formaterMrd(norgeAktiv.humanitarian_allocation, valuta) + " " + mrdEnhet],
+  ];
+  if (periode === "kumulativt" && norgeEndr) {
+    const dEur = tilTall(norgeEndr.delta_total_allocation);
+    const d = (valuta === "nok" ? dEur * SISTE_KURS : dEur);
+    const tegn = d > 0 ? "+" : "";
+    rader.push(["Endring siste Kiel-utgivelse", tegn + d.toFixed(2) + " " + mrdEnhet]);
+  } else if (periode === "kumulativt") {
+    rader.push(["Endring siste Kiel-utgivelse", "Vises etter neste release"]);
+  } else {
+    rader.push(["Endring siste Kiel-utgivelse", "Kun kumulativt"]);
+  }
+  return rader;
+}
+
+async function genererFlakDocx(opts) {
+  if (typeof docx === "undefined") {
+    throw new Error("docx-biblioteket er ikke lastet (CDN-feil?)");
+  }
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel,
+    Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle,
+  } = docx;
+
+  const { periode, eu, valuta } = opts;
+  const periodeBesk = periode === "kumulativt"
+    ? "kumulativt 2022-2026"
+    : "kalenderåret " + periode;
+  const euBesk = (periode === "kumulativt" && eu === "inkl")
+    ? "inkludert EU-fordeling"
+    : "direkte bilateral (uten EU-fordeling)";
+  const valutaNavn = valutaKortNavn(valuta);
+  const dato = new Date().toLocaleDateString("nb-NO", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  const rader = _bygFlakRader(opts);
+
+  const cellBorder = {
+    top: { style: BorderStyle.SINGLE, size: 6, color: "999999" },
+    bottom: { style: BorderStyle.SINGLE, size: 6, color: "999999" },
+    left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+    right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+  };
+
+  function celle(tekst, justering, bold) {
+    return new TableCell({
+      borders: cellBorder,
+      children: [new Paragraph({
+        alignment: justering || AlignmentType.LEFT,
+        children: [new TextRun({ text: tekst, bold: !!bold })],
+      })],
+    });
+  }
+
+  const headerRad = new TableRow({
+    tableHeader: true,
+    children: [
+      celle("Målepunkt", AlignmentType.LEFT, true),
+      celle("Verdi", AlignmentType.RIGHT, true),
+    ],
+  });
+  const dataRader = rader.map(([etikett, verdi]) =>
+    new TableRow({
+      children: [
+        celle(etikett, AlignmentType.LEFT, false),
+        celle(verdi, AlignmentType.RIGHT, false),
+      ],
+    })
+  );
+
+  const tabell = new Table({
+    rows: [headerRad, ...dataRader],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+
+  const tittel = new Paragraph({
+    heading: HeadingLevel.TITLE,
+    children: [new TextRun({
+      text: "Norges støtte til Ukraina - Kiel-instituttets tall",
+      bold: true,
+    })],
+  });
+  const undertittel = new Paragraph({
+    children: [new TextRun({
+      text: "Generert " + dato + ". " + periodeBesk.charAt(0).toUpperCase()
+        + periodeBesk.slice(1) + ", " + euBesk + ". Verdier i " + valutaNavn + ".",
+      italics: true,
+    })],
+  });
+  const tabellTittel = new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    children: [new TextRun({ text: "Tabell 1 - Nøkkeltall for Norge" })],
+  });
+  const figurMerknad = new Paragraph({
+    children: [new TextRun({
+      text: "Figurer kan eksporteres som PNG direkte fra dashboardet "
+        + "(knappene over hver graf). Topp 15-rangering, Norges tidsserie og "
+        + "scatter-plot av andel BNP × per innbygger er tilgjengelige.",
+    })],
+  });
+  const kildeMerknad = new Paragraph({
+    children: [new TextRun({
+      text: "Kilde: Kiel Institute for the World Economy, Ukraine Support "
+        + "Tracker. Folketall: Verdensbanken (WDI). BNP: Kiels Country "
+        + "Summary, GDP 2021 (i EUR).",
+      size: 18,
+      color: "555555",
+    })],
+  });
+
+  const dokument = new Document({
+    creator: "SFSs Ukraina-støtte overvåker",
+    title: "Norges støtte til Ukraina - " + dato,
+    description: "Flak med Norges nøkkeltall basert på Kiel-data.",
+    sections: [{
+      children: [
+        tittel,
+        undertittel,
+        new Paragraph({ text: "" }),
+        tabellTittel,
+        tabell,
+        new Paragraph({ text: "" }),
+        figurMerknad,
+        new Paragraph({ text: "" }),
+        kildeMerknad,
+      ],
+    }],
+  });
+
+  const blob = await Packer.toBlob(dokument);
+  return blob;
+}
+
+function lastNedFlakBlob(blob, filnavn) {
+  const erIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const url = URL.createObjectURL(blob);
+  if (erIOS) {
+    // iOS Safari blokkerer programmatisk nedlasting av binærfiler. Åpne
+    // i ny fane så brukeren kan dele/lagre manuelt.
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filnavn;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function byggEksportLenker() {
   const ul = document.getElementById("eksport-lenker");
   if (!ul) return;
@@ -1565,6 +1765,38 @@ async function main() {
         eu: eu,
         valuta: valuta,
       });
+      // M7.6: aktiver flak-nedlastingsknapp når docx-biblioteket er lastet
+      // og oppdater click-handler med nye state-verdier.
+      const flakKnapp = document.getElementById("flak-last-ned-knapp");
+      if (flakKnapp && typeof docx !== "undefined") {
+        flakKnapp.disabled = false;
+        flakKnapp.setAttribute("aria-disabled", "false");
+        flakKnapp.removeAttribute("title");
+        flakKnapp.onclick = async () => {
+          flakKnapp.disabled = true;
+          flakKnapp.textContent = "Genererer...";
+          try {
+            const blob = await genererFlakDocx({
+              norgeAktiv: aktivNorge,
+              norgeRelAktiv: aktivNorgeRel,
+              norgeEndr: norgeEndr,
+              aktiveRader: aktiveRader,
+              periode: periode,
+              eu: eu,
+              valuta: valuta,
+            });
+            const dato = new Date().toISOString().slice(0, 10);
+            const periodeFil = periode === "kumulativt" ? "kumulativt" : periode;
+            lastNedFlakBlob(blob, "Norges-Ukraina-stotte-" + periodeFil + "-" + dato + ".docx");
+          } catch (e) {
+            console.error("Flak-generering feilet:", e);
+            alert("Kunne ikke generere flak: " + e.message);
+          } finally {
+            flakKnapp.disabled = false;
+            flakKnapp.textContent = "Last ned flak (.docx)";
+          }
+        };
+      }
     }
     visning.addEventListener("change", tegn);
     rangeringMaal.addEventListener("change", tegn);
