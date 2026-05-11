@@ -5,9 +5,9 @@ Excel-metoden (M7.2 og senere): BNP hentes fra Kiels `Country Summary (€)`
 `fetch-wdi.yml`. Begge er i EUR-baserte enheter, så ingen valutakonvertering
 trengs.
 
-Legacy WDI-BNP-modus (før M7.2) støttes fortsatt for å unngå breaking i
-gjenværende kall - hvis `bnp_eur_mrd` ikke gis, konverteres WDI USD-BNP
-til EUR via en omtrentlig rate.
+Etter M7.3-opprydding: WDI hentes kun for folketall (`SP.POP.TOTL`),
+lagres i `data/reference/folketall.json`. Legacy WDI USD-BNP-modus
+er fjernet.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ from pathlib import Path
 
 from src.ingest.parse_kiel import LandSummary
 
-EUR_TIL_USD_DEFAULT = 1.08  # Legacy: omtrentlig snittrate 2023-2024
 KIEL_BNP_AAR = 2021  # Kiel bruker 2021 som referanseår, jf. M7-plan F6
 
 
@@ -35,7 +34,8 @@ class RelativeNoekkeltall:
     referanseaar_folketall: int | None
 
 
-def _les_wdi(sti: Path) -> dict:
+def _les_folketall_data(sti: Path) -> dict:
+    """Les folketall-fil. Støtter både ny `folketall.json` og legacy `wdi.json`."""
     if not sti.exists():
         raise FileNotFoundError(
             f"Fant ikke {sti}. Kjør workflow fetch-wdi.yml manuelt for å "
@@ -47,30 +47,28 @@ def _les_wdi(sti: Path) -> dict:
 
 def beregn_relative_noekkeltall(
     summary: list[LandSummary],
-    wdi_sti: Path,
-    bnp_eur_mrd: dict[str, float] | None = None,
-    eur_til_usd: float = EUR_TIL_USD_DEFAULT,
+    folketall_sti: Path,
+    bnp_eur_mrd: dict[str, float],
 ) -> list[RelativeNoekkeltall]:
     """Beregn BNP-andel og per capita per land.
 
-    `bnp_eur_mrd`: dict {land: BNP i € mrd} fra Kiels Country Summary.
-    Hvis gitt, brukes Kiel-BNP (excel-metoden). Hvis None, faller funksjonen
-    tilbake på WDI USD-BNP konvertert til EUR via `eur_til_usd` (legacy).
-    Per S24-beslutning beholdes WDI folketall i begge moduser.
+    `bnp_eur_mrd`: dict {land: BNP i € mrd} fra Kiels Country Summary
+    (`GDP (2021)`-kolonnen i EUR). Obligatorisk - excel-metoden er
+    autoritativ siden M7.2.
+    `folketall_sti`: peker på `folketall.json` (eller legacy `wdi.json`).
     """
-    wdi = _les_wdi(wdi_sti)
-    land_wdi = wdi.get("land", {})
+    data = _les_folketall_data(folketall_sti)
+    land_data = data.get("land", {})
     resultat: list[RelativeNoekkeltall] = []
     for r in summary:
-        info = land_wdi.get(r.land)
+        gdp_eur = bnp_eur_mrd.get(r.land)
+        andel = (
+            r.total_allocation / gdp_eur * 100
+            if gdp_eur and gdp_eur > 0
+            else None
+        )
+        info = land_data.get(r.land)
         if info is None:
-            # Land mangler i WDI - prøv likevel Kiel-BNP for andel.
-            gdp_eur = bnp_eur_mrd.get(r.land) if bnp_eur_mrd else None
-            andel = (
-                r.total_allocation / gdp_eur * 100
-                if gdp_eur and gdp_eur > 0
-                else None
-            )
             resultat.append(
                 RelativeNoekkeltall(
                     land=r.land,
@@ -84,24 +82,6 @@ def beregn_relative_noekkeltall(
             )
             continue
         folketall = info.get("folketall")
-        if bnp_eur_mrd is not None:
-            gdp_eur = bnp_eur_mrd.get(r.land)
-            andel = (
-                r.total_allocation / gdp_eur * 100
-                if gdp_eur and gdp_eur > 0
-                else None
-            )
-            referanseaar_bnp = KIEL_BNP_AAR if gdp_eur else None
-        else:
-            # Legacy: WDI USD-BNP konvertert til EUR
-            bnp_usd = info.get("bnp_usd")
-            gdp_eur = bnp_usd / eur_til_usd / 1e9 if bnp_usd else None
-            andel = (
-                r.total_allocation / gdp_eur * 100
-                if gdp_eur and gdp_eur > 0
-                else None
-            )
-            referanseaar_bnp = info.get("bnp_aar")
         per_capita = (
             r.total_allocation * 1_000_000_000 / folketall
             if folketall and folketall > 0
@@ -114,7 +94,7 @@ def beregn_relative_noekkeltall(
                 per_capita_eur=per_capita,
                 bnp_eur_mrd=gdp_eur,
                 folketall=folketall,
-                referanseaar_bnp=referanseaar_bnp,
+                referanseaar_bnp=KIEL_BNP_AAR if gdp_eur else None,
                 referanseaar_folketall=info.get("folketall_aar"),
             )
         )

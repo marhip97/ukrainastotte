@@ -27,13 +27,13 @@ def _land(navn: str, total_alloc: float) -> LandSummary:
     )
 
 
-def _skriv_wdi(tmp_path: Path, land: dict) -> Path:
-    sti = tmp_path / "wdi.json"
+def _skriv_folketall(tmp_path: Path, land: dict) -> Path:
+    sti = tmp_path / "folketall.json"
     sti.write_text(
         json.dumps(
             {
-                "hentet_dato": "2026-04-22",
-                "indikatorer": {},
+                "hentet_dato": "2026-05-11",
+                "indikator": "SP.POP.TOTL",
                 "land": land,
                 "utelatt": [],
                 "manglende_mapping": [],
@@ -43,42 +43,13 @@ def _skriv_wdi(tmp_path: Path, land: dict) -> Path:
     return sti
 
 
-def test_beregner_riktig_andel_bnp_og_per_capita_legacy(tmp_path: Path) -> None:
-    """Legacy-modus: WDI USD-BNP konvertert til EUR (før M7.2)."""
-    wdi_sti = _skriv_wdi(
-        tmp_path,
-        {
-            "Norway": {
-                "iso3": "NOR",
-                "bnp_usd": 500_000_000_000,  # 500 mrd USD
-                "bnp_aar": 2024,
-                "folketall": 5_500_000,  # 5.5 mill
-                "folketall_aar": 2024,
-            }
-        },
-    )
-    resultat = beregn_relative_noekkeltall(
-        [_land("Norway", 10.0)],  # 10 mrd EUR
-        wdi_sti,
-        eur_til_usd=1.10,
-    )
-    assert len(resultat) == 1
-    r = resultat[0]
-    # 500 mrd USD / 1.10 = 454.5 mrd EUR. Andel av 10 mrd EUR = 2.2 %.
-    assert r.andel_bnp_pct == pytest.approx(2.2, rel=0.001)
-    assert r.per_capita_eur == pytest.approx(10e9 / 5.5e6, rel=0.001)
-    assert r.referanseaar_bnp == 2024
-
-
 def test_beregner_med_kiel_bnp(tmp_path: Path) -> None:
-    """Excel-metoden (M7.2): Kiel-BNP i EUR direkte uten valutakonvertering."""
-    wdi_sti = _skriv_wdi(
+    """Excel-metoden (M7.2+): Kiel-BNP i EUR direkte uten valutakonvertering."""
+    sti = _skriv_folketall(
         tmp_path,
         {
             "Norway": {
                 "iso3": "NOR",
-                "bnp_usd": 0,  # ignoreres når bnp_eur_mrd er gitt
-                "bnp_aar": 2024,
                 "folketall": 5_500_000,
                 "folketall_aar": 2024,
             }
@@ -86,8 +57,8 @@ def test_beregner_med_kiel_bnp(tmp_path: Path) -> None:
     )
     resultat = beregn_relative_noekkeltall(
         [_land("Norway", 10.0)],
-        wdi_sti,
-        bnp_eur_mrd={"Norway": 407.7},  # Kiel BNP 2021 EUR
+        sti,
+        bnp_eur_mrd={"Norway": 407.7},
     )
     r = resultat[0]
     # 10 / 407.7 * 100 = 2.4527 %
@@ -95,15 +66,31 @@ def test_beregner_med_kiel_bnp(tmp_path: Path) -> None:
     assert r.per_capita_eur == pytest.approx(10e9 / 5.5e6, rel=0.001)
     assert r.bnp_eur_mrd == pytest.approx(407.7)
     assert r.referanseaar_bnp == 2021  # KIEL_BNP_AAR
+    assert r.referanseaar_folketall == 2024
 
 
-def test_land_uten_wdi_data_gir_none(tmp_path: Path) -> None:
-    wdi_sti = _skriv_wdi(tmp_path, {})
-    resultat = beregn_relative_noekkeltall([_land("X", 1.0)], wdi_sti)
+def test_land_uten_folketall_men_med_bnp_gir_andel_men_ikke_per_capita(
+    tmp_path: Path,
+) -> None:
+    sti = _skriv_folketall(tmp_path, {})
+    resultat = beregn_relative_noekkeltall(
+        [_land("X", 1.0)],
+        sti,
+        bnp_eur_mrd={"X": 100.0},
+    )
+    assert resultat[0].andel_bnp_pct == pytest.approx(1.0)
+    assert resultat[0].per_capita_eur is None
+
+
+def test_land_uten_data_gir_none(tmp_path: Path) -> None:
+    sti = _skriv_folketall(tmp_path, {})
+    resultat = beregn_relative_noekkeltall([_land("X", 1.0)], sti, bnp_eur_mrd={})
     assert resultat[0].andel_bnp_pct is None
     assert resultat[0].per_capita_eur is None
 
 
 def test_mangler_fil_kaster(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
-        beregn_relative_noekkeltall([_land("X", 1.0)], tmp_path / "mangler.json")
+        beregn_relative_noekkeltall(
+            [_land("X", 1.0)], tmp_path / "mangler.json", bnp_eur_mrd={}
+        )

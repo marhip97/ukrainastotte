@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.9
+**Versjon:** 2.10
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
@@ -336,6 +336,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-05-11 | M7.0 / M7.1 | Godkjent / Oppstart | Prosjekteier godkjente M7.0-rapporten og besluttet S22, S23, S24 i tråd med prosjektleders tilrådning (Kiels publiserte Sverige-tall, Kiels pre-aggregerte EU-fordeling, behold WDI MRV). M7.1 Parser-utvidelse startet med `dataingenior` som primær rolle. | prosjekteier, prosjektleder | — |
 | 2026-05-11 | M7.1: Parser-utvidelse | Klar for review | `src/ingest/parse_kiel.py` utvidet med nye felter på `Aktivitet` (`verdi_eur_redistr`, `verdi_eur_activity`, `maaned_nr`, `maaned_finnes`), to nye dataklasser (`EuAndel`, `LandBnp`) og to nye parsere (`parse_eu_aid_shares`, `parse_gdp`). Kolonnekontrakt utvidet med fem nye obligatoriske bilateral-kolonner og fem EU Aid Shares-kolonner. Legacy-feltet `verdi_eur` beholdes inntil M7.3 ifølge plan. Sju nye tester (4 fixture-baserte, 3 mot ekte Kiel-fil) verifiserer at Norges total redistr-allokering matcher 10,005 mrd EUR og at Norges BNP 2021 leses som 407,7 mrd EUR (EUR-kolonnen kol 13). **Testsuite 70/70 grønn.** | dataingenior | Godkjenning av M7.1-leveransen før M7.2 starter. |
 | 2026-05-11 | M7.2: Analyselag-migrering | Klar for review | To nye moduler: `src/analyze/eu_fordeling.py` (LandSummaryEu og fordelEuStotte() basert på Kiels pre-aggregerte INKL EU-tall per S23) og `src/analyze/aarlig.py` (aggreger_per_aar() bygger land/aar-aggregater fra redistr-verdier). `noekkeltall_relative.py` utvidet med Kiel-BNP-modus (bnp_eur_mrd-parameter); legacy WDI USD beholdes som fallback. `normalize.py` skriver tre nye CSV-er: `country_summary_eu.csv`, `country_summary_aar.csv`, og oppdaterer `country_summary_relative.csv` med Kiel-BNP. **Verifisert mot fasit:** Norge total alloc 10,005 mrd, BNP-andel 2,4542 %, Norge 2025 4,677 mrd, Norge 2026 1,089 mrd, Tyskland INKL EU 44,407 mrd - alle matcher fasit 100 %. Sverige EKSKL 10,320 mrd følger Kiels publiserte tall per S22. **Testsuite 78/78 grønn** (8 nye tester for M7.2-modulene). WDI-slanking til kun folketall skyves til M7.3. | analytiker | Godkjenning av M7.2-leveransen før M7.3 starter. |
+| 2026-05-11 | M7.3: Opprydding | Klar for review | `fetch_wdi.py` slanket til kun `SP.POP.TOTL`-folketall; output omdøpt fra `wdi.json` til `folketall.json` med ny slankere struktur. `noekkeltall_relative.py` ryddet: legacy WDI USD-modus fjernet, `bnp_eur_mrd` er nå obligatorisk parameter (excel-metoden). `normalize.py` leser primært `folketall.json` med fallback til `wdi.json` i overgangsperioden. Workflow `fetch-wdi.yml` oppdatert til ny filsti og regenererer prosesserte CSV-er etter henting. Per S21: brukerveiledning utvidet med "Hva er endret (mai 2026)"-seksjon øverst som dokumenterer alle metode-endringene; dashboardet fikk header-merknad med lenke til seksjonen. Legacy `verdi_eur`-felt i Aktivitet beholdes inntil tidsserier/NOK-aggregering også er migrert (planlegges i drift senere). Testsuite 78/78 grønn. | dataingenior, frontend | Godkjenning av M7.3-leveransen før M7.4 starter. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -400,6 +401,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.7 | 2026-05-11 | M7.0 godkjent av prosjekteier. S22, S23, S24 besluttet i tråd med prosjektleders tilrådning og flyttet til 11.3. M7.1 Parser-utvidelse startet. | prosjekteier, prosjektleder |
 | 2.8 | 2026-05-11 | M7.1 Parser-utvidelse levert. `parse_kiel.py` utvidet med redistr/month/activity-felter på `Aktivitet` og to nye parsere (`parse_eu_aid_shares`, `parse_gdp`). Testsuite 70/70 grønn. Klar for review. | dataingenior, prosjektleder |
 | 2.9 | 2026-05-11 | M7.2 Analyselag-migrering levert. Nye moduler `eu_fordeling.py` og `aarlig.py`, oppdaterte `noekkeltall_relative.py` og `normalize.py`. Tre nye CSV-er produsert. Verifisert mot fasitverdier (Norge, Tyskland INKL EU og enkeltår 2025/2026 matcher 100 %). Testsuite 78/78 grønn. WDI-slanking utsatt til M7.3. | analytiker, prosjektleder |
+| 2.10 | 2026-05-11 | M7.3 Opprydding levert. WDI-fetch slanket til kun folketall, `wdi.json` → `folketall.json`. Legacy USD-BNP-modus fjernet. Brukerveiledning fikk "Hva er endret"-seksjon og dashboardet fikk header-merknad per S21. | dataingenior, frontend, prosjektleder |
 
 ---
 

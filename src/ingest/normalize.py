@@ -51,8 +51,21 @@ AARLIG_AAR_LISTE = [2022, 2023, 2024, 2025, 2026]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "data" / "raw" / "kiel"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
-WDI_PATH = REPO_ROOT / "data" / "reference" / "wdi.json"
+# Etter M7.3 leses folketall fra folketall.json. Hvis filen mangler (gammel
+# workflow har ikke kjørt enda), faller vi tilbake til legacy wdi.json som
+# fortsatt har folketall-feltet.
+FOLKETALL_PATH = REPO_ROOT / "data" / "reference" / "folketall.json"
+LEGACY_WDI_PATH = REPO_ROOT / "data" / "reference" / "wdi.json"
 VALUTAKURSER_PATH = REPO_ROOT / "data" / "reference" / "valutakurser.json"
+
+
+def _aktiv_folketall_sti() -> Path | None:
+    """Returner stien til folketalldata, eller None hvis ingen finnes."""
+    if FOLKETALL_PATH.exists():
+        return FOLKETALL_PATH
+    if LEGACY_WDI_PATH.exists():
+        return LEGACY_WDI_PATH
+    return None
 
 
 def _finn_nyeste_xlsx() -> Path:
@@ -172,22 +185,18 @@ def skriv_endringstekst(
 
 def skriv_country_summary_relative(
     summary: list[LandSummary],
-    wdi_path: Path,
+    folketall_path: Path,
     out_path: Path,
-    bnp_eur_mrd: dict[str, float] | None = None,
+    bnp_eur_mrd: dict[str, float],
 ) -> int:
-    """Skriv CSV med BNP-andel og per capita per land.
+    """Skriv CSV med BNP-andel og per capita per land (excel-metoden).
 
-    Excel-metoden (M7.2): `bnp_eur_mrd` skal være Kiels GDP 2021 i EUR.
-    Hvis `bnp_eur_mrd` er None, faller funksjonen tilbake på legacy
-    WDI USD-BNP konvertert til EUR.
-
-    Returnerer antall rader med komplette relative tall. Hvis `wdi_path`
-    mangler, skrives ingen fil.
+    `bnp_eur_mrd` er Kiels GDP 2021 per land i EUR. `folketall_path` peker
+    på `folketall.json` (eller legacy `wdi.json` i overgangsperioden).
     """
-    if not wdi_path.exists():
+    if not folketall_path.exists():
         return 0
-    rader = beregn_relative_noekkeltall(summary, wdi_path, bnp_eur_mrd=bnp_eur_mrd)
+    rader = beregn_relative_noekkeltall(summary, folketall_path, bnp_eur_mrd=bnp_eur_mrd)
     feltnavn = [
         "land",
         "total_allocation_eur_mrd",
@@ -384,20 +393,23 @@ def normalize(xlsx_path: Path, out_dir: Path = PROCESSED_DIR) -> dict:
     skriv_country_summary(summary, out_dir / "country_summary.csv")
     skriv_bilateral(bilateral, out_dir / "bilateral_activities.csv")
     skriv_disbursements(disbursements, out_dir / "financial_disbursements.csv")
-    antall_relative = skriv_country_summary_relative(
-        summary, WDI_PATH, out_dir / "country_summary_relative.csv",
-        bnp_eur_mrd=bnp_eur_mrd,
-    )
+    folketall_sti = _aktiv_folketall_sti()
+    antall_relative = 0
+    if folketall_sti is not None:
+        antall_relative = skriv_country_summary_relative(
+            summary, folketall_sti, out_dir / "country_summary_relative.csv",
+            bnp_eur_mrd=bnp_eur_mrd,
+        )
     eu_rader = fordelEuStotte(summary, inkl_eu_totaler)
     antall_eu = skriv_country_summary_eu(
         eu_rader, out_dir / "country_summary_eu.csv"
     )
     # WDI folketall for per capita-beregning i årlig CSV. Per S24 beholdes
-    # WDI MRV-strategi.
+    # WDI MRV-strategi (kun SP.POP.TOTL etter M7.3-slanking).
     folketall: dict[str, int] = {}
-    if WDI_PATH.exists():
-        wdi = json.loads(WDI_PATH.read_text())
-        for land, info in wdi.get("land", {}).items():
+    if folketall_sti is not None:
+        data = json.loads(folketall_sti.read_text())
+        for land, info in data.get("land", {}).items():
             if info.get("folketall"):
                 folketall[land] = info["folketall"]
     aarlig = aggreger_per_aar(
