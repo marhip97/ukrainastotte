@@ -340,7 +340,14 @@
     </p>
   </footer>
 
-  <script src="https://unpkg.com/docx@9.5.0/build/index.js"></script>
+  <script type="module">
+    // docx-pakken distribueres som ESM. esm.sh leverer en browser-
+    // kompatibel build. Vi eksponerer biblioteket pa window.docx slik
+    // at den ikke-modulariserte dashboard.js kan bruke den.
+    import * as docxLib from "https://esm.sh/docx@9.5.0";
+    window.docx = docxLib;
+    window.dispatchEvent(new Event("docx-loaded"));
+  </script>
   <script src="dashboard.js"></script>
 </body>
 </html>
