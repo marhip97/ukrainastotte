@@ -159,7 +159,9 @@ main > section:last-child {
  */
 
 .valuta-toggle,
-.modus-toggle {
+.modus-toggle,
+.periode-toggle,
+.eu-toggle {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -168,7 +170,9 @@ main > section:last-child {
 }
 
 .valuta-toggle label,
-.modus-toggle label {
+.modus-toggle label,
+.periode-toggle label,
+.eu-toggle label {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -182,24 +186,51 @@ main > section:last-child {
 }
 
 .valuta-toggle label:has(input:checked),
-.modus-toggle label:has(input:checked) {
+.modus-toggle label:has(input:checked),
+.periode-toggle label:has(input:checked),
+.eu-toggle label:has(input:checked) {
   background: var(--blue-500);
   color: var(--card-bg);
   border-color: var(--blue-500);
 }
 
 .valuta-toggle label:focus-within,
-.modus-toggle label:focus-within {
+.modus-toggle label:focus-within,
+.periode-toggle label:focus-within,
+.eu-toggle label:focus-within {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .valuta-toggle input[type="radio"],
-.modus-toggle input[type="radio"] {
+.modus-toggle input[type="radio"],
+.periode-toggle input[type="radio"],
+.eu-toggle input[type="radio"] {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
+}
+
+.toggle-etikett {
+  font-weight: var(--fw-semi);
+  color: var(--blue-700);
+  font-size: var(--fs-body);
+}
+
+.eu-toggle.deaktivert label {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.eu-toggle.deaktivert label input[type="radio"] {
+  pointer-events: none;
+}
+
+.eu-merknad {
+  font-size: var(--fs-micro);
+  color: var(--blue-700);
+  font-style: italic;
 }
 
 .valuta-merknad {

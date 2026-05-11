@@ -9,6 +9,9 @@ const ENDR_PATH = window.ENDR_PATH || "../../data/processed/country_summary_endr
 const TIDSSERIE_PATH = window.TIDSSERIE_PATH || "../../data/processed/tidsserier_maanedlig.csv";
 const ENDRTEKST_PATH = window.ENDRTEKST_PATH || "../../data/processed/endringstekst.json";
 const VALUTAKURSER_PATH = window.VALUTAKURSER_PATH || "../../data/reference/valutakurser.json";
+// M7.4: nye CSV-er for INKL EU og enkeltår.
+const EU_PATH = window.EU_PATH || "../../data/processed/country_summary_eu.csv";
+const AAR_PATH = window.AAR_PATH || "../../data/processed/country_summary_aar.csv";
 
 // Speiler src/analyze/landgrupper.py (S9). Aliaser inkludert for robusthet.
 const LAND_GRUPPER = {
@@ -173,6 +176,101 @@ function parseCsv(tekst) {
     });
     return rad;
   });
+}
+
+// M7.4: state for periode-bryter og EU-bryter.
+function lesPeriode() {
+  const v = sessionStorage.getItem("m7_periode");
+  if (v === "kumulativt" || /^\d{4}$/.test(v || "")) return v;
+  const radio = document.querySelector('input[name="periode"]:checked');
+  return radio ? radio.value : "kumulativt";
+}
+
+function lesEu() {
+  if (lesPeriode() !== "kumulativt") return "ekskl";
+  const v = sessionStorage.getItem("m7_eu");
+  if (v === "ekskl" || v === "inkl") return v;
+  const radio = document.querySelector('input[name="eu"]:checked');
+  return radio ? radio.value : "ekskl";
+}
+
+function settPeriode(p) {
+  sessionStorage.setItem("m7_periode", p);
+}
+
+function settEu(e) {
+  sessionStorage.setItem("m7_eu", e);
+}
+
+/**
+ * Returner aktivt summary-datasett basert på periode og EU-state.
+ * Output har samme felter som country_summary.csv (`total_allocation`,
+ * `financial_allocation`, etc.) slik at tegnXX-funksjonene kan brukes
+ * uendret. For INKL EU mappes `total_allocation_inkl_eu` ned til
+ * `total_allocation`. For enkeltår filtreres `aarRader` på året.
+ */
+function aktivSummary(kumRader, euRader, aarRader, periode, eu) {
+  if (periode === "kumulativt") {
+    if (eu === "inkl" && euRader.length > 0) {
+      const euIdx = {};
+      euRader.forEach((r) => { euIdx[r.land] = r; });
+      return kumRader.map((r) => {
+        const e = euIdx[r.land];
+        if (!e) return r;
+        return Object.assign({}, r, {
+          total_allocation: e.total_allocation_inkl_eu,
+          total_commitment: e.total_commitment_inkl_eu,
+        });
+      });
+    }
+    return kumRader;
+  }
+  // Enkeltår: filtrer aarRader. Returner objekter med felt som matcher
+  // country_summary.csv-strukturen.
+  return aarRader
+    .filter((r) => String(r.aar) === String(periode))
+    .map((r) => ({
+      land: r.land,
+      er_eu_medlem: "",  // ikke i aar-CSV
+      er_geografisk_europa: "",
+      financial_allocation: r.financial_allocation,
+      humanitarian_allocation: r.humanitarian_allocation,
+      military_allocation: r.military_allocation,
+      total_allocation: r.total_allocation,
+      financial_commitment: r.financial_commitment,
+      humanitarian_commitment: r.humanitarian_commitment,
+      military_commitment: r.military_commitment,
+      total_commitment: r.total_commitment,
+    }));
+}
+
+/**
+ * Returner aktive relative tall (BNP-andel og per capita).
+ * For kumulativt: country_summary_relative.csv.
+ * For enkeltår: hentes fra aarRader (samme år) med felt
+ * `andel_bnp_pct` og `per_capita_eur`.
+ */
+function aktivRelative(relRader, aarRader, periode) {
+  if (periode === "kumulativt") {
+    return relRader;
+  }
+  return aarRader
+    .filter((r) => String(r.aar) === String(periode))
+    .map((r) => ({
+      land: r.land,
+      total_allocation_eur_mrd: r.total_allocation,
+      andel_bnp_pct: r.andel_bnp_pct,
+      per_capita_eur: r.per_capita_eur,
+      bnp_eur_mrd: "",
+      folketall: "",
+      referanseaar_bnp: "",
+      referanseaar_folketall: "",
+    }));
+}
+
+function periodeEtikett(periode) {
+  if (periode === "kumulativt") return "kumulativt 2022-2026";
+  return "i " + periode;
 }
 
 function lesValuta() {
@@ -1186,7 +1284,7 @@ function tegnEndringstekst(endringstekstData) {
 async function main() {
   try {
     const [csvResp, metaResp, disbResp, relResp, endrResp, tidsResp, endrTekstResp,
-           kurserResp] =
+           kurserResp, euResp, aarResp] =
       await Promise.all([
         fetch(DATA_PATH),
         fetch(META_PATH),
@@ -1196,12 +1294,23 @@ async function main() {
         fetch(TIDSSERIE_PATH),
         fetch(ENDRTEKST_PATH),
         fetch(VALUTAKURSER_PATH),
+        fetch(EU_PATH),
+        fetch(AAR_PATH),
       ]);
     if (!csvResp.ok) throw new Error("Fant ikke country_summary.csv");
     const csv = await csvResp.text();
     const rader = parseCsv(csv);
     const norge = rader.find((r) => r.land === "Norway");
     if (!norge) throw new Error("Norge finnes ikke i datasettet");
+
+    let euRader = [];
+    if (euResp.ok) {
+      euRader = parseCsv(await euResp.text());
+    }
+    let aarRader = [];
+    if (aarResp.ok) {
+      aarRader = parseCsv(await aarResp.text());
+    }
 
     let disbSum = {};
     if (disbResp.ok) {
@@ -1255,12 +1364,64 @@ async function main() {
     const alleLand = rader.map((r) => r.land).sort();
     fyllKomparativVelger(alleLand, KOMPARATIV_DEFAULT);
 
+    // M7.4: bygg dynamisk år-liste basert på aarRader (nyeste først).
+    const tilgjengeligeAr = Array.from(
+      new Set(aarRader.map((r) => String(r.aar)))
+    ).sort((a, b) => b.localeCompare(a));
+    const periodeAarSpan = document.getElementById("periode-aar-knapper");
+    if (periodeAarSpan) {
+      periodeAarSpan.innerHTML = tilgjengeligeAr
+        .map((aar) =>
+          '<label><input type="radio" name="periode" value="' + aar
+          + '"><span>' + aar + '</span></label>'
+        )
+        .join("");
+    }
+    // Gjenopprett periode/EU-state fra sessionStorage hvis tilgjengelig.
+    const startPeriode = lesPeriode();
+    document.querySelectorAll('input[name="periode"]').forEach((r) => {
+      r.checked = (r.value === startPeriode);
+    });
+    const startEu = lesEu();
+    document.querySelectorAll('input[name="eu"]').forEach((r) => {
+      r.checked = (r.value === startEu);
+    });
+
+    function oppdaterEuToggleTilstand() {
+      const periode = lesPeriode();
+      const euToggle = document.getElementById("eu-toggle");
+      const euMerknad = document.getElementById("eu-merknad");
+      if (!euToggle) return;
+      if (periode === "kumulativt") {
+        euToggle.classList.remove("deaktivert");
+        document.querySelectorAll('input[name="eu"]').forEach((r) => {
+          r.disabled = false;
+          r.setAttribute("aria-disabled", "false");
+        });
+        if (euMerknad) euMerknad.textContent = "";
+      } else {
+        euToggle.classList.add("deaktivert");
+        document.querySelectorAll('input[name="eu"]').forEach((r) => {
+          r.disabled = true;
+          r.setAttribute("aria-disabled", "true");
+          if (r.value === "ekskl") r.checked = true;
+          else r.checked = false;
+        });
+        if (euMerknad) {
+          euMerknad.textContent = "EU-fordeling er kun tilgjengelig på kumulative tall.";
+        }
+      }
+    }
+
     const visning = document.getElementById("visning");
     const rangeringMaal = document.getElementById("rangering-maal");
     function tegn() {
       const valgte = lesValgteLand();
       const valuta = lesValuta();
       const kompModus = lesKompModus();
+      const periode = lesPeriode();
+      const eu = lesEu();
+      oppdaterEuToggleTilstand();
       oppdaterValutaMerknad(valuta);
       // Skjul multi-velger og gruppe-knapper i gjennomsnitt-modus.
       const enkeltKontroller = document.getElementById("komp-enkeltland-kontroller");
@@ -1273,10 +1434,20 @@ async function main() {
           ? "Sammenligner Norge med gjennomsnittet for medlemslandene i hver gruppe (Norge er ekskludert fra gruppe-snittet selv om den er medlem). Gruppe-snittene styrer kun komparativ profil; rangering og scatter beholder valgte enkeltland."
           : "Velg ett eller flere land. Valget styrer komparativ profil, rangering og scatter. Hold inne Ctrl (Windows) eller Cmd (Mac) for å velge flere. Bruk hurtigknappene for forhåndsdefinerte grupper.";
       }
-      skrivNoekkeltall(norge, rader, relRader, endrRader, valuta);
-      tegnFordeling(norge, visning.value, norgeUtbetalt, norgeRel, norgeEndr, valuta);
-      tegnRangering(rader, rangeringMaal.value, disbSum, relRader, endrRader, valgte, valuta);
-      tegnKomparativProfil(rader, valgte, relRader, endrRader, valuta, kompModus);
+      // M7.4: bytt til aktive datasett basert på periode + EU-state.
+      const aktiveRader = aktivSummary(rader, euRader, aarRader, periode, eu);
+      const aktiveRel = aktivRelative(relRader, aarRader, periode);
+      const aktivNorge = aktiveRader.find((r) => r.land === "Norway") || norge;
+      const aktivNorgeRel = aktiveRel.find((r) => r.land === "Norway");
+      // Oppdater KPI-kontekst med periode-merknad.
+      const periodeEtMrd = valutaMrdEnhet(valuta) + ", " + periodeEtikett(periode);
+      const totalKtx = document.getElementById("total-allocation-kontekst");
+      if (totalKtx) totalKtx.textContent = periodeEtMrd;
+      skrivNoekkeltall(aktivNorge, aktiveRader, aktiveRel, endrRader, valuta);
+      tegnFordeling(aktivNorge, visning.value, norgeUtbetalt, aktivNorgeRel, norgeEndr, valuta);
+      tegnRangering(aktiveRader, rangeringMaal.value, disbSum, aktiveRel, endrRader, valgte, valuta);
+      tegnKomparativProfil(aktiveRader, valgte, aktiveRel, endrRader, valuta, kompModus);
+      // Tidsserien er uavhengig av periode-bryteren (viser alltid hele perioden).
       if (tidsserieRader.length > 0) {
         tegnTidsserie(tidsserieRader, valgte, valuta);
       } else {
@@ -1285,13 +1456,27 @@ async function main() {
           + 'Kjør <code>python -m src.ingest.normalize</code> etter at '
           + '<code>data/reference/valutakurser.json</code> er hentet.</p>';
       }
-      tegnScatter(rader, relRader, valgte, valuta);
+      tegnScatter(aktiveRader, aktiveRel, valgte, valuta);
     }
     visning.addEventListener("change", tegn);
     rangeringMaal.addEventListener("change", tegn);
     document
       .querySelectorAll('input[name="valuta"]')
       .forEach((r) => r.addEventListener("change", tegn));
+    document
+      .querySelectorAll('input[name="periode"]')
+      .forEach((r) => r.addEventListener("change", (e) => {
+        settPeriode(e.target.value);
+        tegn();
+      }));
+    document
+      .querySelectorAll('input[name="eu"]')
+      .forEach((r) => r.addEventListener("change", (e) => {
+        if (!e.target.disabled) {
+          settEu(e.target.value);
+          tegn();
+        }
+      }));
     document
       .querySelectorAll('input[name="komp-modus"]')
       .forEach((r) => r.addEventListener("change", () => {

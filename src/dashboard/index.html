@@ -42,6 +42,26 @@
         </label>
         <span class="valuta-merknad" id="valuta-kursmerknad">Styrer alle pengetall i dashboardet.</span>
       </div>
+      <div class="periode-toggle" role="group" aria-label="Velg tidsperiode">
+        <span class="toggle-etikett">Periode:</span>
+        <label>
+          <input type="radio" name="periode" value="kumulativt" checked>
+          <span>Kumulativt</span>
+        </label>
+        <span id="periode-aar-knapper"></span>
+      </div>
+      <div class="eu-toggle" id="eu-toggle" role="group" aria-label="EU-fordeling">
+        <span class="toggle-etikett">EU-fordeling:</span>
+        <label>
+          <input type="radio" name="eu" value="ekskl" checked>
+          <span>EKSKL EU</span>
+        </label>
+        <label>
+          <input type="radio" name="eu" value="inkl">
+          <span>INKL EU</span>
+        </label>
+        <span class="eu-merknad" id="eu-merknad" role="status"></span>
+      </div>
       <div class="grid hero-grid">
         <article class="kpi-kort hero col-span-6"
                  role="group" aria-labelledby="kpi-total-etikett">
