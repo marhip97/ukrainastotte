@@ -1550,7 +1550,7 @@ async function genererFlakDocx(opts) {
   });
 
   const dokument = new Document({
-    creator: "SFSs Ukraina-støtte overvåker",
+    creator: "SFSs overvåker av Ukraina-støtte",
     title: "Norges støtte til Ukraina - " + dato,
     description: "Flak med Norges nøkkeltall basert på Kiel-data.",
     sections: [{
@@ -1987,7 +1987,7 @@ async function main() {
             },
             annotations: [{
               text: "Kilde: Kiel Institute for the World Economy, Ukraine Support Tracker. Hentet "
-                + dato + ". SFSs Ukraina-støtte overvåker.",
+                + dato + ". SFSs overvåker av Ukraina-støtte.",
               xref: "paper", yref: "paper", x: 0, y: -0.09, showarrow: false,
               font: { size: 11, color: "#777" },
               xanchor: "left",
