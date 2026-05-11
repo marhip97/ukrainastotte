@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.7
+**Versjon:** 2.8
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
@@ -334,6 +334,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-05-11 | M7: Metodisk migrering | Oppstart | Prosjekteier godkjente planutkastet `docs/planer/M7 plan.md` og bekreftet at M7.0 (migrerings-QA) starter umiddelbart uten ytterligere avklaringer. Foreslått rekkefølge S21 → S20 → S19 godkjent. Excelen brukes ikke som datakilde i repoet; alle metode-konstanter (BNP 2021, EU-fordelingsnøkkel) leses direkte fra Kiels XLSX. `docs/qa/m7-fasitverdier.md` er ekstrahert fra FINs excel og brukes som gylne tall for QA. Arbeidsbranch: `claude/migrate-excel-to-dashboard-t8LoD` (plattform-pålagt). | prosjektleder | S19, S20, S21 åpnet. |
 | 2026-05-11 | M7.0: Migrerings-QA | Klar for review | Engangs-skript `scripts/m7_migrering_avvik.py` reimplementerer excel-metoden mot Kiel Release 28 og produserer `docs/qa/m7-migrering-avvik.md`. **Norge matcher fasit 100 %** på alle mål (allokering 10,005 mrd, forpliktelse 24,724 mrd, BNP-andel 2,4542 %, enkeltår 2025 4,677 mrd og 2026 1,089 mrd). Storbritannia, USA, Tyskland EKSKL EU, Frankrike EKSKL EU og Danmark EKSKL EU matcher også fasit innen 0,1 %. **Tre punkter krever avklaring før M7.2 godkjennes:** (a) Sverige EKSKL EU avviker 12,8 % (Kiel-tall 10,320 mrd vs. fasit 9,149 mrd - sannsynligvis at FINs excel ekskluderer en spesifikk svensk aktivitetsgruppe), (b) EU-fordeling INKL EU har 1-3 % avvik for store EU-land fordi M7.2 må bruke Kiels pre-aggregerte `Share of EU Allocated/Committed aid` istedenfor andel × total, (c) per innbygger avviker 0,5-2 % pga. WDI-vintage. Detaljer i rapporten. **Metoden er klar for implementering i M7.1-M7.2** med disse forbeholdene. | qa, prosjektleder | M7.0-rapport til prosjekteier for godkjenning. Tre spørsmål åpnet (Sverige-avvik, EU-fordelingsmetode, folketalls-vintage). |
 | 2026-05-11 | M7.0 / M7.1 | Godkjent / Oppstart | Prosjekteier godkjente M7.0-rapporten og besluttet S22, S23, S24 i tråd med prosjektleders tilrådning (Kiels publiserte Sverige-tall, Kiels pre-aggregerte EU-fordeling, behold WDI MRV). M7.1 Parser-utvidelse startet med `dataingenior` som primær rolle. | prosjekteier, prosjektleder | — |
+| 2026-05-11 | M7.1: Parser-utvidelse | Klar for review | `src/ingest/parse_kiel.py` utvidet med nye felter på `Aktivitet` (`verdi_eur_redistr`, `verdi_eur_activity`, `maaned_nr`, `maaned_finnes`), to nye dataklasser (`EuAndel`, `LandBnp`) og to nye parsere (`parse_eu_aid_shares`, `parse_gdp`). Kolonnekontrakt utvidet med fem nye obligatoriske bilateral-kolonner og fem EU Aid Shares-kolonner. Legacy-feltet `verdi_eur` beholdes inntil M7.3 ifølge plan. Sju nye tester (4 fixture-baserte, 3 mot ekte Kiel-fil) verifiserer at Norges total redistr-allokering matcher 10,005 mrd EUR og at Norges BNP 2021 leses som 407,7 mrd EUR (EUR-kolonnen kol 13). **Testsuite 70/70 grønn.** | dataingenior | Godkjenning av M7.1-leveransen før M7.2 starter. |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -396,6 +397,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.5 | 2026-05-11 | M7 Metodisk migrering åpnet som ny milepæl. Lagt til i seksjon 5. Plan i `docs/planer/M7 plan.md` godkjent av prosjekteier. S19-S21 åpnet i 11.2. M7.0 (migrerings-QA) starter umiddelbart. Status oppdatert til "Drift + ny utvidelsesfase M7 starter". | prosjektleder |
 | 2.6 | 2026-05-11 | M7.0 Migrerings-QA fullført samme dag. Rapport `docs/qa/m7-migrering-avvik.md` produsert. Norge matcher fasit 100 %, men tre metodiske avvik identifisert som krever avklaring før M7.2: Sverige EKSKL EU (S22), EU-fordelingsmetode INKL EU (S23), folketalls-vintage (S24). S22-S24 åpnet i 11.2. | qa, prosjektleder |
 | 2.7 | 2026-05-11 | M7.0 godkjent av prosjekteier. S22, S23, S24 besluttet i tråd med prosjektleders tilrådning og flyttet til 11.3. M7.1 Parser-utvidelse startet. | prosjekteier, prosjektleder |
+| 2.8 | 2026-05-11 | M7.1 Parser-utvidelse levert. `parse_kiel.py` utvidet med redistr/month/activity-felter på `Aktivitet` og to nye parsere (`parse_eu_aid_shares`, `parse_gdp`). Testsuite 70/70 grønn. Klar for review. | dataingenior, prosjektleder |
 
 ---
 
