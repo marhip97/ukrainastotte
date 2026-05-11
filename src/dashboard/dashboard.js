@@ -1404,12 +1404,29 @@ function _bygFlakRader(opts) {
   return rader;
 }
 
+async function _grafSomPngBuffer(divId, width, height) {
+  const div = document.getElementById(divId);
+  if (!div || typeof Plotly === "undefined") return null;
+  // Plotly-grafer renderer asynkront; sjekk at div har innhold før eksport.
+  if (!div.querySelector(".main-svg")) return null;
+  try {
+    const dataUrl = await Plotly.toImage(div, {
+      format: "png", width, height,
+    });
+    const resp = await fetch(dataUrl);
+    return new Uint8Array(await resp.arrayBuffer());
+  } catch (e) {
+    console.warn("Klarte ikke eksportere " + divId + ":", e);
+    return null;
+  }
+}
+
 async function genererFlakDocx(opts) {
   if (typeof docx === "undefined") {
     throw new Error("docx-biblioteket er ikke lastet (CDN-feil?)");
   }
   const {
-    Document, Packer, Paragraph, TextRun, HeadingLevel,
+    Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun,
     Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle,
   } = docx;
 
@@ -1483,13 +1500,45 @@ async function genererFlakDocx(opts) {
     heading: HeadingLevel.HEADING_2,
     children: [new TextRun({ text: "Tabell 1 - Nøkkeltall for Norge" })],
   });
-  const figurMerknad = new Paragraph({
-    children: [new TextRun({
-      text: "Figurer kan eksporteres som PNG direkte fra dashboardet "
-        + "(knappene over hver graf). Topp 15-rangering, Norges tidsserie og "
-        + "scatter-plot av andel BNP × per innbygger er tilgjengelige.",
-    })],
-  });
+  // Eksporter de tre hovedgrafene som PNG og embed i docx-en.
+  // Hvis eksport feiler (graf ikke rendret enda eller iOS-begrensning),
+  // faller funksjonen tilbake på tekstmerknad.
+  const [rangPng, tidsPng, scatterPng] = await Promise.all([
+    _grafSomPngBuffer("rangering-graf", 900, 600),
+    _grafSomPngBuffer("tidsserie-graf", 900, 500),
+    _grafSomPngBuffer("scatter-graf", 800, 600),
+  ]);
+  const figurInnhold = [];
+  function lagFigur(buffer, tekst, w, h) {
+    figurInnhold.push(new Paragraph({
+      heading: HeadingLevel.HEADING_3,
+      children: [new TextRun({ text: tekst })],
+    }));
+    figurInnhold.push(new Paragraph({
+      children: [new ImageRun({
+        data: buffer,
+        transformation: { width: w, height: h },
+      })],
+    }));
+  }
+  if (rangPng) {
+    lagFigur(rangPng, "Figur 1 - Topp 15 giverland", 600, 400);
+  }
+  if (tidsPng) {
+    lagFigur(tidsPng, "Figur 2 - Utvikling over tid", 600, 333);
+  }
+  if (scatterPng) {
+    lagFigur(scatterPng, "Figur 3 - Andel BNP vs. per innbygger", 540, 405);
+  }
+  if (figurInnhold.length === 0) {
+    figurInnhold.push(new Paragraph({
+      children: [new TextRun({
+        text: "Figurer kunne ikke eksporteres automatisk. Bruk PNG-eksport-"
+          + "knappen over hver graf i dashboardet og lim inn manuelt.",
+        italics: true,
+      })],
+    }));
+  }
   const kildeMerknad = new Paragraph({
     children: [new TextRun({
       text: "Kilde: Kiel Institute for the World Economy, Ukraine Support "
@@ -1512,7 +1561,7 @@ async function genererFlakDocx(opts) {
         tabellTittel,
         tabell,
         new Paragraph({ text: "" }),
-        figurMerknad,
+        ...figurInnhold,
         new Paragraph({ text: "" }),
         kildeMerknad,
       ],

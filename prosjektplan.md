@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.15
+**Versjon:** 2.16
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
@@ -412,6 +412,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.13 | 2026-05-11 | M7.5 Steg 1 (designnotat) levert: `docs/m7-design/m7-5-design.md` med plassering, tabell-/figur-struktur og fire avklaringsspørsmål før implementering. | frontend, prosjektleder |
 | 2.14 | 2026-05-11 | M7.5 Steg 2 (implementering) levert: flak-forhåndsvisning nederst i dashboardet med Norges 9-rads tabell og figur-liste som speiler aktiv tilstand. Nedlastingsknapp stubbet til M7.6. | frontend, prosjektleder |
 | 2.15 | 2026-05-11 | M7.6 (docx-generering klientside) levert: `docx`-pakke via unpkg.com, `genererFlakDocx()` med tittel, undertittel, 9-rads tabell, figur-merknad og kildehenvisning. iOS-fallback for nedlasting. Plotly-figurer i docx skyves til drift. M7-milepælen funksjonelt komplett. | frontend, prosjektleder |
+| 2.16 | 2026-05-11 | M7.6 utvidet med Plotly-figurer (rangering, tidsserie, scatter) eksportert som PNG og embeddet i docx-en via ImageRun. Faller tilbake til tekstmerknad hvis grafer ikke er rendret eller eksport feiler. M7-leveransen er nå komplett uten gjenstående punkter. | frontend, prosjektleder |
 
 ---
 
