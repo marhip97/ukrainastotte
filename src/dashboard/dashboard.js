@@ -1791,6 +1791,12 @@ async function main() {
       const periodeEtMrd = valutaMrdEnhet(valuta) + ", " + periodeEtikett(periode);
       const totalKtx = document.getElementById("total-allocation-kontekst");
       if (totalKtx) totalKtx.textContent = periodeEtMrd;
+      const rangKtx = document.getElementById("rangering-alloc-kontekst");
+      if (rangKtx) {
+        rangKtx.textContent = periode === "kumulativt"
+          ? "akkumulert allokering"
+          : "allokering i " + periode;
+      }
       skrivNoekkeltall(aktivNorge, aktiveRader, aktiveRel, endrRader, valuta);
       tegnFordeling(aktivNorge, visning.value, norgeUtbetalt, aktivNorgeRel, norgeEndr, valuta);
       tegnRangering(aktiveRader, rangeringMaal.value, disbSum, aktiveRel, endrRader, valgte, valuta);
