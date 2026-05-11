@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SFSs Ukraina-støtte overvåker</title>
+  <title>SFSs overvåker av Ukraina-støtte</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
@@ -13,7 +13,7 @@
 
   <header>
     <div class="header-innhold">
-      <h1>SFSs Ukraina-støtte overvåker</h1>
+      <h1>SFSs overvåker av Ukraina-støtte</h1>
       <p class="subtitle">
         Norges støtte til Ukraina i kontekst, basert på data fra
         <a href="https://www.kielinstitut.de/topics/war-against-ukraine/ukraine-support-tracker">Kiel
@@ -30,7 +30,7 @@
 
   <main id="hovedinnhold">
     <section class="hero-seksjon" aria-labelledby="hero-tittel">
-      <h2 id="hero-tittel" class="visuelt-skjult">Norge i tall</h2>
+      <h2 id="hero-tittel" class="hero-overskrift">Norge i tall</h2>
       <div class="valuta-toggle" role="group" aria-label="Velg visningsvaluta for hele dashboardet">
         <label>
           <input type="radio" name="valuta" value="eur" checked>
@@ -73,15 +73,15 @@
         <article class="kpi-kort col-span-6"
                  role="group" aria-labelledby="kpi-rang-etikett">
           <div class="kpi-verdi" id="rangering-alloc">–</div>
-          <div class="kpi-etikett" id="kpi-rang-etikett">Rangering blant giverland</div>
-          <div class="kpi-kontekst">total allokering</div>
+          <div class="kpi-etikett" id="kpi-rang-etikett">Norges rangering</div>
+          <div class="kpi-kontekst" id="rangering-alloc-kontekst">akkumulert allokering</div>
         </article>
 
         <article class="kpi-kort col-span-6"
                  role="group" aria-labelledby="kpi-bnp-etikett">
           <div class="kpi-verdi" id="andel-bnp">–</div>
           <div class="kpi-etikett" id="kpi-bnp-etikett">Andel av BNP</div>
-          <div class="kpi-kontekst">kumulativt mot Verdensbanken 2024</div>
+          <div class="kpi-kontekst" id="andel-bnp-kontekst">av Kiels BNP 2021</div>
         </article>
 
         <article class="kpi-kort col-span-6"
@@ -99,9 +99,9 @@
       </p>
 
       <p class="metode-notat">
-        Tallene følger Kiels hovedinndeling (allokering). Andel av BNP og per
-        innbygger beregnes på kumulativ allokering 2022-2026 mot Verdensbankens
-        2024-tall (S2, S6).
+        Tallene følger Kiels hovedinndeling (allokering). Andel av BNP
+        beregnes mot Kiels eget BNP-tall for 2021 (fra Country Summary).
+        Per innbygger bruker Verdensbankens folketall (siste tilgjengelige år).
       </p>
     </section>
 
@@ -224,8 +224,8 @@
         <strong>Forpliktelse</strong> inkluderer lovnader som ennå ikke er konkretisert.
         <strong>Kun utbetalt</strong> viser faktiske finansielle utbetalinger (budget support) -
         dekker <em>ikke</em> militær eller humanitær støtte.
-        <strong>Andel BNP</strong> og <strong>per innbygger</strong> beregnes på total
-        allokering (kumulativt 2022-2026) mot Verdensbankens 2024-tall for BNP og folketall.
+        <strong>Andel BNP</strong> beregnes mot Kiels eget BNP for 2021;
+        <strong>per innbygger</strong> bruker Verdensbankens folketall.
         Se <a href="../../docs/beslutningssaker/S2-definisjon-av-norges-stotte.md">S2</a>
         og <a href="../../docs/beslutningssaker/S6-kilde-bnp-folketall.md">S6</a>.
       </p>
@@ -284,8 +284,8 @@
            aria-label="Scatter-graf som viser sammenheng mellom to nøkkeltall for alle giverland, med Norge framhevet"></div>
       <p class="metode-notat">
         Hvert punkt er ett giverland. Norge er fremhevet i rødt. Akser kan
-        byttes via dropdownene over. BNP-andel og per capita beregnes fra
-        Verdensbankens 2024-tall (S6).
+        byttes via dropdownene over. BNP-andel bruker Kiels BNP 2021;
+        per capita bruker Verdensbankens folketall (S6).
       </p>
     </section>
 
