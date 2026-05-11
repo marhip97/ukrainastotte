@@ -1244,6 +1244,105 @@ const EKSPORT_FILER = [
   ["metadata.json", "Metadata: kildefil, sha256, prosesseringsdato", () => META_PATH],
 ];
 
+// M7.5: Flak-forhåndsvisning. Tabell 1 har 9 rader per S20. Rad 9
+// (endring) vises kun kumulativt; ved enkeltår erstattes den med
+// årsmerknad. Knappen for nedlasting stubbes inntil M7.6 er ferdig.
+function tegnFlakForhandsvisning(opts) {
+  const {
+    norgeAktiv, norgeRelAktiv, norgeEndr,
+    aktiveRader, periode, eu, valuta,
+  } = opts;
+  const body = document.getElementById("flak-tabell-body");
+  const tilstandEl = document.getElementById("flak-tilstand");
+  const figur1 = document.getElementById("flak-figur-1");
+  const figur2 = document.getElementById("flak-figur-2");
+  const figur3 = document.getElementById("flak-figur-3");
+  if (!body) return;
+
+  const skala = valuta === "nok" ? SISTE_KURS : 1;
+  const valutaNavn = valutaKortNavn(valuta);
+  const mrdEnhet = "mrd. " + valutaNavn;
+  const periodeBesk = periode === "kumulativt"
+    ? "kumulativt 2022-2026"
+    : "kalenderåret " + periode;
+  const euBesk = (periode === "kumulativt" && eu === "inkl")
+    ? "inkludert EU-fordeling"
+    : "direkte bilateral (uten EU-fordeling)";
+  tilstandEl.textContent =
+    "Reflekterer dashboardets aktive tilstand: "
+    + periodeBesk + ", " + euBesk + ", verdier i " + valutaNavn + ".";
+
+  const allocEur = tilTall(norgeAktiv.total_allocation);
+  const commEur = tilTall(norgeAktiv.total_commitment);
+  const milEur = tilTall(norgeAktiv.military_allocation);
+  const finEur = tilTall(norgeAktiv.financial_allocation);
+  const humEur = tilTall(norgeAktiv.humanitarian_allocation);
+
+  // Rangering: Norges plass i aktiveRader sortert på total_allocation.
+  const sortert = sortertEtter(aktiveRader, "total_allocation");
+  const rangAlloc = sortert.findIndex((r) => r.land === "Norway") + 1;
+  const antall = aktiveRader.length;
+
+  function f(v, des) {
+    const tall = (Number(v) || 0) * skala;
+    return tall.toLocaleString("nb-NO", {
+      minimumFractionDigits: des,
+      maximumFractionDigits: des,
+    });
+  }
+
+  const rader = [
+    ["Total allokering", f(allocEur, 2) + " " + mrdEnhet],
+    [
+      "Andel av BNP",
+      norgeRelAktiv && norgeRelAktiv.andel_bnp_pct !== "" && norgeRelAktiv.andel_bnp_pct != null
+        ? f(tilTall(norgeRelAktiv.andel_bnp_pct), 2) + " pst."
+        : "–",
+    ],
+    [
+      "Per innbygger",
+      norgeRelAktiv && norgeRelAktiv.per_capita_eur !== "" && norgeRelAktiv.per_capita_eur != null
+        ? Math.round(tilTall(norgeRelAktiv.per_capita_eur) * skala)
+            .toLocaleString("nb-NO") + " " + valutaNavn
+        : "–",
+    ],
+    ["Rangering blant giverland", rangAlloc + " av " + antall],
+    ["Total forpliktelse", f(commEur, 2) + " " + mrdEnhet],
+    ["Militær allokering", f(milEur, 2) + " " + mrdEnhet],
+    ["Finansiell allokering", f(finEur, 2) + " " + mrdEnhet],
+    ["Humanitær allokering", f(humEur, 2) + " " + mrdEnhet],
+  ];
+  // Rad 9 - endring siste release (kun meningsfullt kumulativt).
+  if (periode === "kumulativt" && norgeEndr) {
+    const dEur = tilTall(norgeEndr.delta_total_allocation);
+    const d = dEur * skala;
+    const tegn = d > 0 ? "+" : "";
+    rader.push(["Endring siste Kiel-utgivelse", tegn + d.toFixed(2) + " " + mrdEnhet]);
+  } else if (periode === "kumulativt") {
+    rader.push(["Endring siste Kiel-utgivelse", "Vises etter neste release"]);
+  } else {
+    rader.push(["Endring siste Kiel-utgivelse", "Kun kumulativt"]);
+  }
+
+  body.innerHTML = rader.map(([etikett, verdi]) =>
+    '<tr><th scope="row">' + etikett + '</th><td>' + verdi + '</td></tr>'
+  ).join("");
+
+  // Figur-etiketter speiler aktive tilstand.
+  if (figur1 && figur2 && figur3) {
+    if (periode === "kumulativt") {
+      figur1.textContent = "Topp 15 giverland - total allokering"
+        + (eu === "inkl" ? " (inkl. EU-fordeling)" : "");
+      figur2.textContent = "Norge over tid - akkumulert allokering 2022-d.d.";
+      figur3.textContent = "Andel av BNP vs. per innbygger (alle giverland)";
+    } else {
+      figur1.textContent = "Topp 15 giverland - total allokering i " + periode;
+      figur2.textContent = "Norge - månedlig allokering i " + periode;
+      figur3.textContent = "Andel av BNP vs. per innbygger i " + periode;
+    }
+  }
+}
+
 function byggEksportLenker() {
   const ul = document.getElementById("eksport-lenker");
   if (!ul) return;
@@ -1457,6 +1556,15 @@ async function main() {
           + '<code>data/reference/valutakurser.json</code> er hentet.</p>';
       }
       tegnScatter(aktiveRader, aktiveRel, valgte, valuta);
+      tegnFlakForhandsvisning({
+        norgeAktiv: aktivNorge,
+        norgeRelAktiv: aktivNorgeRel,
+        norgeEndr: norgeEndr,
+        aktiveRader: aktiveRader,
+        periode: periode,
+        eu: eu,
+        valuta: valuta,
+      });
     }
     visning.addEventListener("change", tegn);
     rangeringMaal.addEventListener("change", tegn);
