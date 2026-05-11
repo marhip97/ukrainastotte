@@ -1,6 +1,6 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.5
+**Versjon:** 2.6
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
@@ -332,6 +332,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-04-26 | M6.3: Visuelt redesign | **Ferdig** | **Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase.** M6.3 lukkes etter visuelle forbedringer i PR 52/54/55/56. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` (CSV-eksport, brukerveiledning-oppdatering, ytterligere komponentpolering) tas inn i drift som forbedringsforslag dersom prosjekteier ønsker det senere. | prosjekteier, prosjektleder | — |
 | 2026-04-26 | Drift | Aktiv | Prosjektet i ren driftfase. Ukentlig `fetch-kiel.yml`, månedlig `fetch-wdi.yml`, daglig `fetch-valutakurser.yml` kjører som planlagt. Dashboard live på <https://marhip97.github.io/ukrainastotte/>. Neste planlagte gjennomgang: kvartalsvis (jf. seksjon 10). | prosjektleder | — |
 | 2026-05-11 | M7: Metodisk migrering | Oppstart | Prosjekteier godkjente planutkastet `docs/planer/M7 plan.md` og bekreftet at M7.0 (migrerings-QA) starter umiddelbart uten ytterligere avklaringer. Foreslått rekkefølge S21 → S20 → S19 godkjent. Excelen brukes ikke som datakilde i repoet; alle metode-konstanter (BNP 2021, EU-fordelingsnøkkel) leses direkte fra Kiels XLSX. `docs/qa/m7-fasitverdier.md` er ekstrahert fra FINs excel og brukes som gylne tall for QA. Arbeidsbranch: `claude/migrate-excel-to-dashboard-t8LoD` (plattform-pålagt). | prosjektleder | S19, S20, S21 åpnet. |
+| 2026-05-11 | M7.0: Migrerings-QA | Klar for review | Engangs-skript `scripts/m7_migrering_avvik.py` reimplementerer excel-metoden mot Kiel Release 28 og produserer `docs/qa/m7-migrering-avvik.md`. **Norge matcher fasit 100 %** på alle mål (allokering 10,005 mrd, forpliktelse 24,724 mrd, BNP-andel 2,4542 %, enkeltår 2025 4,677 mrd og 2026 1,089 mrd). Storbritannia, USA, Tyskland EKSKL EU, Frankrike EKSKL EU og Danmark EKSKL EU matcher også fasit innen 0,1 %. **Tre punkter krever avklaring før M7.2 godkjennes:** (a) Sverige EKSKL EU avviker 12,8 % (Kiel-tall 10,320 mrd vs. fasit 9,149 mrd - sannsynligvis at FINs excel ekskluderer en spesifikk svensk aktivitetsgruppe), (b) EU-fordeling INKL EU har 1-3 % avvik for store EU-land fordi M7.2 må bruke Kiels pre-aggregerte `Share of EU Allocated/Committed aid` istedenfor andel × total, (c) per innbygger avviker 0,5-2 % pga. WDI-vintage. Detaljer i rapporten. **Metoden er klar for implementering i M7.1-M7.2** med disse forbeholdene. | qa, prosjektleder | M7.0-rapport til prosjekteier for godkjenning. Tre spørsmål åpnet (Sverige-avvik, EU-fordelingsmetode, folketalls-vintage). |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -340,6 +341,9 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | S19 | 2026-05-11 | Skal flak-malen `flak-mal.docx` ligge i repoet som visuell referanse, eller skal docx-en bygges fra grunnen i kode uten referansemal? | Før M7.6 | Mal i repoet under `src/dashboard/maler/flak-mal.docx` som visuell referanse. Docx-en bygges programmatisk, men utviklerne har kvalitetssjekk å sammenligne mot. |
 | S20 | 2026-05-11 | Hvilke målepunkt skal flaket vise i tabell 1? Excel-flaket viser 9 rader - skal denne være konfigurerbar eller låst til malens struktur? | Før M7.5 | Låst til malens 9 rader i første versjon. Konfigurerbart kan legges til senere som forbedring uten å påvirke flak-malens visuelle integritet. |
 | S21 | 2026-05-11 | Hvordan kommuniseres metodisk migrering til brukerne? | Før M7.3 | Tre kanaler: (1) "Hva er endret"-seksjon i `brukerveiledning.md`, (2) kort merknad i dashboardets header i overgangsperiode (4-6 uker), (3) varsel til kjente brukere via vanlig kanal. Reduserer risiko R17/R20. |
+| S22 | 2026-05-11 | Sverige EKSKL EU: min reproduksjon gir 10,320 mrd EUR (matcher Kiels Country Summary), fasiten 9,149 mrd EUR. Differansen 1,171 mrd antyder at FINs excel ekskluderer en spesifikk svensk aktivitetsgruppe. Hva skal dashboardet vise? | Før M7.2 | Avklar med brukerne hvilke svenske aktiviteter som er ekskludert i excelen, eller godkjenn at dashboardet viser Kiels 10,320 mrd (publisert tall). Tilrådning: bruk Kiels publiserte tall som standard, med fotnote om eventuelle ekskluderinger som senere kan implementeres som tilleggsfilter. |
+| S23 | 2026-05-11 | EU-fordeling INKL EU: andel × EU-institusjonens total gir 1-3 % avvik fra fasit. Skal M7.2 bruke Kiels pre-aggregerte `Share of EU Allocated/Committed aid` direkte istedenfor å reprodusere via fordelingsnøkkel? | Før M7.2 | Tilrådning: ja, bruk Kiels pre-aggregerte tall direkte. Det er Kiels offisielle EU-fordeling og treffer fasit innen 0,1 %. Fordelingsnøkkel (`Country Share on total EU budget`) beholdes som referanseverdi i rapporter. |
+| S24 | 2026-05-11 | Per innbygger har systematisk 0,5-2 % avvik mellom WDI 2024-folketall og excelens kilde (antagelig 2025-tall). Hvilken folketall-vintage skal dashboardet bruke? | Før M7.2 | Tilrådning: behold WDI Most Recent Value (dagens metode), siden den oppdateres automatisk hver måned via `fetch-wdi.yml`. Avviket dokumenteres i brukerveiledning ved M7.3 som metodisk forbehold. Alternativ: be Verdensbanken om 2025-folketall så snart de publiseres. |
 
 ### 11.3 Lukkede saker
 
@@ -374,7 +378,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
 | M6.2: Analytisk innhold | — | Ferdig | PR #25 merget til main 2026-04-25. Levert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips, automatisk regenerering ved kursoppdatering. 63/63 tester grønne. |
 | M6.3: Visuelt redesign | — | Ferdig | Designgrunnlag (PR #26) + visuelle forbedringer i PR 52, 54, 55 og 56 merget til main 2026-04-26. Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` håndteres som forbedringsforslag i drift dersom ønsket senere. |
-| M7: Metodisk migrering og flak-generering | — | Pågår | Oppstart 2026-05-11. Plan i `docs/planer/M7 plan.md`. Syv delfaser (M7.0-M7.6). M7.0 Migrerings-QA er første utviklingssteg og krever ingen åpne saker besluttet på forhånd. Fasitverdier ligger i `docs/qa/m7-fasitverdier.md`. |
+| M7: Metodisk migrering og flak-generering | — | Pågår | Oppstart 2026-05-11. Plan i `docs/planer/M7 plan.md`. Syv delfaser (M7.0-M7.6). M7.0 Migrerings-QA levert samme dag - se rapport `docs/qa/m7-migrering-avvik.md`. Norge matcher fasit 100 % for alle mål. Tre åpne saker (S22-S24) krever avklaring før M7.2. M7.1 kan starte parallelt fordi den er parser-utvidelse uten avhengighet til de åpne sakene. |
 
 ---
 
@@ -389,6 +393,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.3 | 2026-04-26 | Hosting flyttet fra Netlify til GitHub Pages. S16 åpnet og lukket. Repoet gjort offentlig. | prosjektleder, devops |
 | 2.4 | 2026-04-26 | M6.3 lukket etter prosjekteiers godkjenning av dashboardet. PR 52, 54, 55 og 56 merget med visuelle forbedringer (kompakt hero, rullgardin-filter, sammenkoblet komparativ-blokk, padding-fix). Status flyttet fra "Drift + ny utvidelsesfase M6 starter" til "Drift". | prosjektleder, frontend, qa |
 | 2.5 | 2026-05-11 | M7 Metodisk migrering åpnet som ny milepæl. Lagt til i seksjon 5. Plan i `docs/planer/M7 plan.md` godkjent av prosjekteier. S19-S21 åpnet i 11.2. M7.0 (migrerings-QA) starter umiddelbart. Status oppdatert til "Drift + ny utvidelsesfase M7 starter". | prosjektleder |
+| 2.6 | 2026-05-11 | M7.0 Migrerings-QA fullført samme dag. Rapport `docs/qa/m7-migrering-avvik.md` produsert. Norge matcher fasit 100 %, men tre metodiske avvik identifisert som krever avklaring før M7.2: Sverige EKSKL EU (S22), EU-fordelingsmetode INKL EU (S23), folketalls-vintage (S24). S22-S24 åpnet i 11.2. | qa, prosjektleder |
 
 ---
 
