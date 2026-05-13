@@ -1,11 +1,11 @@
 # Prosjektplan: Dashboard for Ukraina-støtte basert på Kiel-data
 
-**Versjon:** 2.16
+**Versjon:** 2.17
 **Dato opprettet:** 22. april 2026
 **Dato sist oppdatert:** 11. mai 2026
 **Prosjekteier:** [Brukerens navn]
 **Prosjektleder:** Claude Code (agent: `prosjektleder`)
-**Status:** Drift + ny utvidelsesfase M7 starter
+**Status:** Drift
 
 ---
 
@@ -342,6 +342,9 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2026-05-11 | M7.5 Steg 1: Designnotat | Klar for review | `docs/m7-design/m7-5-design.md` levert. Spesifiserer plassering av flak-forhåndsvisning (nederst i dashboardet), antatt struktur for tabell 1 (9 rader basert på fasitverdier - må bekreftes mot FINs mal), antatte figurer 1-3 (rangering, tidsserie, scatter), "Last ned flak (.docx)"-knapp stubbet med "Kommer i M7.6"-tooltip, tilstandskobling til alle tre brytere, tilgjengelighet. Fire spørsmål til prosjekteier: (1) bekreftelse av tabell 1 sine 9 rader, (2) figur 1-3, (3) knapp-tilstand, (4) plassering. Ingen kodeendringer i denne leveransen. | frontend | Godkjenning av designnotat + svar på de 4 spørsmålene før M7.5 Steg 2 (implementering) starter. |
 | 2026-05-11 | M7.5 Steg 1: Godkjent / Steg 2: Implementering | Klar for review | Prosjekteier godkjente alle fire spørsmål. **Implementering levert:** ny `flak-seksjon` nederst i `index.html` med header, tabell 1 (9 rader), figur-liste og nedlastingsknapp. `dashboard.js` har ny `tegnFlakForhandsvisning()` som rendrer Norges nøkkeltall i tabellform per dashboardets aktive tilstand (periode + EU + valuta). Tilstandsmerknad over tabellen forklarer hvilken konfigurasjon flaket reflekterer. Figur-etiketter byttes basert på periode-valg (kumulativt vs. enkeltår). Nedlastingsknapp er stubbet med `aria-disabled="true"` og tooltip "Kommer i M7.6". `styles.css` utvidet med `.flak-seksjon`, `.flak-tabell` (HTML-tabell med caption/thead/tbody for skjermlesere), `.flak-knapp` og tilhørende stiler. Smoke-test og build-script OK. | frontend | Godkjenning av M7.5-leveransen før M7.6 starter. |
 | 2026-05-11 | M7.6: Docx-generering klientside | Klar for review | `docx`-pakke (v9.5.0) lastet inn via unpkg.com UMD-CDN. Ny `genererFlakDocx(state)` i `dashboard.js` bygger Word-fil fra grunnen med tittel, undertittel (med periode/EU/valuta), Tabell 1 med 9 rader, figur-merknad og kildehenvisning. Norsk tallformat: komma som desimaltegn, ikke-brytende mellomrom som tusenseparator, "pst." for prosent, "mrd. EUR/NOK" for milliarder. `lastNedFlakBlob()` håndterer iOS/Safari-fallback (åpner i ny fane når programmatisk nedlasting er blokkert). Knappen aktiveres automatisk når `docx`-biblioteket er lastet. Filnavn: `Norges-Ukraina-stotte-{periode}-{dato}.docx`. **Skyves til drift som forbedring:** Plotly-figurer embeddet som PNG i docx-en (krever Plotly.toImage + ImageRun i docx). Per M7-planen er Word-filen bygget fra grunnen og malen `flak-mal.docx` er kun visuell referanse (S19) - malen sendes fortsatt fra prosjekteier ved behov. Smoke-test: node --check OK, build-site OK. Manuell nettleser-test gjenstår - krever ekte nettforbindelse for CDN. | frontend | Godkjenning av M7.6-leveransen avslutter M7-milepælen. |
+| 2026-05-11 | M7: hele milepælen | **Merget** | PR #58 merget til main: alle syv delfaser M7.0-M7.6 levert. Prosjekteier verifiserte i Codespaces før merge. | prosjekteier, prosjektleder | — |
+| 2026-05-11 | Drift (M7-oppfølging) | Merget | PR #59 merget: docx-CDN-fiks (ESM via `esm.sh` istedenfor unpkg UMD som ikke fantes for moderne docx-versjon) + rangering-etikett endret fra "Rangering blant giverland" til "Rangering (total allokering)" i forhåndsvisning og docx. | frontend, prosjektleder | — |
+| 2026-05-11 | Drift (M7-oppfølging) | Merget | PR #60 merget: KPI-konteksten korrigert til "av Kiels BNP 2021" (var feilaktig "kumulativt mot Verdensbanken 2024" etter M7.2-overgangen til Kiel-BNP). Rangering-kontekst gjort dynamisk: "akkumulert allokering" kumulativt og "allokering i 2025" i enkeltårs-modus. "Norge i tall"-overskriften gjort synlig over KPI-kortene for tydeligere Norge-fokus. "Rangering blant giverland"-etikett endret til "Norges rangering". Hovedtittel endret fra "SFSs Ukraina-støtte overvåker" til **"SFSs overvåker av Ukraina-støtte"** i `<h1>`, `<title>`, docx-metadata og PNG-eksportens kildehenvisning. Metode-notater i hero/fordeling/scatter oppdatert til å reflektere ny BNP-kilde (Kiel) og folketalls-kilde (WDI). | frontend, prosjektleder | — |
 
 ### 11.2 Åpne saker til avklaring hos prosjekteier
 
@@ -387,7 +390,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | M6.1: Datafundament | — | Ferdig | PR #24 merget til main 2026-04-25. Levert: Norges Bank EUR/NOK-fetch, valutakonvertering med bankdag-fallback, månedlig tidsserie, land-grupperinger, NOK-utvidelse av normalize. 51/51 tester grønne. |
 | M6.2: Analytisk innhold | — | Ferdig | PR #25 merget til main 2026-04-25. Levert: endringstekst-generator, komparativ profil, tidsseriegraf, scatter plot, harmoniserte norske tooltips, automatisk regenerering ved kursoppdatering. 63/63 tester grønne. |
 | M6.3: Visuelt redesign | — | Ferdig | Designgrunnlag (PR #26) + visuelle forbedringer i PR 52, 54, 55 og 56 merget til main 2026-04-26. Prosjekteier godkjente dashboardet og besluttet at prosjektet går tilbake i ren driftfase. Resterende punkter fra `docs/m6.3/04-implementation-plan.md` håndteres som forbedringsforslag i drift dersom ønsket senere. |
-| M7: Metodisk migrering og flak-generering | — | Klar for review | Levert 2026-05-11. Alle syv delfaser implementert: M7.0 (migrerings-QA), M7.1 (parser-utvidelse), M7.2 (analyselag), M7.3 (opprydding), M7.4 (periode/EU-bryter), M7.5 (flak-forhåndsvisning), M7.6 (docx-generering). M7.0-M7.3 godkjent av prosjekteier. M7.4-M7.6 klar for review. Norge matcher fasit 100 % på alle mål. Plotly-figurer i docx-en skyves til drift som forbedring. |
+| M7: Metodisk migrering og flak-generering | — | **Ferdig** | Levert og merget til main 2026-05-11 (PR #58). Alle syv delfaser implementert: M7.0 (migrerings-QA), M7.1 (parser-utvidelse), M7.2 (analyselag-migrering), M7.3 (opprydding), M7.4 (periode/EU-bryter), M7.5 (flak-forhåndsvisning), M7.6 (docx-generering med Plotly-figurer som PNG). Norge matcher fasit 100 % på alle mål. Post-merge fikser via PR #59 (docx-CDN, rangering-etikett) og PR #60 (Norge-fokus, tittel, BNP-kontekst) merget samme dag. Prosjektet tilbake i ren driftfase. |
 
 ---
 
@@ -413,6 +416,7 @@ Denne protokollen oppdateres av prosjektleder-agenten gjennom hele prosjektet. H
 | 2.14 | 2026-05-11 | M7.5 Steg 2 (implementering) levert: flak-forhåndsvisning nederst i dashboardet med Norges 9-rads tabell og figur-liste som speiler aktiv tilstand. Nedlastingsknapp stubbet til M7.6. | frontend, prosjektleder |
 | 2.15 | 2026-05-11 | M7.6 (docx-generering klientside) levert: `docx`-pakke via unpkg.com, `genererFlakDocx()` med tittel, undertittel, 9-rads tabell, figur-merknad og kildehenvisning. iOS-fallback for nedlasting. Plotly-figurer i docx skyves til drift. M7-milepælen funksjonelt komplett. | frontend, prosjektleder |
 | 2.16 | 2026-05-11 | M7.6 utvidet med Plotly-figurer (rangering, tidsserie, scatter) eksportert som PNG og embeddet i docx-en via ImageRun. Faller tilbake til tekstmerknad hvis grafer ikke er rendret eller eksport feiler. M7-leveransen er nå komplett uten gjenstående punkter. | frontend, prosjektleder |
+| 2.17 | 2026-05-11 | M7-milepælen lukket. PR #58 merget (alle syv delfaser), deretter PR #59 (docx-CDN-fiks, rangering-etikett) og PR #60 (Norge-fokus, KPI-kontekst, ny tittel "SFSs overvåker av Ukraina-støtte") merget samme dag. Status tilbake til "Drift". Versjonsnummer oppdatert. | prosjektleder |
 
 ---
 
